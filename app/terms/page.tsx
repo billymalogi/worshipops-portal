@@ -25,7 +25,7 @@ export default function PrivacyPage() {
 
         <section>
           <h2 className="text-xl font-semibold text-white mb-2">4. Help:</h2>
-          <p>If you are experiencing issues with the messaging program you can reply with the keyword "HELP" for more assistance, or you can get help directly at [info@worshipops.com].</p>
+          <p>If you are experiencing issues with the messaging program you can reply with the keyword "HELP" for more assistance, or you can get help directly at info@worshipops.com.</p>
         </section>
 
         <section>
