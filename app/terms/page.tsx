@@ -5,7 +5,7 @@ export default function PrivacyPage() {
     <main className="min-h-screen bg-[#050505] text-gray-300 p-8 md:p-20 font-sans">
       <Link href="/" className="text-blue-500 hover:text-blue-400 mb-8 block">← Back to Home</Link>
       <div className="max-w-3xl mx-auto space-y-6">
-        <h1 className="text-3xl font-bold text-white mb-8">Privacy Policy</h1>
+        <h1 className="text-3xl font-bold text-white mb-8">Terms of Service</h1>
         <p>Last updated: January 2026</p>
         
         <section>
