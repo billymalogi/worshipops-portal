@@ -20,7 +20,7 @@ export default function LandingPage() {
     }
 
     const { error } = await supabase
-      .from('leads')
+      .from('leads' as any)
       .insert([{ phone }]);
 
     if (error) {

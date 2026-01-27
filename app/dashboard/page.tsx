@@ -5,7 +5,7 @@ import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 
 // --- IMPORTS ---
-import VolunteerDashboard from '@/components/VolunteerDashboard';
+import VolunteerDashboard from '@/components/VolunteerDashboard'; 
 import ScheduleTable from '@/components/ScheduleTable'; 
 import OrganizationProfile from '@/components/OrganizationProfile'; 
 
@@ -49,21 +49,6 @@ const VolunteerView = ({ user, onLogout }: any) => {
     </div>
   );
 };
-
-// ==========================================
-// 2. ADMIN VIEW SUB-COMPONENT
-// ==========================================
-const Modal = ({ title, onClose, children, colors }: any) => (
-  <div style={{position:'fixed', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.7)', display:'flex', alignItems:'center', justifyContent:'center', zIndex: 1000, backdropFilter: 'blur(3px)'}}>
-    <div style={{background: colors.card, padding:'25px', borderRadius:'12px', width:'400px', border: `1px solid ${colors.border}`, boxShadow: '0 10px 25px rgba(0,0,0,0.5)'}}>
-      <div style={{display:'flex', justifyContent:'space-between', marginBottom:'20px'}}>
-        <h3 style={{margin:0, color: colors.heading}}>{title}</h3>
-        <button onClick={onClose} style={{background:'none', border:'none', color: colors.text, cursor:'pointer'}}><X size={20}/></button>
-      </div>
-      {children}
-    </div>
-  </div>
-);
 
 const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, setSelectedService, fetchServices, onLogout, toggleViewMode, viewMode }: any) => (
   <div style={{ padding: '15px 30px', borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: colors.card }}>
