@@ -51,7 +51,7 @@ export default function VolunteerDashboard({ user }: { user: any }) {
               else {
                  const { data: dbItems } = await supabase.from('service_items')
                     .select('*')
-                    .eq('service_date', nextService.service.date.split('T')[0])
+                    .eq('service_date', svc.date.split('T')[0])
                     .order('sort_order');
                  
                  if(dbItems) {
@@ -75,7 +75,7 @@ export default function VolunteerDashboard({ user }: { user: any }) {
               if (nextService?.service?.id) {
                 const { data: songs } = await supabase.from('service_items')
                   .select('*')
-                  .eq('service_date', nextService.service.date.split('T')[0]) 
+                  .eq('service_date', svc.date.split('T')[0])
                   .eq('item_type', 'song')
                   .order('sort_order');
                 const validSongs = (songs || []).filter(s => s.title && s.title.trim() !== '');
