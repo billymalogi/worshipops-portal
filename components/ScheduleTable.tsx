@@ -97,18 +97,18 @@ const ScheduleTable = ({
 
   // --- STYLES ---
   const themeColors = {
-    bg: isDarkMode ? '#1a1b1e' : '#ffffff',
-    controlBarBg: isDarkMode ? '#25262b' : '#ffffff', 
-    controlBarBorder: isDarkMode ? '#2c2e33' : '#e5e7eb',
-    headerText: isDarkMode ? '#909296' : '#868e96', 
-    textSubtle: isDarkMode ? '#5c5f66' : '#adb5bd',
-    rowText: isDarkMode ? '#c1c2c5' : '#374151',
+    bg: isDarkMode ? '#111827' : '#ffffff',
+    controlBarBg: isDarkMode ? '#1f2937' : '#ffffff',
+    controlBarBorder: isDarkMode ? '#374151' : '#e5e7eb',
+    headerText: isDarkMode ? '#9ca3af' : '#6b7280',
+    textSubtle: isDarkMode ? '#6b7280' : '#9ca3af',
+    rowText: isDarkMode ? '#d1d5db' : '#374151',
     rowBg: isDarkMode ? 'transparent' : '#ffffff',
-    rowBorder: isDarkMode ? '#2c2e33' : '#f1f3f5',
-    sectionBg: isDarkMode ? '#25262b' : '#f8f9fa', 
-    sectionText: isDarkMode ? '#e9ecef' : '#495057',
-    primary: '#228be6',
-    accent: '#40c057',
+    rowBorder: isDarkMode ? '#374151' : '#f3f4f6',
+    sectionBg: isDarkMode ? '#1f2937' : '#f9fafb',
+    sectionText: isDarkMode ? '#f3f4f6' : '#374151',
+    primary: '#3b82f6',
+    accent: '#10b981',
   };
 
   // FIX: Explicitly typed as CSSProperties map to satisfy TypeScript

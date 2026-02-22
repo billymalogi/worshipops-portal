@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { Calendar, Clock, Music, Mic2, Guitar, Loader2, CheckCircle, XCircle, ChevronRight, LayoutGrid, LogOut } from 'lucide-react';
-import VolunteerSchedule from './VolunteerSchedule'; // <--- THIS IMPORT WORKS because they are in the same folder
+import VolunteerSchedule from './VolunteerSchedule'; 
 
 export default function VolunteerDashboard({ user }: { user: any }) {
   const supabase = createClient();
@@ -12,8 +12,6 @@ export default function VolunteerDashboard({ user }: { user: any }) {
   const [futurePlans, setFuturePlans] = useState<any[]>([]);
   const [setlist, setSetlist] = useState<any[]>([]);
   const [responding, setResponding] = useState(false);
-  
-  // NEW: State to toggle between Dashboard and Schedule View
   const [viewMode, setViewMode] = useState<'dashboard' | 'schedule'>('dashboard');
   const [activePlanItems, setActivePlanItems] = useState<any[]>([]);
 
@@ -27,7 +25,6 @@ export default function VolunteerDashboard({ user }: { user: any }) {
         if (!member) { setLoading(false); return; }
 
         // 2. Get Assignments
-        // Note: We are fetching 'items' (JSON) from services to render the grid view
         const { data: positions } = await supabase.from('service_positions')
           .select(`id, role_name, status, service:services (id, name, date, items)`) 
           .eq('member_id', member.id)
@@ -36,24 +33,53 @@ export default function VolunteerDashboard({ user }: { user: any }) {
 
         // 3. Process Data
         if (positions && positions.length > 0) {
-          const sorted = positions.sort((a: any, b: any) => new Date(a.service.date).getTime() - new Date(b.service.date).getTime());
-          const nextService = sorted[0];
-          setNextUp(nextService);
-          setFuturePlans(sorted.slice(1));
+          const validPositions = positions.filter((p: any) => p.service !== null);
           
-          if(nextService.service.items) {
-             setActivePlanItems(nextService.service.items);
-          }
+          if (validPositions.length > 0) {
+              const sorted = validPositions.sort((a: any, b: any) => new Date(a.service.date).getTime() - new Date(b.service.date).getTime());
+              const nextService = sorted[0];
+              setNextUp(nextService);
+              setFuturePlans(sorted.slice(1));
+              
+              // --- FIX: ROBUST SCHEDULE FETCHING ---
+              // Try A: Get items from JSON column
+              if(nextService.service?.items && nextService.service.items.length > 0) {
+                 setActivePlanItems(nextService.service.items);
+              } 
+              // Try B: If JSON is empty, fetch from service_items table
+              else {
+                 const { data: dbItems } = await supabase.from('service_items')
+                    .select('*')
+                    .eq('service_date', nextService.service.date.split('T')[0])
+                    .order('sort_order');
+                 
+                 if(dbItems) {
+                    // Map DB items to Plan Item format
+                    const mappedItems = dbItems.map((item: any) => ({
+                        id: item.id,
+                        type: item.item_type || 'item',
+                        title: item.title,
+                        length: item.duration_seconds || 0,
+                        bpm: item.bpm,
+                        key: item.song_key,
+                        notes: item.notes,
+                        role: item.role_name
+                    }));
+                    setActivePlanItems(mappedItems);
+                 }
+              }
+              // -------------------------------------
 
-          // 4. Get Songs (Setlist)
-          if (nextService?.service?.id) {
-            const { data: songs } = await supabase.from('service_items')
-              .select('*')
-              .eq('service_date', nextService.service.date.split('T')[0]) 
-              .eq('item_type', 'song')
-              .order('sort_order');
-            const validSongs = (songs || []).filter(s => s.title && s.title.trim() !== '');
-            setSetlist(validSongs);
+              // 4. Get Songs (Setlist)
+              if (nextService?.service?.id) {
+                const { data: songs } = await supabase.from('service_items')
+                  .select('*')
+                  .eq('service_date', nextService.service.date.split('T')[0]) 
+                  .eq('item_type', 'song')
+                  .order('sort_order');
+                const validSongs = (songs || []).filter(s => s.title && s.title.trim() !== '');
+                setSetlist(validSongs);
+              }
           }
         }
       } catch (err) { console.error(err); } finally { setLoading(false); }
@@ -71,8 +97,14 @@ export default function VolunteerDashboard({ user }: { user: any }) {
     } catch (err) { console.error(err); } finally { setResponding(false); }
   };
 
-  const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-  const formatTime = (dateStr: string) => new Date(dateStr).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  const formatDate = (dateStr: string) => {
+      if(!dateStr) return '';
+      return new Date(dateStr).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  }
+  const formatTime = (dateStr: string) => {
+      if(!dateStr) return '';
+      return new Date(dateStr).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  }
 
   if (loading) return <div className="flex h-64 items-center justify-center text-gray-500"><Loader2 className="animate-spin mr-2"/> Loading...</div>;
 
