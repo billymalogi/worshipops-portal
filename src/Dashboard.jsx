@@ -81,81 +81,138 @@ const getActiveCategory = (tab) =>
     items.some(i => i.id === tab)
   )?.[0] || 'planner';
 
+// --- ROLE-BASED TAB PERMISSIONS ---
+const ROLE_TABS = {
+  admin:            ['dashboard','templates','songs','team','lighting','stage','rehearsals','profile','organization','billing'],
+  leader:           ['dashboard','templates','songs','team','lighting','stage','rehearsals','profile','organization'],
+  campus_leader:    ['dashboard','team','profile'],
+  editor:           ['dashboard','templates','songs','team','lighting','stage','rehearsals','profile','organization'],
+  viewer:           [],
+  scheduled_viewer: [],
+};
+const ROLE_CAN_TOGGLE = { admin: true, leader: true, campus_leader: true, editor: true, viewer: false, scheduled_viewer: false };
+const ROLE_LABELS = { admin: 'Admin', leader: 'Leader', campus_leader: 'Campus Leader', editor: 'Editor', viewer: 'Volunteer', scheduled_viewer: 'Volunteer' };
+const getAllowedTabs = (role) => ROLE_TABS[role] ?? [];
+
+// --- CATEGORY ACCENT COLORS ---
+// accent = active tab text/underline
+// tabBgLight/Dark = subtle bg on the active main-nav button
+// navBgLight/Dark = subnav bar background
+const CAT_COLORS = {
+  planner:    { accent: '#b45309', tabBgLight: '#fef9c3', tabBgDark: 'rgba(217,119,6,0.22)',  navBgLight: '#fef9c3', navBgDark: '#1c1400' },
+  production: { accent: '#9b1c1c', tabBgLight: '#fce7e7', tabBgDark: 'rgba(155,28,28,0.25)',  navBgLight: '#fce7e7', navBgDark: '#1a0004' },
+  settings:   { accent: '#0f766e', tabBgLight: '#ccfbf1', tabBgDark: 'rgba(15,118,110,0.22)', navBgLight: '#ccfbf1', navBgDark: '#001512' },
+};
+
 // --- HEADER COMPONENT ---
+const CAT_DISPLAY = { planner: 'Planner', production: 'Production', settings: 'Settings' };
+
 const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, setSelectedService, refreshData, onLogout, session, userRole, realRole, toggleViewMode }) => {
   const activeCategory = getActiveCategory(activeTab);
+  const allowed = getAllowedTabs(realRole);
+
+  // Only show categories that have at least one accessible tab
+  const visibleCats = Object.keys(NAV_CATEGORIES).filter(cat =>
+    NAV_CATEGORIES[cat].items.some(item => allowed.includes(item.id))
+  );
 
   const handleCategoryClick = (cat) => {
     setSelectedService(null);
-    if (activeCategory !== cat) setActiveTab(NAV_CATEGORIES[cat].first);
+    if (activeCategory !== cat) {
+      const firstAllowed = NAV_CATEGORIES[cat].items.find(item => allowed.includes(item.id));
+      if (firstAllowed) setActiveTab(firstAllowed.id);
+    }
   };
 
   return (
-    <div style={{ padding: '0 30px', height:'64px', borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: colors.card, position: 'sticky', top: 0, zIndex: 200 }}>
-      <div onClick={() => { setSelectedService(null); setActiveTab('dashboard'); refreshData(); }} style={{display:'flex', alignItems:'center', gap:'12px', cursor: 'pointer'}}>
-        <img src="/favicon.ico" alt="Logo" onError={(e) => {e.target.style.display='none'}} style={{height:'48px', width:'48px', borderRadius:'8px', objectFit:'contain'}} />
-        <span style={{ fontWeight: '800', fontSize: '20px', color: colors.heading, letterSpacing: '-0.5px' }}>Worship Ops</span>
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: '1fr auto 1fr',
+      alignItems: 'center',
+      height: '64px',
+      borderBottom: `1px solid ${colors.border}`,
+      background: colors.card,
+      position: 'sticky',
+      top: 0,
+      zIndex: 200,
+      padding: '0 20px',
+    }}>
+      {/* LEFT: Logo */}
+      <div onClick={() => { setSelectedService(null); setActiveTab('dashboard'); refreshData(); }} style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', justifySelf: 'start' }}>
+        <img src="/favicon.ico" alt="Logo" onError={(e) => { e.target.style.display = 'none'; }} style={{ height: '40px', width: '40px', borderRadius: '8px', objectFit: 'contain' }} />
+        <span style={{ fontWeight: '800', fontSize: '18px', color: colors.heading, letterSpacing: '-0.5px' }}>Worship Ops</span>
       </div>
 
-      {/* CATEGORY BUTTONS */}
-      <div style={{display:'flex', gap:'4px', alignItems:'center'}}>
-        {Object.keys(NAV_CATEGORIES).map(cat => (
+      {/* CENTER: Category tabs — truly centered via CSS grid */}
+      <div style={{ display: 'flex', height: '100%', alignItems: 'stretch' }}>
+        {visibleCats.map(cat => {
+          const isActive = activeCategory === cat;
+          const cc = CAT_COLORS[cat];
+          return (
+            <button
+              key={cat}
+              onClick={() => handleCategoryClick(cat)}
+              style={{
+                background: isActive ? (isDarkMode ? cc.tabBgDark : cc.tabBgLight) : 'transparent',
+                border: 'none',
+                borderBottom: `2px solid ${isActive ? cc.accent : 'transparent'}`,
+                cursor: 'pointer',
+                padding: '0 24px',
+                fontSize: '14px',
+                fontWeight: isActive ? '700' : '500',
+                color: isActive ? cc.accent : colors.text,
+                textTransform: 'capitalize',
+                transition: 'all 0.15s',
+                whiteSpace: 'nowrap',
+              }}
+              onMouseEnter={e => {
+                if (!isActive) { e.currentTarget.style.background = isDarkMode ? cc.tabBgDark : cc.tabBgLight; e.currentTarget.style.color = cc.accent; }
+              }}
+              onMouseLeave={e => {
+                if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = colors.text; }
+              }}
+            >
+              {CAT_DISPLAY[cat]}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* RIGHT: Controls */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '10px', justifySelf: 'end' }}>
+        {/* Role badge */}
+        <span style={{ fontSize: '11px', fontWeight: '600', color: colors.text, opacity: 0.6, padding: '2px 8px', border: `1px solid ${colors.border}`, borderRadius: '12px', whiteSpace: 'nowrap' }}>
+          {ROLE_LABELS[realRole] || realRole}
+        </span>
+        {/* View toggle — only for roles that can see both views */}
+        {ROLE_CAN_TOGGLE[realRole] && (
           <button
-            key={cat}
-            onClick={() => handleCategoryClick(cat)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: activeCategory === cat ? colors.heading : colors.text,
-              padding: '8px 18px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: activeCategory === cat ? '700' : '600',
-              borderBottom: activeCategory === cat ? `2px solid ${colors.primary}` : '2px solid transparent',
-              textTransform: 'capitalize',
-              height: '64px',
-            }}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
-
-      <div style={{display:'flex', gap:'15px', alignItems: 'center'}}>
-        {/* NEW: VIEW TOGGLE BUTTON */}
-        {realRole === 'admin' && (
-          <button 
             onClick={toggleViewMode}
-            style={{
-              padding: '6px 12px',
-              fontSize: '12px',
-              fontWeight: 'bold',
-              borderRadius: '6px',
-              border: `1px solid ${colors.primary}`,
-              background: userRole === 'admin' ? colors.primary : 'transparent',
-              color: userRole === 'admin' ? '#fff' : colors.primary,
-              cursor: 'pointer'
-            }}
+            style={{ padding: '5px 12px', fontSize: '12px', fontWeight: '600', borderRadius: '6px', border: `1px solid ${colors.border}`, background: colors.bgSolid, color: colors.text, cursor: 'pointer', whiteSpace: 'nowrap' }}
           >
-            {userRole === 'admin' ? '👁 View as Admin' : '👁 View as Volunteer'}
+            {userRole === 'admin' ? 'Volunteer View' : 'Admin View'}
           </button>
         )}
-
-        <div style={{display:'flex', flexDirection:'column', alignItems:'flex-end', fontSize:'11px'}}>
-          <span style={{fontWeight:'700', color: colors.heading}}>{session?.user?.email}</span>
-          <span style={{color: userRole === 'admin' ? colors.danger : colors.text, textTransform:'uppercase', fontSize:'10px', border:`1px solid ${colors.border}`, padding:'0 4px', borderRadius:'4px'}}>{userRole || 'Loading...'}</span>
-        </div>
-        <button onClick={() => setIsDarkMode(!isDarkMode)} style={{ background: 'transparent', color: colors.text, border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}>{isDarkMode ? <Sun size={20} /> : <Moon size={20} />}</button>
-        <button onClick={onLogout} title="Log Out" style={{ background: 'transparent', color: colors.danger, border: 'none', padding: '8px', cursor: 'pointer' }}><LogOut size={20} /></button>
+        <button onClick={() => setIsDarkMode(!isDarkMode)} style={{ background: 'transparent', color: colors.text, border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+          {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+        </button>
+        <button onClick={onLogout} title="Log Out" style={{ background: 'transparent', color: colors.danger, border: 'none', padding: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+          <LogOut size={18} />
+        </button>
       </div>
     </div>
   );
 };
 
 // --- SUB-NAV BAR ---
-const SubNav = ({ colors, activeTab, setActiveTab, setSelectedService, isDarkMode }) => {
+const SubNav = ({ colors, activeTab, setActiveTab, setSelectedService, isDarkMode, realRole }) => {
   const activeCategory = getActiveCategory(activeTab);
-  const items = NAV_CATEGORIES[activeCategory]?.items || [];
+  const allowed = getAllowedTabs(realRole);
+  const cc = CAT_COLORS[activeCategory] || CAT_COLORS.planner;
+  const allItems = NAV_CATEGORIES[activeCategory]?.items || [];
+  // Only show items the user's role can access
+  const items = allItems.filter(item => allowed.includes(item.id));
+  const navBg = isDarkMode ? cc.navBgDark : cc.navBgLight;
 
   return (
     <div style={{
@@ -166,7 +223,7 @@ const SubNav = ({ colors, activeTab, setActiveTab, setSelectedService, isDarkMod
       padding: '0 30px',
       height: '44px',
       borderBottom: `1px solid ${colors.border}`,
-      background: isDarkMode ? '#0d1117' : '#f8f9fa',
+      background: navBg,
       position: 'sticky',
       top: '64px',
       zIndex: 199,
@@ -184,16 +241,19 @@ const SubNav = ({ colors, activeTab, setActiveTab, setSelectedService, isDarkMod
               padding: '6px 14px',
               borderRadius: '6px',
               border: 'none',
-              background: isActive ? colors.card : 'transparent',
-              color: isActive ? colors.primary : colors.text,
-              fontWeight: isActive ? '600' : '500',
+              background: isActive ? (isDarkMode ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.10)') : 'transparent',
+              color: isActive ? cc.accent : (isDarkMode ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.5)'),
+              fontWeight: isActive ? '700' : '500',
               fontSize: '13px',
               cursor: 'pointer',
-              boxShadow: isActive ? `0 1px 3px rgba(0,0,0,0.1), inset 0 0 0 1px ${colors.border}` : 'none',
               transition: 'all 0.15s',
             }}
-            onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = colors.hover; }}
-            onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
+            onMouseEnter={(e) => {
+              if (!isActive) { e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'; e.currentTarget.style.color = cc.accent; }
+            }}
+            onMouseLeave={(e) => {
+              if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = isDarkMode ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.5)'; }
+            }}
           >
             <Icon size={13} />
             {label}
@@ -402,7 +462,7 @@ export default function Dashboard() {
 
       <Header colors={colors} activeTab={activeTab} setActiveTab={setActiveTab} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} setSelectedService={setSelectedService} refreshData={() => refreshAllData(orgId)} onLogout={handleLogout} session={session} userRole={userRole} realRole={realRole} toggleViewMode={toggleViewMode} />
 
-      <SubNav colors={colors} activeTab={activeTab} setActiveTab={setActiveTab} setSelectedService={setSelectedService} isDarkMode={isDarkMode} />
+      <SubNav colors={colors} activeTab={activeTab} setActiveTab={setActiveTab} setSelectedService={setSelectedService} isDarkMode={isDarkMode} realRole={realRole} />
 
       {/* MAIN CONTENT */}
       <div style={{ display: 'flex', height: 'calc(100vh - 137px)' }}>
