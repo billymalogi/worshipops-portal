@@ -43,8 +43,9 @@ export default function VolunteerDashboard({ user }: { user: any }) {
               
               // --- FIX: ROBUST SCHEDULE FETCHING ---
               // Try A: Get items from JSON column
-              if(nextService.service?.items && nextService.service.items.length > 0) {
-                 setActivePlanItems(nextService.service.items);
+              const svc = nextService.service as any;
+              if(svc?.items && svc.items.length > 0) {
+                 setActivePlanItems(svc.items);
               } 
               // Try B: If JSON is empty, fetch from service_items table
               else {
