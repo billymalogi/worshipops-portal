@@ -72,7 +72,7 @@ export default function VolunteerDashboard({ user }: { user: any }) {
               // -------------------------------------
 
               // 4. Get Songs (Setlist)
-              if (nextService?.service?.id) {
+              if (svc?.id) {
                 const { data: songs } = await supabase.from('service_items')
                   .select('*')
                   .eq('service_date', svc.date.split('T')[0])
