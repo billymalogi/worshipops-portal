@@ -1,0 +1,264 @@
+/* RESET & BASICS */
+:root {
+  --bg-dark: #111827;       /* Very dark blue/gray */
+  --bg-panel: #1f2937;      /* Slightly lighter panel */
+  --text-main: #f3f4f6;     /* White text */
+  --text-muted: #9ca3af;    /* Gray text */
+  --accent: #3b82f6;        /* Blue accent */
+  --border: #374151;        /* Border lines */
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  font-family: 'Inter', sans-serif;
+}
+
+/* LAYOUT CONTAINER */
+.app-container {
+  display: flex;
+  height: 100vh; /* Full screen height */
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* SIDEBAR STYLES */
+.sidebar {
+  width: 260px;
+  background-color: var(--bg-panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease;
+}
+
+.sidebar.collapsed {
+  width: 70px;
+}
+
+.logo-area {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.hide {
+  display: none;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: 0.2s;
+}
+
+.nav-item:hover {
+  background-color: rgba(255,255,255, 0.05);
+  color: white;
+}
+
+.nav-item.active {
+  background-color: var(--accent);
+  color: white;
+}
+
+.logout-area {
+  margin-top: auto;
+  padding: 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 10px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+/* MAIN CONTENT AREA */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.top-bar {
+  height: 64px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30px;
+  background-color: var(--bg-panel);
+}
+
+.user-profile {
+  width: 35px;
+  height: 35px;
+  background-color: var(--accent);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.content-scrollable {
+  padding: 30px;
+  overflow-y: auto;
+  height: 100%;
+}
+
+
+/* --- MATRIX SCHEDULER STYLES --- */
+
+/* Header Area */
+.scheduler-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.btn-primary {
+  background-color: var(--accent);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+/* The Table Grid */
+.matrix-container {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background-color: var(--bg-panel);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
+.matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+/* Table Headers */
+.matrix-table th {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  background-color: var(--bg-panel);
+  color: var(--text-muted);
+}
+
+.sticky-col {
+  position: sticky;
+  left: 0;
+  background-color: var(--bg-panel);
+  z-index: 10;
+  border-right: 1px solid var(--border);
+  width: 180px;
+  font-weight: bold;
+  color: var(--text-main);
+}
+
+.date-header {
+  color: var(--text-main);
+  font-size: 1.1rem;
+}
+
+.service-sub {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+/* Table Cells */
+.matrix-table td {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Status Cards (The colored boxes) */
+.status-card {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+/* Status Colors */
+.status-confirmed {
+  background-color: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #34d399; /* Green */
+}
+
+.status-declined {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171; /* Red */
+}
+
+.status-pending {
+  background-color: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #fbbf24; /* Yellow */
+}
+
+/* Add Button */
+.add-slot {
+  height: 40px;
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.add-slot:hover {
+  border-color: var(--text-muted);
+  color: var(--text-main);
+}
+

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Center Schedule</title>
+    <style>
+        /* Dark Mode "Planning Center" Style */
+        body {
+            background-color: #1e1e1e;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* Flexbox for Header */
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        h2 { margin: 0; border: none; }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .btn-reset {
+            background-color: transparent;
+            border: 1px solid #555;
+            color: #aaa;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+        .btn-reset:hover { background-color: #d32f2f; color: #fff; border-color: #d32f2f; }
+
+        #live-clock {
+            font-size: 2em;
+            font-weight: bold;
+            font-variant-numeric: tabular-nums; 
+            color: #4CAF50; 
+        }
+
+        /* Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #252525;
+            border-radius: 8px;
+            overflow: hidden;
+            table-layout: fixed; /* Keep layout strict */
+        }
+
+        th {
+            text-align: left;
+            background-color: #333;
+            padding: 12px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #aaa;
+        }
+
+        /* Draggable Rows */
+        tr[draggable="true"] { cursor: grab; }
+        tr.dragging { opacity: 0.5; background-color: #444; }
+        tr.drag-over { border-top: 2px solid #4CAF50; }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #333;
+            white-space: nowrap; 
+            overflow: hidden;
+            text-overflow: ellipsis;
+            vertical-align: middle;
+        }
+
+        .handle-col { width: 30px; color: #555; text-align: center; cursor: grab; font-size: 1.2em; }
+        tr:hover .handle-col { color: #888; }
+
+        /* HEADER ROW STYLING */
+        tr.is-header td {
+            background-color: #2a2a2a;
+            color: #aaa;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: center;
+            padding: 15px;
+            border-bottom: 1px solid #333;
+            border-top: 1px solid #333;
+        }
+
+        tr.active-row td {
+            background-color: #2e3b2f !important; 
+            color: #fff;
+            border-top: 2px solid #4CAF50;
+            border-bottom: 2px solid #4CAF50;
+        }
+
+        /* Editable Cells */
+        .editable-cell { cursor: pointer; border-radius: 4px; transition: background 0.2s; }
+        .editable-cell:hover { background-color: #3a3a3a; color: #fff; }
+        .editable-cell input {
+            width: 100%;
+            background: #111;
+            border: 1px solid #4CAF50;
+            color: white;
+            padding: 4px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        /* --- UPDATED COLUMN WIDTHS --- */
+        /* Adjusted widths to fix the gap issues */
+        .col-time { width: 85px; color: #aaa; font-variant-numeric: tabular-nums; }
+        .col-len  { width: 65px; color: #aaa; font-variant-numeric: tabular-nums; }
+        
+        /* Give ITEM more space so it pushes BPM/Key to the right naturally */
+        .col-item { width: 40%; } 
+        
+        /* Tighten these up */
+        .col-bpm  { width: 60px; color: #888; font-size: 0.9em; text-align: center; }
+        .col-key  { width: 50px; color: #888; font-weight: bold; font-size: 0.9em; text-align: center; }
+        
+        /* Details gets whatever is left */
+        .col-details { width: auto; color: #888; font-style: italic; font-size: 0.9em; white-space: nowrap; }
+
+        .type-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; }
+        .type-song { background-color: #4CAF50; } 
+        .type-speaker { background-color: #2196F3; } 
+        .type-media { background-color: #FF9800; } 
+        
+    </style>
+</head>
+<body>
+
+    <div class="header-container">
+        <h2>Sunday Service: Dec 21, 2025</h2>
+        <div class="controls">
+            <button class="btn-reset" onclick="resetAllTimes()">Reset Time</button>
+            <div id="live-clock">00:00:00 AM</div>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th></th> <th class="col-time">Time</th>
+                <th class="col-len">Length</th>
+                <th class="col-item">Item</th>
+                <th class="col-bpm">BPM</th>
+                <th class="col-key">Key</th>
+                <th class="col-details">Details / People / Notes</th>
+            </tr>
+        </thead>
+        <tbody id="schedule-body">
+            </tbody>
+    </table>
+
+    <script>
+        const SERVICE_START_TIME = "10:00"; 
+        let scheduleData = []; 
+        let dragSrcEl = null; 
+
+        async function loadSchedule() {
+            try {
+                const response = await fetch('http://localhost:3000/service-order?date=2025-12-21');
+                const items = await response.json();
+                renderTable(items);
+            } catch (error) {
+                console.error("Error loading schedule:", error);
+            }
+        }
+
+        function renderTable(items) {
+            const tbody = document.getElementById('schedule-body');
+            tbody.innerHTML = ''; 
+            scheduleData = []; 
+
+            let currentTime = new Date(); 
+            const [hours, mins] = SERVICE_START_TIME.split(':');
+            currentTime.setHours(hours, mins, 0, 0);
+
+            items.forEach((item, index) => {
+                const startTime = new Date(currentTime);
+                currentTime.setSeconds(currentTime.getSeconds() + item.duration_seconds);
+                const endTime = new Date(currentTime);
+
+                const rowId = `row-${index}`;
+                const isHeader = item.item_type === 'header';
+                const rowClass = isHeader ? 'is-header' : '';
+                
+                scheduleData.push({ ...item, id: item.id, rowId: rowId, start: startTime, end: endTime });
+
+                let rowContent = '';
+                const dragHandle = `<td class="handle-col">☰</td>`;
+
+                if (isHeader) {
+                    rowContent = `
+                        ${dragHandle}
+                        <td colspan="6">${item.title}</td>
+                    `;
+                } else {
+                    rowContent = `
+                        ${dragHandle}
+                        <td class="col-time">${formatTime(startTime)}</td>
+                        
+                        <td class="col-len editable-cell" 
+                            onclick="editField(this, ${item.id}, 'duration_seconds', '${formatDuration(item.duration_seconds)}')">
+                            ${formatDuration(item.duration_seconds)}
+                        </td>
+                        
+                        <td class="col-item">
+                            <span class="type-indicator type-${item.item_type}"></span>
+                            <strong>${item.title}</strong>
+                        </td>
+
+                        <td class="col-bpm editable-cell" 
+                            onclick="editField(this, ${item.id}, 'bpm', '${item.bpm || ''}')">
+                            ${item.bpm || '-'}
+                        </td>
+
+                        <td class="col-key editable-cell" 
+                            onclick="editField(this, ${item.id}, 'song_key', '${item.song_key || ''}')">
+                            ${item.song_key || '-'}
+                        </td>
+
+                        <td class="col-details editable-cell" 
+                            onclick="editField(this, ${item.id}, 'notes', '${item.notes || ''}')">
+                            ${item.notes || '<span style="opacity:0.3">Add details...</span>'}
+                        </td>
+                    `;
+                }
+
+                const tr = document.createElement('tr');
+                tr.id = rowId;
+                tr.className = rowClass;
+                tr.innerHTML = rowContent;
+                
+                tr.setAttribute('draggable', true);
+                tr.setAttribute('data-index', index); 
+                tr.addEventListener('dragstart', handleDragStart);
+                tr.addEventListener('dragover', handleDragOver);
+                tr.addEventListener('drop', handleDrop);
+                tr.addEventListener('dragend', handleDragEnd);
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- GENERIC EDIT FUNCTION ---
+        function editField(cell, itemId, fieldName, currentVal) {
+            if (cell.querySelector('input')) return; 
+            
+            if (currentVal === 'undefined') currentVal = '';
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentVal;
+            
+            setTimeout(() => input.select(), 10);
+
+            cell.innerHTML = '';
+            cell.appendChild(input);
+            input.focus();
+
+            const save = async () => {
+                let newVal = input.value;
+                let payload = {};
+
+                if (fieldName === 'duration_seconds') {
+                    const seconds = parseDuration(newVal);
+                    if (seconds === null) {
+                        alert("Invalid Time! Use MM:SS");
+                        loadSchedule(); 
+                        return;
+                    }
+                    payload[fieldName] = seconds;
+                } else {
+                    payload[fieldName] = newVal;
+                }
+
+                await sendUpdate(itemId, payload);
+            };
+
+            input.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    input.blur(); 
+                } else if (e.key === 'Escape') {
+                    loadSchedule(); 
+                }
+            };
+            
+            input.onblur = () => save();
+        }
+
+        async function sendUpdate(id, updates) {
+            try {
+                await fetch('http://localhost:3000/update-item', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: id, updates: updates })
+                });
+                loadSchedule(); 
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function resetAllTimes() {
+            if (!confirm("Reset all times to 0:00?")) return;
+            await fetch('http://localhost:3000/reset-durations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ date: '2025-12-21' }) 
+            });
+            loadSchedule();
+        }
+
+        function handleDragStart(e) {
+            this.style.opacity = '0.4';
+            dragSrcEl = this;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
+        }
+        function handleDragOver(e) {
+            if (e.preventDefault) e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            this.classList.add('drag-over');
+            return false;
+        }
+        function handleDragEnd(e) {
+            this.style.opacity = '1';
+            document.querySelectorAll('tr').forEach(row => row.classList.remove('drag-over'));
+        }
+        async function handleDrop(e) {
+            e.stopPropagation();
+            if (dragSrcEl !== this) {
+                const oldIndex = parseInt(dragSrcEl.getAttribute('data-index'));
+                const newIndex = parseInt(this.getAttribute('data-index'));
+                const movedItem = scheduleData[oldIndex];
+                scheduleData.splice(oldIndex, 1);
+                scheduleData.splice(newIndex, 0, movedItem);
+                
+                renderTable(scheduleData); 
+
+                const updatePayload = scheduleData.map((item, index) => ({
+                    id: item.id,
+                    sort_order: index + 1
+                }));
+
+                await fetch('http://localhost:3000/reorder-service', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ items: updatePayload })
+                });
+            }
+            return false;
+        }
+
+        function parseDuration(str) {
+            const parts = str.split(':');
+            if (parts.length !== 2) return null;
+            return (parseInt(parts[0]) * 60) + parseInt(parts[1]);
+        }
+        function formatTime(date) { return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
+        function formatDuration(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        }
+        
+        function startLiveClock() {
+            const clockEl = document.getElementById('live-clock');
+            setInterval(() => {
+                const now = new Date();
+                clockEl.innerText = now.toLocaleTimeString();
+                scheduleData.forEach(item => {
+                    const row = document.getElementById(item.rowId);
+                    if (row) {
+                        if (now >= item.start && now < item.end) row.classList.add('active-row');
+                        else row.classList.remove('active-row');
+                    }
+                });
+            }, 1000);
+        }
+
+        loadSchedule();
+        startLiveClock();
+    </script>
+
+</body>
+</html>
