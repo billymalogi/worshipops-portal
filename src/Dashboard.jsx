@@ -16,13 +16,14 @@ import ProfileSettings from './components/ProfileSettings';
 import OrgSettings from './components/OrgSettings';
 import BillingSettings from './components/BillingSettings';
 import SupportWidget from './components/SupportWidget';
+import MyScheduleView from './components/MyScheduleView';
 
 // --- ICONS ---
 import {
   Trash2, Plus, Calendar, Music, User,
   LayoutGrid, Sun, Moon,
   LogOut, Folder, ArrowLeft, Users, FolderInput, Zap,
-  Grid3x3, Settings, LayoutTemplate, Monitor
+  Grid3x3, Settings, LayoutTemplate, Monitor, CalendarCheck, Bell, X
 } from 'lucide-react';
 
 // --- DEFAULT VERSES ---
@@ -58,18 +59,21 @@ const pickVerse = (pool) => pool[Math.floor(Math.random() * pool.length)];
 
 // --- SHARED NAV STRUCTURE ---
 const NAV_CATEGORIES = {
+  myschedule: { first: 'myschedule', items: [
+    { id: 'myschedule',  label: 'My Schedule', icon: CalendarCheck },
+  ]},
   planner:    { first: 'dashboard',  items: [
-    { id: 'dashboard',  label: 'Plans',      icon: LayoutGrid },
-    { id: 'templates',  label: 'Templates',  icon: LayoutTemplate },
-    { id: 'songs',      label: 'Songs',      icon: Music },
-    { id: 'team',       label: 'Teams',      icon: Users },
+    { id: 'dashboard',   label: 'Plans',      icon: LayoutGrid },
+    { id: 'templates',   label: 'Templates',  icon: LayoutTemplate },
+    { id: 'songs',       label: 'Songs',      icon: Music },
+    { id: 'team',        label: 'Teams',      icon: Users },
   ]},
   production: { first: 'lighting', items: [
     { id: 'lighting',   label: 'Lighting',   icon: Zap },
     { id: 'stage',      label: 'Stage View', icon: Monitor },
     { id: 'rehearsals', label: 'Rehearsals', icon: Calendar },
   ]},
-  settings:   { first: 'profile', items: [
+  admin:      { first: 'profile', items: [
     { id: 'profile',      label: 'Profile',       icon: User },
     { id: 'organization', label: 'Organization',  icon: FolderInput },
     { id: 'billing',      label: 'Billing',       icon: Settings },
@@ -83,31 +87,24 @@ const getActiveCategory = (tab) =>
 
 // --- ROLE-BASED TAB PERMISSIONS ---
 const ROLE_TABS = {
-  admin:            ['dashboard','templates','songs','team','lighting','stage','rehearsals','profile','organization','billing'],
-  leader:           ['dashboard','templates','songs','team','lighting','stage','rehearsals','profile','organization'],
-  campus_leader:    ['dashboard','team','profile'],
-  editor:           ['dashboard','templates','songs','team','lighting','stage','rehearsals','profile','organization'],
-  viewer:           [],
-  scheduled_viewer: [],
+  admin:            ['dashboard','templates','songs','team','myschedule','lighting','stage','rehearsals','profile','organization','billing'],
+  leader:           ['dashboard','templates','songs','team','myschedule','lighting','stage','rehearsals','profile','organization'],
+  campus_leader:    ['dashboard','team','myschedule','profile'],
+  editor:           ['dashboard','templates','songs','team','myschedule','lighting','stage','rehearsals','profile','organization'],
+  viewer:           ['myschedule'],
+  scheduled_viewer: ['myschedule'],
 };
-const ROLE_CAN_TOGGLE = { admin: true, leader: true, campus_leader: true, editor: true, viewer: false, scheduled_viewer: false };
 const ROLE_LABELS = { admin: 'Admin', leader: 'Leader', campus_leader: 'Campus Leader', editor: 'Editor', viewer: 'Volunteer', scheduled_viewer: 'Volunteer' };
 const getAllowedTabs = (role) => ROLE_TABS[role] ?? [];
 
-// --- CATEGORY ACCENT COLORS ---
-// accent = active tab text/underline
-// tabBgLight/Dark = subtle bg on the active main-nav button
-// navBgLight/Dark = subnav bar background
-const CAT_COLORS = {
-  planner:    { accent: '#b45309', tabBgLight: '#fef9c3', tabBgDark: 'rgba(217,119,6,0.22)',  navBgLight: '#fef9c3', navBgDark: '#1c1400' },
-  production: { accent: '#9b1c1c', tabBgLight: '#fce7e7', tabBgDark: 'rgba(155,28,28,0.25)',  navBgLight: '#fce7e7', navBgDark: '#1a0004' },
-  settings:   { accent: '#0f766e', tabBgLight: '#ccfbf1', tabBgDark: 'rgba(15,118,110,0.22)', navBgLight: '#ccfbf1', navBgDark: '#001512' },
-};
+// Active tab highlight: lighter in dark mode, darker in light mode
+const tabActiveBg  = (isDark) => isDark ? '#1F1F22' : '#E4E4E7';
+const subNavBg     = (isDark) => isDark ? '#0A0A0A' : '#F4F4F5';
 
 // --- HEADER COMPONENT ---
-const CAT_DISPLAY = { planner: 'Planner', production: 'Production', settings: 'Settings' };
+const CAT_DISPLAY = { myschedule: 'My Schedule', planner: 'Planner', production: 'Production', admin: 'Admin' };
 
-const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, setSelectedService, refreshData, onLogout, session, userRole, realRole, toggleViewMode }) => {
+const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, setSelectedService, refreshData, onLogout, session, realRole }) => {
   const activeCategory = getActiveCategory(activeTab);
   const allowed = getAllowedTabs(realRole);
 
@@ -147,26 +144,25 @@ const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, se
       <div style={{ display: 'flex', height: '100%', alignItems: 'stretch' }}>
         {visibleCats.map(cat => {
           const isActive = activeCategory === cat;
-          const cc = CAT_COLORS[cat];
           return (
             <button
               key={cat}
               onClick={() => handleCategoryClick(cat)}
               style={{
-                background: isActive ? (isDarkMode ? cc.tabBgDark : cc.tabBgLight) : 'transparent',
+                background: isActive ? tabActiveBg(isDarkMode) : 'transparent',
                 border: 'none',
-                borderBottom: `2px solid ${isActive ? cc.accent : 'transparent'}`,
+                borderBottom: `2px solid ${isActive ? colors.heading : 'transparent'}`,
                 cursor: 'pointer',
                 padding: '0 24px',
                 fontSize: '14px',
                 fontWeight: isActive ? '700' : '500',
-                color: isActive ? cc.accent : colors.text,
+                color: isActive ? colors.heading : colors.text,
                 textTransform: 'capitalize',
                 transition: 'all 0.15s',
                 whiteSpace: 'nowrap',
               }}
               onMouseEnter={e => {
-                if (!isActive) { e.currentTarget.style.background = isDarkMode ? cc.tabBgDark : cc.tabBgLight; e.currentTarget.style.color = cc.accent; }
+                if (!isActive) { e.currentTarget.style.background = tabActiveBg(isDarkMode); e.currentTarget.style.color = colors.heading; }
               }}
               onMouseLeave={e => {
                 if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = colors.text; }
@@ -184,15 +180,6 @@ const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, se
         <span style={{ fontSize: '11px', fontWeight: '600', color: colors.text, opacity: 0.6, padding: '2px 8px', border: `1px solid ${colors.border}`, borderRadius: '12px', whiteSpace: 'nowrap' }}>
           {ROLE_LABELS[realRole] || realRole}
         </span>
-        {/* View toggle — only for roles that can see both views */}
-        {ROLE_CAN_TOGGLE[realRole] && (
-          <button
-            onClick={toggleViewMode}
-            style={{ padding: '5px 12px', fontSize: '12px', fontWeight: '600', borderRadius: '6px', border: `1px solid ${colors.border}`, background: colors.bgSolid, color: colors.text, cursor: 'pointer', whiteSpace: 'nowrap' }}
-          >
-            {userRole === 'admin' ? 'Volunteer View' : 'Admin View'}
-          </button>
-        )}
         <button onClick={() => setIsDarkMode(!isDarkMode)} style={{ background: 'transparent', color: colors.text, border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
           {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
         </button>
@@ -208,11 +195,11 @@ const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, se
 const SubNav = ({ colors, activeTab, setActiveTab, setSelectedService, isDarkMode, realRole }) => {
   const activeCategory = getActiveCategory(activeTab);
   const allowed = getAllowedTabs(realRole);
-  const cc = CAT_COLORS[activeCategory] || CAT_COLORS.planner;
   const allItems = NAV_CATEGORIES[activeCategory]?.items || [];
-  // Only show items the user's role can access
   const items = allItems.filter(item => allowed.includes(item.id));
-  const navBg = isDarkMode ? cc.navBgDark : cc.navBgLight;
+
+  // Hide subnav for single-item categories (e.g. My Schedule)
+  if (items.length <= 1) return null;
 
   return (
     <div style={{
@@ -223,7 +210,7 @@ const SubNav = ({ colors, activeTab, setActiveTab, setSelectedService, isDarkMod
       padding: '0 30px',
       height: '44px',
       borderBottom: `1px solid ${colors.border}`,
-      background: navBg,
+      background: subNavBg(isDarkMode),
       position: 'sticky',
       top: '64px',
       zIndex: 199,
@@ -241,18 +228,18 @@ const SubNav = ({ colors, activeTab, setActiveTab, setSelectedService, isDarkMod
               padding: '6px 14px',
               borderRadius: '6px',
               border: 'none',
-              background: isActive ? (isDarkMode ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.10)') : 'transparent',
-              color: isActive ? cc.accent : (isDarkMode ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.5)'),
+              background: isActive ? tabActiveBg(isDarkMode) : 'transparent',
+              color: isActive ? colors.heading : colors.text,
               fontWeight: isActive ? '700' : '500',
               fontSize: '13px',
               cursor: 'pointer',
               transition: 'all 0.15s',
             }}
             onMouseEnter={(e) => {
-              if (!isActive) { e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'; e.currentTarget.style.color = cc.accent; }
+              if (!isActive) { e.currentTarget.style.background = tabActiveBg(isDarkMode); e.currentTarget.style.color = colors.heading; }
             }}
             onMouseLeave={(e) => {
-              if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = isDarkMode ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.5)'; }
+              if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = colors.text; }
             }}
           >
             <Icon size={13} />
@@ -264,22 +251,19 @@ const SubNav = ({ colors, activeTab, setActiveTab, setSelectedService, isDarkMod
   );
 };
 
+
 // --- MAIN DASHBOARD ---
 export default function Dashboard() {
   const router = useNavigate();
   const [session, setSession] = useState(null); 
   const [orgId, setOrgId] = useState(null); 
 
-  const [realRole, setRealRole] = useState('viewer'); // Remembers true DB power
-  const [userRole, setUserRole] = useState('viewer'); // Controls the current view
-  const toggleViewMode = () => {
-    if (realRole !== 'admin') return; 
-    setUserRole(prevRole => prevRole === 'admin' ? 'viewer' : 'admin');
-  };
+  const [realRole, setRealRole] = useState('viewer');
+  const userRole = realRole; // always reflect true role — no volunteer toggle
 
   const [activeTab, setActiveTab] = useState('dashboard'); 
   const [currentFolder, setCurrentFolder] = useState(null); 
-  const [isDarkMode, setIsDarkMode] = useState(false); 
+  const [isDarkMode, setIsDarkMode] = useState(true);
   
   // Data State
   const [songs, setSongs] = useState([]); 
@@ -294,18 +278,19 @@ export default function Dashboard() {
   const [orgName, setOrgName] = useState('');
   const [customVerses, setCustomVerses] = useState([]);
   const [verseOfDay, setVerseOfDay] = useState(() => pickVerse(DEFAULT_VERSES));
+  const [alertOverlay, setAlertOverlay] = useState(null); // { message, sender_name, serviceName, thread }
 
   const colors = {
-    bg: isDarkMode
-      ? 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #1e293b 100%)'
-      : 'linear-gradient(135deg, #f8fafc 0%, #e0e7ff 50%, #f1f5f9 100%)',
-    bgSolid: isDarkMode ? '#111827' : '#f3f4f6',
-    card: isDarkMode ? '#1f2937' : '#ffffff',
-    text: isDarkMode ? '#9ca3af' : '#4b5563',
-    heading: isDarkMode ? '#f9fafb' : '#111827',
-    border: isDarkMode ? '#374151' : '#e5e7eb',
-    hover: isDarkMode ? '#374151' : '#f3f4f6',
-    primary: '#3b82f6', accent: '#10b981', danger: '#ef4444',
+    bg:      isDarkMode ? '#000000' : '#F7F8FA',
+    bgSolid: isDarkMode ? '#0A0A0A' : '#FFFFFF',
+    card:    isDarkMode ? '#111111' : '#FFFFFF',
+    text:    isDarkMode ? '#A1A1AA' : '#52525B',
+    heading: isDarkMode ? '#EDEDED' : '#09090B',
+    border:  isDarkMode ? '#27272A' : '#E4E4E7',
+    hover:   isDarkMode ? '#1F1F22' : '#F4F4F5',
+    primary: '#0070F3',
+    accent:  '#10B981',
+    danger:  '#EF4444',
   };
 
   // Helper function to format TIME values (e.g., "09:00:00" -> "9:00 AM")
@@ -347,6 +332,13 @@ export default function Dashboard() {
     return () => subscription.unsubscribe();
   }, [router]);
 
+  // --- ALERT OVERLAY: listen for cross-screen alert events from ChatPanel ---
+  useEffect(() => {
+    const handler = (e) => setAlertOverlay(e.detail);
+    window.addEventListener('worship-alert', handler);
+    return () => window.removeEventListener('worship-alert', handler);
+  }, []);
+
   // --- 2. FETCH ORG DATA (The "Data Loss" Fix) ---
   const fetchOrgData = async (userId) => {
       
@@ -364,8 +356,12 @@ export default function Dashboard() {
       if (data) {
           console.log("Organization Found:", data.organization_id);
           setOrgId(data.organization_id);
-          setRealRole(data.role || 'viewer'); // <--- ADD THIS
-          setUserRole(data.role || 'viewer');
+          const role = data.role || 'viewer';
+          setRealRole(role);
+          // Volunteers only have myschedule — land them there directly
+          if (ROLE_TABS[role]?.length === 1 && ROLE_TABS[role][0] === 'myschedule') {
+            setActiveTab('myschedule');
+          }
           refreshAllData(data.organization_id);
       } else {
           console.warn("User has no organization linked!");
@@ -423,6 +419,45 @@ export default function Dashboard() {
   return (
     <div style={{ minHeight: '100vh', fontFamily: 'sans-serif', background: colors.bg, color: colors.text }}>
 
+      {/* ALERT OVERLAY — shown on any screen when an alert message is sent */}
+      {alertOverlay && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: '60px', background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}>
+          <div style={{ width: 'min(480px, 92vw)', background: isDarkMode ? '#111111' : '#ffffff', borderRadius: '16px', border: '2px solid #ef4444', boxShadow: '0 0 0 4px rgba(239,68,68,0.15), 0 24px 60px rgba(0,0,0,0.5)', overflow: 'hidden', fontFamily: 'sans-serif' }}>
+            {/* Red header */}
+            <div style={{ background: '#ef4444', padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Bell size={16} color="#fff" />
+                <span style={{ fontWeight: '800', fontSize: '13px', color: '#fff', textTransform: 'uppercase', letterSpacing: '1px' }}>Alert</span>
+                {alertOverlay.serviceName && (
+                  <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)', fontWeight: '400' }}>— {alertOverlay.serviceName}</span>
+                )}
+              </div>
+              <button onClick={() => setAlertOverlay(null)} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%', width: '26px', height: '26px', cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <X size={14} />
+              </button>
+            </div>
+            {/* Body */}
+            <div style={{ padding: '20px 22px 24px' }}>
+              <div style={{ fontSize: '12px', color: colors.text, marginBottom: '10px', opacity: 0.7 }}>
+                From <strong style={{ color: colors.heading }}>{alertOverlay.sender_name}</strong>
+                {alertOverlay.thread && alertOverlay.thread !== 'global' && (
+                  <span> in <strong style={{ color: colors.heading }}>{alertOverlay.thread}</strong></span>
+                )}
+              </div>
+              <div style={{ fontSize: '16px', fontWeight: '600', color: colors.heading, lineHeight: '1.6' }}>
+                {alertOverlay.message}
+              </div>
+              <button
+                onClick={() => setAlertOverlay(null)}
+                style={{ marginTop: '20px', width: '100%', padding: '10px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* VERSE STATUS BAR */}
       <div style={{
         background: isDarkMode ? '#92400e' : '#f97316',
@@ -460,16 +495,20 @@ export default function Dashboard() {
         )}
       </div>
 
-      <Header colors={colors} activeTab={activeTab} setActiveTab={setActiveTab} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} setSelectedService={setSelectedService} refreshData={() => refreshAllData(orgId)} onLogout={handleLogout} session={session} userRole={userRole} realRole={realRole} toggleViewMode={toggleViewMode} />
+      <Header colors={colors} activeTab={activeTab} setActiveTab={setActiveTab} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} setSelectedService={setSelectedService} refreshData={() => refreshAllData(orgId)} onLogout={handleLogout} session={session} realRole={realRole} />
 
       <SubNav colors={colors} activeTab={activeTab} setActiveTab={setActiveTab} setSelectedService={setSelectedService} isDarkMode={isDarkMode} realRole={realRole} />
 
-      {/* MAIN CONTENT */}
-      <div style={{ display: 'flex', height: 'calc(100vh - 137px)' }}>
+      {/* MAIN CONTENT - height adjusts: 64px header + optional 44px subnav */}
+      <div style={{ display: 'flex', height: `calc(100vh - ${activeTab === 'myschedule' ? 93 : 137}px)` }}>
 
         {/* Main Content Area */}
         <div style={{ flex: 1, overflow: 'auto' }}>
           {activeTab === 'team' && <TeamManager orgId={orgId} isDarkMode={isDarkMode} userRole={userRole} services={services} />}
+
+          {activeTab === 'myschedule' && (
+            <MyScheduleView session={session} isDarkMode={isDarkMode} colors={colors} />
+          )}
 
           {activeTab === 'lighting' && <LightingController isDarkMode={isDarkMode} userRole={userRole} />}
 
@@ -528,12 +567,12 @@ export default function Dashboard() {
 
 
       {activeTab === 'dashboard' && !selectedService && !selectedTemplate && (
-        <div style={{ display: 'flex', height: 'calc(100vh - 64px)' }}>
+        <div style={{ display: 'flex', height: 'calc(100vh - 137px)' }}>
 
           {/* LEFT SIDEBAR - Folders & Calendar */}
           <div style={{
             width: '280px',
-            background: isDarkMode ? '#0d1117' : '#f8f9fa',
+            background: isDarkMode ? '#0a0a0a' : '#f8f9fa',
             borderRight: `1px solid ${colors.border}`,
             display: 'flex',
             flexDirection: 'column',
@@ -543,7 +582,7 @@ export default function Dashboard() {
             {/* Folders Header */}
             <div style={{
               padding: '20px 20px 15px',
-              borderBottom: `1px solid ${isDarkMode ? '#21262d' : '#e1e4e8'}`
+              borderBottom: `1px solid ${isDarkMode ? '#111111' : '#e1e4e8'}`
             }}>
               <div style={{
                 display: 'flex',
@@ -742,11 +781,11 @@ export default function Dashboard() {
                 {currentFolder && (
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     {/* View Toggle */}
-                    <div style={{ display: 'flex', gap: '4px', background: isDarkMode ? '#1f2937' : '#f3f4f6', padding: '4px', borderRadius: '6px' }}>
+                    <div style={{ display: 'flex', gap: '4px', background: isDarkMode ? '#1f1f22' : '#f3f4f6', padding: '4px', borderRadius: '6px' }}>
                       <button
                         onClick={() => setFolderViewMode('list')}
                         style={{
-                          background: folderViewMode === 'list' ? (isDarkMode ? '#374151' : 'white') : 'transparent',
+                          background: folderViewMode === 'list' ? (isDarkMode ? '#27272a' : 'white') : 'transparent',
                           color: folderViewMode === 'list' ? colors.heading : colors.text,
                           border: 'none',
                           padding: '6px 12px',
@@ -764,7 +803,7 @@ export default function Dashboard() {
                       <button
                         onClick={() => setFolderViewMode('matrix')}
                         style={{
-                          background: folderViewMode === 'matrix' ? (isDarkMode ? '#374151' : 'white') : 'transparent',
+                          background: folderViewMode === 'matrix' ? (isDarkMode ? '#27272a' : 'white') : 'transparent',
                           color: folderViewMode === 'matrix' ? colors.heading : colors.text,
                           border: 'none',
                           padding: '6px 12px',
@@ -987,6 +1026,7 @@ export default function Dashboard() {
                 onCreateService={handleQuickCreateService}
                 onServiceClick={openService}
                 userRole={userRole}
+                session={session}
             />
             </div>
           )}
@@ -1004,8 +1044,8 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* SUPPORT WIDGET — floating contact buttons on settings pages */}
-      {getActiveCategory(activeTab) === 'settings' && <SupportWidget />}
+      {/* SUPPORT WIDGET - floating contact buttons on admin pages */}
+      {getActiveCategory(activeTab) === 'admin' && <SupportWidget />}
     </div>
   );
 }

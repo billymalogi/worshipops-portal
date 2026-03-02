@@ -23,7 +23,7 @@ export default function VolunteerSchedule({ service, planItems, onBack }) {
 
       {/* Service Card */}
       <div style={{background: 'white', padding: '24px', borderRadius: '16px', border: '1px solid #e5e7eb', marginBottom: '32px', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'}}>
-        <h1 style={{fontSize: '24px', fontWeight: 'bold', color: '#111827', marginBottom: '8px', marginTop: 0}}>{service.name}</h1>
+        <h1 style={{fontSize: '24px', fontWeight: 'bold', color: '#111111', marginBottom: '8px', marginTop: 0}}>{service.name}</h1>
         <div style={{display: 'flex', gap: '16px', color: '#4b5563', fontSize: '14px', fontWeight: '500'}}>
             <div style={{display: 'flex', alignItems: 'center', gap: '4px'}}><Calendar size={16}/> {new Date(service.date).toLocaleDateString()}</div>
             <div style={{display: 'flex', alignItems: 'center', gap: '4px'}}><Clock size={16}/> {new Date(service.date).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'})}</div>
@@ -46,7 +46,7 @@ export default function VolunteerSchedule({ service, planItems, onBack }) {
             if (isHeader) {
                 return (
                     <div key={i} style={{marginTop: '24px', marginBottom: '8px', paddingTop: '16px', paddingBottom: '8px', borderBottom: '1px solid #e5e7eb'}}>
-                        <h3 style={{fontSize: '14px', fontWeight: 'bold', color: '#111827', textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0}}>{item.title}</h3>
+                        <h3 style={{fontSize: '14px', fontWeight: 'bold', color: '#111111', textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0}}>{item.title}</h3>
                     </div>
                 );
             }
@@ -55,7 +55,7 @@ export default function VolunteerSchedule({ service, planItems, onBack }) {
                 <div key={i} style={{background: 'white', padding: '16px', borderRadius: '12px', border: '1px solid #f3f4f6', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'}}>
                     <div style={{width: '60px', fontSize: '14px', fontFamily: 'monospace', fontWeight: 'bold', color: '#6b7280', flexShrink: 0}}>{startAt}</div>
                     <div style={{flex: 1, minWidth: 0}}>
-                        <div style={{fontWeight: 'bold', color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{item.title}</div>
+                        <div style={{fontWeight: 'bold', color: '#111111', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{item.title}</div>
                         {(item.notes || item.role) && (
                             <div style={{fontSize: '12px', color: '#6b7280', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
                                 {item.role && <span style={{fontWeight: '500', color: '#2563eb', marginRight: '8px'}}>{item.role}</span>}

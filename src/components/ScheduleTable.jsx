@@ -4,10 +4,12 @@ import {
   GripVertical, Plus, Trash2, X, Save, Music,
   ChevronDown, ChevronRight, CheckCircle,
   Users, Monitor, LayoutTemplate, Calendar, Search,
-  Palette, Loader2, Eye, Video, FileText, ArrowLeft, Filter
+  Palette, Loader2, Eye, Video, FileText, ArrowLeft, Filter,
+  MessageSquare
 } from 'lucide-react';
 import EditableTitle from './EditableTitle';
 import CalendarWidget from './CalendarWidget';
+import ChatPanel from './ChatPanel';
 
 // Music Keys & Chords for Key Dropdown
 const MUSIC_KEYS = [
@@ -35,8 +37,8 @@ const MUSIC_KEYS = [
 export default function ScheduleTable({
     serviceData, isTemplate, availableSongs = [], teamMembers = [],
     onBack, onSave, isDarkMode, orgId, onCreateService,
-    userRole, // <--- NEW: Role passed down from Dashboard
-    onServiceClick // <--- NEW: Callback to open another service
+    userRole, session,
+    onServiceClick
 }) {
   // --- PERMISSIONS CHECK ---
   const canEdit = userRole === 'admin' || userRole === 'editor';
@@ -92,28 +94,32 @@ export default function ScheduleTable({
   const [filterBySkill, setFilterBySkill] = useState(true);
   const [newRoleName, setNewRoleName] = useState('');
 
+  // Chat State
+  const [showChat,   setShowChat]   = useState(false);
+  const [chatThread, setChatThread] = useState('global');
+
   // Drag State
-  const [draggedItemIndex, setDraggedItemIndex] = useState(null); 
-  const [draggedNewItem, setDraggedNewItem] = useState(null);     
+  const [draggedItemIndex, setDraggedItemIndex] = useState(null);
+  const [draggedNewItem, setDraggedNewItem] = useState(null);
   const [dropTargetIndex, setDropTargetIndex] = useState(null);   
 
   // --- COLORS - SOLID BACKGROUNDS FOR READABILITY ---
   const colors = {
-    bg: isDarkMode ? '#111827' : '#ffffff',
-    bgSolid: isDarkMode ? '#111827' : '#ffffff',
-    text: isDarkMode ? '#e5e7eb' : '#374151',
+    bg: isDarkMode ? '#111111' : '#ffffff',
+    bgSolid: isDarkMode ? '#111111' : '#ffffff',
+    text: isDarkMode ? '#e5e7eb' : '#27272a',
     subText: isDarkMode ? '#9ca3af' : '#6b7280',
-    border: isDarkMode ? '#374151' : '#e5e7eb',
-    hover: isDarkMode ? '#1f2937' : '#f9fafb',
-    inputBg: isDarkMode ? '#1f2937' : '#ffffff',
+    border: isDarkMode ? '#27272a' : '#e5e7eb',
+    hover: isDarkMode ? '#1f1f22' : '#f9fafb',
+    inputBg: isDarkMode ? '#1f1f22' : '#ffffff',
     accent: '#3b82f6',
     danger: '#ef4444',
     success: '#10b981',
-    dragBg: isDarkMode ? '#374151' : '#e5e7eb',
-    popover: isDarkMode ? '#1f2937' : '#ffffff',
+    dragBg: isDarkMode ? '#27272a' : '#e5e7eb',
+    popover: isDarkMode ? '#1f1f22' : '#ffffff',
     dropHighlight: isDarkMode ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)',
-    card: isDarkMode ? '#111827' : '#ffffff',
-    heading: isDarkMode ? '#f9fafb' : '#111827'
+    card: isDarkMode ? '#111111' : '#ffffff',
+    heading: isDarkMode ? '#f9fafb' : '#111111'
   };
 
   // Helper function to format TIME values (e.g., "09:00:00" -> "9:00 AM")
@@ -301,12 +307,13 @@ export default function ScheduleTable({
   });
 
   return (
+    <>
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', color: colors.text, userSelect: isResizing ? 'none' : 'auto', cursor: isResizing ? 'col-resize' : 'default' }}>
       
       {/* TOP BAR */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '20px', borderBottom: `1px solid ${colors.border}` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <button onClick={onBack} style={{ background: 'transparent', border: `1px solid ${colors.border}`, padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', color: colors.text }}>← Back</button>
+          <button onClick={onBack} style={{ background: 'transparent', border: `1px solid ${colors.border}`, padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', color: colors.text }}>â† Back</button>
           <div>
             {canEdit ? (
                 <EditableTitle initialTitle={planName} onSave={setPlanName} isDarkMode={isDarkMode} />
@@ -324,7 +331,18 @@ export default function ScheduleTable({
              <div style={{position:'relative'}}><button onClick={() => setShowViewMenu(!showViewMenu)} style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.text, padding: '10px', borderRadius: '6px', cursor: 'pointer', display:'flex', alignItems:'center' }}><Eye size={18} /></button>
                  {showViewMenu && (<div style={{position:'absolute', top:'100%', right:0, marginTop:'10px', width:'200px', background: colors.popover, border: `1px solid ${colors.border}`, borderRadius:'8px', boxShadow:'0 10px 15px -3px rgba(0,0,0,0.1)', padding:'15px', zIndex:50}}><label style={{display:'flex', justifyContent:'space-between', marginBottom:'8px', fontSize:'14px', cursor:'pointer'}}><span style={{display:'flex', gap:'5px', alignItems:'center'}}><Monitor size={14}/> Detail</span> <input type="checkbox" checked={visibleCols.detail} onChange={e=>setVisibleCols({...visibleCols, detail: e.target.checked})} /></label><label style={{display:'flex', justifyContent:'space-between', marginBottom:'0', fontSize:'14px', cursor:'pointer'}}><span style={{display:'flex', gap:'5px', alignItems:'center'}}><FileText size={14}/> Notes</span> <input type="checkbox" checked={visibleCols.notes} onChange={e=>setVisibleCols({...visibleCols, notes: e.target.checked})} /></label></div>)}</div>
              <button onClick={() => alert("Stage Mode")} style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.text, padding: '10px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', display:'flex', alignItems:'center', gap:'6px' }}><Monitor size={16} /> Stage Mode</button>
-             
+
+             {/* Chat button — only for real services, not templates */}
+             {!isTemplate && (
+               <button
+                 onClick={() => setShowChat(true)}
+                 title="Service Chat"
+                 style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.text, padding: '10px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', display:'flex', alignItems:'center', gap:'6px' }}
+               >
+                 <MessageSquare size={16} /> Chat
+               </button>
+             )}
+
              {/* Only Show Save if Editable */}
              <button onClick={handleMainSave} disabled={saveStatus === 'saving' || !canEdit} style={{ background: saveStatus === 'success' ? colors.success : (!canEdit ? colors.subText : colors.accent), color: 'white', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: canEdit ? 'pointer' : 'not-allowed', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', transition: 'background 0.3s ease', opacity: canEdit ? 1 : 0.5 }}>{saveStatus === 'saving' ? <><Loader2 size={18} className="animate-spin"/> Saving...</> : saveStatus === 'success' ? <><CheckCircle size={18} /> Saved!</> : <><Save size={18} /> Save</>}</button>
         </div>
@@ -413,7 +431,7 @@ export default function ScheduleTable({
                   </div>
                   <div style={{ flex: 1, overflowY: 'auto', minHeight:'200px' }} onDragOver={(e) => e.preventDefault()} onDrop={(e) => handleDrop(e, items.length)}>
                       {items.map((item, i) => {
-                          let rowBg = item.type === 'header' ? (item.color ? item.color : (isDarkMode ? '#374151' : '#f3f4f6')) : 'transparent';
+                          let rowBg = item.type === 'header' ? (item.color ? item.color : (isDarkMode ? '#27272a' : '#f3f4f6')) : 'transparent';
                           let rowColor = item.type === 'header' && item.color ? 'white' : colors.text;
                           if (draggedItemIndex === i) { rowBg = colors.dragBg; rowColor = colors.text; }
                           else if (dropTargetIndex === i && isDraggingAny) { rowBg = colors.dropHighlight; } 
@@ -442,6 +460,7 @@ export default function ScheduleTable({
                                   {/* TITLE */}
                                   <div style={{padding:'0 15px', fontWeight: '600', color: rowColor, display: 'flex', alignItems: 'center', gap: '10px', overflow:'hidden'}}>
                                     {item.type === 'header' ? (
+                                      <>
                                       <input
                                         readOnly={!canEdit}
                                         value={item.title || ''}
@@ -459,6 +478,16 @@ export default function ScheduleTable({
                                           pointerEvents: isDraggingAny ? 'none' : 'auto'
                                         }}
                                       />
+                                      {item.title && !isTemplate && (
+                                        <button
+                                          onClick={() => { setChatThread(item.title.trim()); setShowChat(true); }}
+                                          title={`Open ${item.title} chat`}
+                                          style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: item.color ? 'rgba(255,255,255,0.75)' : colors.subText, padding: '2px', flexShrink: 0, display: 'flex', alignItems: 'center', opacity: 0.7 }}
+                                        >
+                                          <MessageSquare size={13} />
+                                        </button>
+                                      )}
+                                      </>
                                     ) : (
                                       <input
                                         readOnly={!canEdit}
@@ -913,8 +942,8 @@ export default function ScheduleTable({
                                                        <div>
                                                            <div style={{fontWeight:'700', fontSize:'13px', color: colors.text}}>{m.name}</div>
                                                            <div style={{fontSize:'11px', color: colors.subText, display:'flex', gap:'8px', marginTop:'2px'}}>
-                                                               <span style={{color: colors.success}}>✔ {confirmedCount}</span>
-                                                               <span style={{color: colors.danger}}>✖ {neededCount}</span>
+                                                               <span style={{color: colors.success}}>âœ” {confirmedCount}</span>
+                                                               <span style={{color: colors.danger}}>âœ– {neededCount}</span>
                                                            </div>
                                                        </div>
                                                    </div>
@@ -970,6 +999,29 @@ export default function ScheduleTable({
           </div>
       </div>
     </div>
+
+    {/* CHAT PANEL */}
+    <ChatPanel
+      isOpen={showChat}
+      onClose={() => { setShowChat(false); setChatThread('global'); }}
+      service={serviceData}
+      orgId={orgId}
+      session={session}
+      userRole={userRole}
+      isDarkMode={isDarkMode}
+      initialThread={chatThread}
+      colors={{
+        bg:      isDarkMode ? '#111111' : '#ffffff',
+        card:    isDarkMode ? '#111111' : '#ffffff',
+        text:    isDarkMode ? '#a1a1aa' : '#52525b',
+        heading: isDarkMode ? '#ededed' : '#09090b',
+        border:  isDarkMode ? '#27272a' : '#e4e4e7',
+        primary: '#0070F3',
+        accent:  '#10B981',
+        danger:  '#EF4444',
+      }}
+    />
+    </>
   );
 }
 

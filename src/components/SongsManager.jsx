@@ -5,7 +5,7 @@ import {
   ExternalLink, BookOpen, Check, Edit2,
 } from 'lucide-react';
 
-// ─── 25 Public Domain Hymns ───────────────────────────────────────────────────
+// â”€â”€â”€ 25 Public Domain Hymns â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // All published before 1928 (US public domain) and authors deceased.
 const PD_HYMNS = [
   {
@@ -797,10 +797,10 @@ Our Maker Defender Redeemer and Friend`,
   },
 ];
 
-// ─── Key options for the dropdown ─────────────────────────────────────────────
+// â”€â”€â”€ Key options for the dropdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const KEY_OPTIONS = ['A', 'Bb', 'B', 'C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab'];
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function SongsManager({ songs, isDarkMode, userRole, orgId, onRefresh }) {
   const [selectedSong, setSelectedSong] = useState(null);
   const [editMode, setEditMode]         = useState(false);
@@ -817,13 +817,13 @@ export default function SongsManager({ songs, isDarkMode, userRole, orgId, onRef
   });
 
   const c = {
-    bg:       isDarkMode ? '#0d1117' : '#f8f9fa',
-    card:     isDarkMode ? '#161b22' : '#ffffff',
+    bg:       isDarkMode ? '#0a0a0a' : '#f8f9fa',
+    card:     isDarkMode ? '#0a0a0a' : '#ffffff',
     text:     isDarkMode ? '#8b949e' : '#6b7280',
-    heading:  isDarkMode ? '#f0f6fc' : '#111827',
-    border:   isDarkMode ? '#21262d' : '#e1e4e8',
+    heading:  isDarkMode ? '#f0f6fc' : '#111111',
+    border:   isDarkMode ? '#111111' : '#e1e4e8',
     hover:    isDarkMode ? '#1c2128' : '#f0f4f8',
-    input:    isDarkMode ? '#0d1117' : '#f9fafb',
+    input:    isDarkMode ? '#0a0a0a' : '#f9fafb',
     primary:  '#3b82f6',
     success:  '#10b981',
     warning:  '#f59e0b',
@@ -831,7 +831,7 @@ export default function SongsManager({ songs, isDarkMode, userRole, orgId, onRef
     muted:    isDarkMode ? '#6b7280' : '#9ca3af',
   };
 
-  // ── derived ──────────────────────────────────────────────────────────────────
+  // â”€â”€ derived â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const pdCount = useMemo(() => songs.filter(s => s.is_public_domain).length, [songs]);
 
   const filtered = useMemo(() => {
@@ -846,7 +846,7 @@ export default function SongsManager({ songs, isDarkMode, userRole, orgId, onRef
     return list;
   }, [songs, searchQuery, filterPD]);
 
-  // ── handlers ─────────────────────────────────────────────────────────────────
+  // â”€â”€ handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleAddSong = async () => {
     if (!form.title.trim()) return;
     const { error } = await supabase.from('songs').insert([{
@@ -915,18 +915,18 @@ export default function SongsManager({ songs, isDarkMode, userRole, orgId, onRef
     setEditMode(false);
   };
 
-  // ── reusable input style ──────────────────────────────────────────────────────
+  // â”€â”€ reusable input style â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const inp = {
     padding: '8px 10px', borderRadius: '6px',
     border: `1px solid ${c.border}`, background: c.input,
     color: c.heading, fontSize: '13px', outline: 'none', width: '100%', boxSizing: 'border-box',
   };
 
-  // ── render ────────────────────────────────────────────────────────────────────
+  // â”€â”€ render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: c.bg, overflow: 'hidden' }}>
 
-      {/* ── CCLI Banner ───────────────────────────────────────────────────────── */}
+      {/* â”€â”€ CCLI Banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {ccliOpen && (
         <div style={{
           background: isDarkMode ? '#0d2137' : '#eff6ff',
@@ -934,7 +934,7 @@ export default function SongsManager({ songs, isDarkMode, userRole, orgId, onRef
           padding: '14px 24px',
           display: 'flex', gap: '20px', alignItems: 'flex-start', flexShrink: 0,
         }}>
-          <div style={{ fontSize: '26px', flexShrink: 0, lineHeight: 1 }}>🎵</div>
+          <div style={{ fontSize: '26px', flexShrink: 0, lineHeight: 1 }}>ðŸŽµ</div>
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: '700', fontSize: '14px', color: isDarkMode ? '#93c5fd' : '#1d4ed8', marginBottom: '4px' }}>
               Unlock 4.5 Million+ Licensed Songs with CCLI SongSelect
@@ -984,12 +984,12 @@ export default function SongsManager({ songs, isDarkMode, userRole, orgId, onRef
         </div>
       )}
 
-      {/* ── Main layout ───────────────────────────────────────────────────────── */}
+      {/* â”€â”€ Main layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
 
         {/* LEFT SIDEBAR */}
         <div style={{
-          width: '220px', background: isDarkMode ? '#0d1117' : '#f8f9fa',
+          width: '220px', background: isDarkMode ? '#0a0a0a' : '#f8f9fa',
           borderRight: `1px solid ${c.border}`,
           display: 'flex', flexDirection: 'column', overflowY: 'auto', flexShrink: 0,
         }}>
@@ -1045,7 +1045,7 @@ export default function SongsManager({ songs, isDarkMode, userRole, orgId, onRef
                 disabled={seedLoading}
                 style={{
                   width: '100%', padding: '8px', borderRadius: '6px', border: 'none',
-                  background: seedDone ? c.success : isDarkMode ? '#1f2937' : '#f3f4f6',
+                  background: seedDone ? c.success : isDarkMode ? '#1f1f22' : '#f3f4f6',
                   color: seedDone ? 'white' : c.heading,
                   fontSize: '12px', fontWeight: '600', cursor: seedLoading ? 'wait' : 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
@@ -1128,7 +1128,7 @@ export default function SongsManager({ songs, isDarkMode, userRole, orgId, onRef
                     >
                       <div style={{
                         width: '34px', height: '34px', borderRadius: '6px',
-                        background: isDarkMode ? '#1f2937' : '#f3f4f6',
+                        background: isDarkMode ? '#1f1f22' : '#f3f4f6',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                       }}>
                         <Music size={15} color={c.primary} />
@@ -1157,7 +1157,7 @@ export default function SongsManager({ songs, isDarkMode, userRole, orgId, onRef
                         </span>
                       )}
                       {song.lyrics && (
-                        <span style={{ fontSize: '10px', color: c.muted, flexShrink: 0 }}>♩</span>
+                        <span style={{ fontSize: '10px', color: c.muted, flexShrink: 0 }}>â™©</span>
                       )}
                     </div>
                   );
@@ -1255,7 +1255,7 @@ export default function SongsManager({ songs, isDarkMode, userRole, orgId, onRef
                   <div>
                     <label style={{ fontSize: '11px', fontWeight: '600', color: c.muted, display: 'block', marginBottom: '4px' }}>LYRICS</label>
                     <div style={{ fontSize: '10px', color: c.muted, marginBottom: '6px', lineHeight: '1.5' }}>
-                      Use <code style={{ background: isDarkMode ? '#374151' : '#f3f4f6', padding: '1px 4px', borderRadius: '3px' }}>[Verse 1]</code>, <code style={{ background: isDarkMode ? '#374151' : '#f3f4f6', padding: '1px 4px', borderRadius: '3px' }}>[Chorus]</code>, <code style={{ background: isDarkMode ? '#374151' : '#f3f4f6', padding: '1px 4px', borderRadius: '3px' }}>[Bridge]</code> labels for sections.
+                      Use <code style={{ background: isDarkMode ? '#27272a' : '#f3f4f6', padding: '1px 4px', borderRadius: '3px' }}>[Verse 1]</code>, <code style={{ background: isDarkMode ? '#27272a' : '#f3f4f6', padding: '1px 4px', borderRadius: '3px' }}>[Chorus]</code>, <code style={{ background: isDarkMode ? '#27272a' : '#f3f4f6', padding: '1px 4px', borderRadius: '3px' }}>[Bridge]</code> labels for sections.
                     </div>
                     <textarea
                       value={editData.lyrics || ''}
@@ -1283,7 +1283,7 @@ export default function SongsManager({ songs, isDarkMode, userRole, orgId, onRef
                       {selectedSong.key && (
                         <span style={{
                           fontSize: '12px', padding: '3px 10px', borderRadius: '20px',
-                          background: isDarkMode ? '#1f2937' : '#f3f4f6',
+                          background: isDarkMode ? '#1f1f22' : '#f3f4f6',
                           color: c.heading, fontWeight: '600',
                         }}>
                           Key of {selectedSong.key}
@@ -1292,7 +1292,7 @@ export default function SongsManager({ songs, isDarkMode, userRole, orgId, onRef
                       {selectedSong.bpm && (
                         <span style={{
                           fontSize: '12px', padding: '3px 10px', borderRadius: '20px',
-                          background: isDarkMode ? '#1f2937' : '#f3f4f6',
+                          background: isDarkMode ? '#1f1f22' : '#f3f4f6',
                           color: c.heading, fontWeight: '600',
                         }}>
                           {selectedSong.bpm} BPM
@@ -1355,7 +1355,7 @@ export default function SongsManager({ songs, isDarkMode, userRole, orgId, onRef
         )}
       </div>
 
-      {/* ── ADD SONG MODAL ────────────────────────────────────────────────────── */}
+      {/* â”€â”€ ADD SONG MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {showAddModal && (
         <div style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
@@ -1422,7 +1422,7 @@ export default function SongsManager({ songs, isDarkMode, userRole, orgId, onRef
               <div>
                 <label style={{ fontSize: '11px', fontWeight: '700', color: c.muted, display: 'block', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Lyrics</label>
                 <div style={{ fontSize: '10px', color: c.muted, marginBottom: '6px' }}>
-                  Use <code style={{ background: isDarkMode ? '#374151' : '#f3f4f6', padding: '1px 3px', borderRadius: '3px' }}>[Verse 1]</code>, <code style={{ background: isDarkMode ? '#374151' : '#f3f4f6', padding: '1px 3px', borderRadius: '3px' }}>[Chorus]</code>, <code style={{ background: isDarkMode ? '#374151' : '#f3f4f6', padding: '1px 3px', borderRadius: '3px' }}>[Bridge]</code> labels for sections (used in Stage View)
+                  Use <code style={{ background: isDarkMode ? '#27272a' : '#f3f4f6', padding: '1px 3px', borderRadius: '3px' }}>[Verse 1]</code>, <code style={{ background: isDarkMode ? '#27272a' : '#f3f4f6', padding: '1px 3px', borderRadius: '3px' }}>[Chorus]</code>, <code style={{ background: isDarkMode ? '#27272a' : '#f3f4f6', padding: '1px 3px', borderRadius: '3px' }}>[Bridge]</code> labels for sections (used in Stage View)
                 </div>
                 <textarea
                   value={form.lyrics}

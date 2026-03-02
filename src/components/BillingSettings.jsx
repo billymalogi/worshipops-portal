@@ -28,7 +28,7 @@ const MOCK_INVOICES = [
   { date: 'Jan 1, 2026',  amount: '$0.00', status: 'Free tier', id: 'INV-0001' },
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function BillingSettings({ isDarkMode, teamMembers = [], services = [] }) {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
@@ -38,18 +38,18 @@ export default function BillingSettings({ isDarkMode, teamMembers = [], services
   const teamLimit = 15;
 
   const c = {
-    bg:      isDarkMode ? '#111827' : '#f9fafb',
-    card:    isDarkMode ? '#1f2937' : '#ffffff',
-    text:    isDarkMode ? '#d1d5db' : '#374151',
-    heading: isDarkMode ? '#f9fafb' : '#111827',
-    border:  isDarkMode ? '#374151' : '#e5e7eb',
+    bg:      isDarkMode ? '#111111' : '#f9fafb',
+    card:    isDarkMode ? '#1f1f22' : '#ffffff',
+    text:    isDarkMode ? '#d1d5db' : '#27272a',
+    heading: isDarkMode ? '#f9fafb' : '#111111',
+    border:  isDarkMode ? '#27272a' : '#e5e7eb',
     muted:   isDarkMode ? '#6b7280' : '#9ca3af',
-    input:   isDarkMode ? '#111827' : '#f9fafb',
+    input:   isDarkMode ? '#111111' : '#f9fafb',
     primary: '#3b82f6',
     success: '#10b981',
     danger:  '#ef4444',
     accent:  '#8b5cf6',
-    section: isDarkMode ? '#161b22' : '#f0f9ff',
+    section: isDarkMode ? '#0a0a0a' : '#f0f9ff',
   };
 
   const sectionCard = (children, extra = {}) => (
@@ -73,7 +73,7 @@ export default function BillingSettings({ isDarkMode, teamMembers = [], services
           <span style={{ fontWeight: '600', color: c.heading }}>{label}</span>
           <span style={{ color: pct >= 90 ? c.danger : c.muted }}>{value} / {max}</span>
         </div>
-        <div style={{ height: '8px', borderRadius: '4px', background: isDarkMode ? '#374151' : '#e5e7eb', overflow: 'hidden' }}>
+        <div style={{ height: '8px', borderRadius: '4px', background: isDarkMode ? '#27272a' : '#e5e7eb', overflow: 'hidden' }}>
           <div style={{ height: '100%', width: `${pct}%`, borderRadius: '4px', background: pct >= 90 ? c.danger : color, transition: 'width 0.4s' }} />
         </div>
         {pct >= 90 && <div style={{ fontSize: '11px', color: c.danger, marginTop: '4px' }}>Approaching limit — consider upgrading</div>}
@@ -81,7 +81,7 @@ export default function BillingSettings({ isDarkMode, teamMembers = [], services
     );
   };
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
     <div style={{ height: 'calc(100vh - 108px)', overflowY: 'auto', background: c.bg }}>
       <div style={{ maxWidth: '760px', margin: '0 auto', padding: '28px 24px 80px' }}>
@@ -92,7 +92,7 @@ export default function BillingSettings({ isDarkMode, teamMembers = [], services
           <p style={{ margin: '4px 0 0', fontSize: '13px', color: c.muted }}>Manage your subscription, usage, and payment details</p>
         </div>
 
-        {/* ── Current plan ──────────────────────────────────────────────────── */}
+        {/* â”€â”€ Current plan â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {sectionCard(
           <>
             {cardHead('Current Plan',
@@ -111,7 +111,7 @@ export default function BillingSettings({ isDarkMode, teamMembers = [], services
                     </div>
                   ))}
                 </div>
-                <div style={{ background: isDarkMode ? '#111827' : '#f8fafc', borderRadius: '10px', padding: '16px', border: `1px solid ${c.border}` }}>
+                <div style={{ background: isDarkMode ? '#111111' : '#f8fafc', borderRadius: '10px', padding: '16px', border: `1px solid ${c.border}` }}>
                   <div style={{ fontSize: '12px', color: c.muted, marginBottom: '4px' }}>Current billing</div>
                   <div style={{ fontSize: '28px', fontWeight: '800', color: c.heading }}>$0<span style={{ fontSize: '14px', fontWeight: '400', color: c.muted }}>/mo</span></div>
                   <div style={{ fontSize: '12px', color: c.muted, marginTop: '4px', marginBottom: '16px' }}>Free tier — no credit card required</div>
@@ -127,7 +127,7 @@ export default function BillingSettings({ isDarkMode, teamMembers = [], services
           </>
         )}
 
-        {/* ── Usage ─────────────────────────────────────────────────────────── */}
+        {/* â”€â”€ Usage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {sectionCard(
           <>
             {cardHead('Usage This Month')}
@@ -138,7 +138,7 @@ export default function BillingSettings({ isDarkMode, teamMembers = [], services
                   <span style={{ fontWeight: '600', color: c.heading }}>Services this month</span>
                   <span style={{ color: c.muted }}>{servicesThisMonth} <span style={{ fontSize: '11px' }}>(unlimited)</span></span>
                 </div>
-                <div style={{ height: '8px', borderRadius: '4px', background: isDarkMode ? '#374151' : '#e5e7eb', overflow: 'hidden' }}>
+                <div style={{ height: '8px', borderRadius: '4px', background: isDarkMode ? '#27272a' : '#e5e7eb', overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${Math.min(100, servicesThisMonth * 10)}%`, borderRadius: '4px', background: c.success }} />
                 </div>
               </div>
@@ -146,12 +146,12 @@ export default function BillingSettings({ isDarkMode, teamMembers = [], services
           </>
         )}
 
-        {/* ── Payment method ─────────────────────────────────────────────────── */}
+        {/* â”€â”€ Payment method â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {sectionCard(
           <>
             {cardHead('Payment Method')}
             <div style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div style={{ width: '52px', height: '36px', borderRadius: '6px', background: isDarkMode ? '#374151' : '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: '52px', height: '36px', borderRadius: '6px', background: isDarkMode ? '#27272a' : '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <CreditCard size={20} color={c.muted} />
               </div>
               <div>
@@ -168,13 +168,13 @@ export default function BillingSettings({ isDarkMode, teamMembers = [], services
           </>
         )}
 
-        {/* ── Invoice history ────────────────────────────────────────────────── */}
+        {/* â”€â”€ Invoice history â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {sectionCard(
           <>
             {cardHead('Invoice History')}
             <div>
               {/* Table header */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px 80px', gap: '12px', padding: '10px 20px', background: isDarkMode ? '#161b22' : '#f8fafc', borderBottom: `1px solid ${c.border}` }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px 80px', gap: '12px', padding: '10px 20px', background: isDarkMode ? '#0a0a0a' : '#f8fafc', borderBottom: `1px solid ${c.border}` }}>
                 {['Invoice', 'Date', 'Amount', 'Status'].map(h => (
                   <div key={h} style={{ fontSize: '11px', fontWeight: '700', color: c.muted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</div>
                 ))}
@@ -202,14 +202,14 @@ export default function BillingSettings({ isDarkMode, teamMembers = [], services
 
       </div>
 
-      {/* ── Upgrade modal ────────────────────────────────────────────────────── */}
+      {/* â”€â”€ Upgrade modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {showUpgradeModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 999, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: c.card, borderRadius: '16px', border: `1px solid ${c.border}`, width: '100%', maxWidth: '520px', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.4)' }}>
 
             {/* Modal header */}
             <div style={{ padding: '24px', background: `linear-gradient(135deg, rgba(59,130,246,0.08), rgba(139,92,246,0.08))`, borderBottom: `1px solid ${c.border}`, textAlign: 'center' }}>
-              <div style={{ fontSize: '32px', marginBottom: '8px' }}>⚡</div>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>âš¡</div>
               <div style={{ fontSize: '20px', fontWeight: '800', color: c.heading }}>Upgrade to Pro</div>
               <div style={{ fontSize: '13px', color: c.muted, marginTop: '4px' }}>Unlock the full WorshipOps experience</div>
             </div>
@@ -224,7 +224,7 @@ export default function BillingSettings({ isDarkMode, teamMembers = [], services
                   </div>
                 ))}
               </div>
-              <div style={{ marginTop: '20px', padding: '14px', borderRadius: '10px', background: isDarkMode ? '#111827' : '#f8fafc', border: `1px solid ${c.border}`, textAlign: 'center' }}>
+              <div style={{ marginTop: '20px', padding: '14px', borderRadius: '10px', background: isDarkMode ? '#111111' : '#f8fafc', border: `1px solid ${c.border}`, textAlign: 'center' }}>
                 <div style={{ fontSize: '13px', color: c.muted }}>Coming soon — Stripe integration in progress</div>
                 <div style={{ fontSize: '13px', color: c.muted, marginTop: '4px' }}>
                   Questions? Email <a href="mailto:billing@worshipops.com" style={{ color: c.primary }}>billing@worshipops.com</a>

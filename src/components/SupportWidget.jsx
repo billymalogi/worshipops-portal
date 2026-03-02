@@ -4,8 +4,8 @@ import React, { useState } from 'react';
  * SupportWidget — Fixed bottom-right floating contact buttons.
  * Shown on all settings pages (Profile, Organization, Billing).
  *
- * Ticket   → support@worshipops.com
- * Feedback → billy@worshipops.com
+ * Ticket   â†’ support@worshipops.com
+ * Feedback â†’ billy@worshipops.com
  */
 export default function SupportWidget() {
   const [expanded, setExpanded] = useState(false);
@@ -39,7 +39,7 @@ export default function SupportWidget() {
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(59,130,246,0.4)'; }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.25)'; }}
           >
-            🎫 Submit a Ticket
+            ðŸŽ« Submit a Ticket
           </a>
 
           {/* Feedback */}
@@ -58,7 +58,7 @@ export default function SupportWidget() {
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(16,185,129,0.4)'; }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.25)'; }}
           >
-            💡 Send Feedback
+            ðŸ’¡ Send Feedback
           </a>
         </>
       )}
@@ -71,7 +71,7 @@ export default function SupportWidget() {
           width: '48px', height: '48px',
           borderRadius: '50%',
           border: 'none',
-          background: expanded ? '#374151' : 'linear-gradient(135deg, #3b82f6, #10b981)',
+          background: expanded ? '#27272a' : 'linear-gradient(135deg, #3b82f6, #10b981)',
           color: 'white',
           fontSize: expanded ? '20px' : '22px',
           cursor: 'pointer',
@@ -83,7 +83,7 @@ export default function SupportWidget() {
         onMouseEnter={e => { e.currentTarget.style.transform = expanded ? 'rotate(45deg) scale(1.08)' : 'scale(1.08)'; }}
         onMouseLeave={e => { e.currentTarget.style.transform = expanded ? 'rotate(45deg)' : 'rotate(0deg)'; }}
       >
-        {expanded ? '✕' : '💬'}
+        {expanded ? 'âœ•' : 'ðŸ’¬'}
       </button>
     </div>
   );

@@ -1,11 +1,11 @@
 /* RESET & BASICS */
 :root {
-  --bg-dark: #111827;       /* Very dark blue/gray */
-  --bg-panel: #1f2937;      /* Slightly lighter panel */
+  --bg-dark: #111111;       /* Very dark blue/gray */
+  --bg-panel: #1f1f22;      /* Slightly lighter panel */
   --text-main: #f3f4f6;     /* White text */
   --text-muted: #9ca3af;    /* Gray text */
   --accent: #3b82f6;        /* Blue accent */
-  --border: #374151;        /* Border lines */
+  --border: #27272a;        /* Border lines */
 }
 
 body {

@@ -12,11 +12,11 @@ export default function ServiceTimeModal({
   editingService = null
 }) {
   const colors = {
-    bg: isDarkMode ? '#111827' : '#ffffff',
-    card: isDarkMode ? '#1f2937' : '#f3f4f6',
+    bg: isDarkMode ? '#111111' : '#ffffff',
+    card: isDarkMode ? '#1f1f22' : '#f3f4f6',
     text: isDarkMode ? '#9ca3af' : '#4b5563',
-    heading: isDarkMode ? '#f9fafb' : '#111827',
-    border: isDarkMode ? '#374151' : '#e5e7eb',
+    heading: isDarkMode ? '#f9fafb' : '#111111',
+    border: isDarkMode ? '#27272a' : '#e5e7eb',
     primary: '#3b82f6',
     danger: '#ef4444',
     success: '#10b981',
@@ -420,7 +420,7 @@ export default function ServiceTimeModal({
                       padding: '10px',
                       borderRadius: '6px',
                       border: `1px solid ${colors.border}`,
-                      background: isDarkMode ? '#111827' : '#ffffff',
+                      background: isDarkMode ? '#111111' : '#ffffff',
                       color: colors.heading,
                       fontSize: '14px',
                       marginBottom: '12px',
@@ -455,7 +455,7 @@ export default function ServiceTimeModal({
                       padding: '10px',
                       borderRadius: '6px',
                       border: `1px solid ${colors.border}`,
-                      background: isDarkMode ? '#111827' : '#ffffff',
+                      background: isDarkMode ? '#111111' : '#ffffff',
                       color: colors.heading,
                       fontSize: '14px',
                       outline: 'none'
@@ -703,7 +703,7 @@ export default function ServiceTimeModal({
                     textDecoration: 'underline'
                   }}
                 >
-                  ← Back to Templates
+                  â† Back to Templates
                 </button>
               )}
             </div>

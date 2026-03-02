@@ -4,7 +4,7 @@ import {
   ChevronRight, ChevronDown, RefreshCw, AlertCircle
 } from 'lucide-react';
 
-// ─── Software registry ────────────────────────────────────────────────────────
+// â”€â”€â”€ Software registry â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const SOFTWARE = [
   {
     id: 'lightkey',
@@ -12,7 +12,7 @@ const SOFTWARE = [
     platform: 'macOS',
     defaultPort: 9090,
     agentRequired: true,
-    logo: '💡',
+    logo: 'ðŸ’¡',
     desc: 'Timeline-based lighting design for macOS.',
     hint: 'Requires the WorshipOps Lighting Agent running on the Mac.',
   },
@@ -22,7 +22,7 @@ const SOFTWARE = [
     platform: 'Windows / macOS / Linux',
     defaultPort: 8080,
     agentRequired: false,
-    logo: '🎛️',
+    logo: 'ðŸŽ›ï¸',
     desc: 'Professional console software with a built-in web server.',
     hint: 'No agent needed — MagicQ serves a web UI directly on port 8080.',
   },
@@ -32,7 +32,7 @@ const SOFTWARE = [
     platform: 'Windows / macOS',
     defaultPort: 9090,
     agentRequired: true,
-    logo: '🌟',
+    logo: 'ðŸŒŸ',
     desc: 'Timeline-based lighting control from Jands.',
     hint: 'Requires the WorshipOps Lighting Agent running on the Vista machine.',
   },
@@ -42,18 +42,18 @@ const SOFTWARE = [
     platform: 'Any',
     defaultPort: 9090,
     agentRequired: true,
-    logo: '🔌',
+    logo: 'ðŸ”Œ',
     desc: 'Connect any software via the WorshipOps Lighting Agent.',
     hint: 'Install and run the agent on the lighting computer.',
   },
 ];
 
-// ─── Setup guide steps ────────────────────────────────────────────────────────
+// â”€â”€â”€ Setup guide steps â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const AGENT_STEPS = [
-  { icon: '⬇️', text: 'Download WorshipOps-Lighting-Agent.exe (Windows) or WorshipOps-Lighting-Agent-macOS from your admin portal.' },
-  { icon: '▶️', text: 'Double-click the file on your lighting computer — no install needed, it runs immediately.' },
-  { icon: '📋', text: 'A small window will open showing your Network IP (e.g. 192.168.1.45). Copy that address.' },
-  { icon: '🔗', text: 'Paste the IP here, confirm the port (default 9090), then click Connect.' },
+  { icon: 'â¬‡ï¸', text: 'Download WorshipOps-Lighting-Agent.exe (Windows) or WorshipOps-Lighting-Agent-macOS from your admin portal.' },
+  { icon: 'â–¶ï¸', text: 'Double-click the file on your lighting computer — no install needed, it runs immediately.' },
+  { icon: 'ðŸ“‹', text: 'A small window will open showing your Network IP (e.g. 192.168.1.45). Copy that address.' },
+  { icon: 'ðŸ”—', text: 'Paste the IP here, confirm the port (default 9090), then click Connect.' },
 ];
 
 export default function LightingController({ isDarkMode }) {
@@ -66,14 +66,14 @@ export default function LightingController({ isDarkMode }) {
   const iframeRef = useRef(null);
 
   const c = {
-    bg:       isDarkMode ? '#111827' : '#f9fafb',
-    card:     isDarkMode ? '#1f2937' : '#ffffff',
-    text:     isDarkMode ? '#d1d5db' : '#374151',
-    heading:  isDarkMode ? '#f9fafb' : '#111827',
-    border:   isDarkMode ? '#374151' : '#e5e7eb',
+    bg:       isDarkMode ? '#111111' : '#f9fafb',
+    card:     isDarkMode ? '#1f1f22' : '#ffffff',
+    text:     isDarkMode ? '#d1d5db' : '#27272a',
+    heading:  isDarkMode ? '#f9fafb' : '#111111',
+    border:   isDarkMode ? '#27272a' : '#e5e7eb',
     muted:    isDarkMode ? '#6b7280' : '#9ca3af',
-    hover:    isDarkMode ? '#374151' : '#f3f4f6',
-    code:     isDarkMode ? '#374151' : '#f3f4f6',
+    hover:    isDarkMode ? '#27272a' : '#f3f4f6',
+    code:     isDarkMode ? '#27272a' : '#f3f4f6',
     primary:  '#3b82f6',
     success:  '#10b981',
     warning:  '#f59e0b',
@@ -104,14 +104,14 @@ export default function LightingController({ isDarkMode }) {
 
   const inputStyle = {
     width: '100%', padding: '8px 10px', borderRadius: '6px',
-    border: `1px solid ${c.border}`, background: isDarkMode ? '#111827' : '#f9fafb',
+    border: `1px solid ${c.border}`, background: isDarkMode ? '#111111' : '#f9fafb',
     color: c.text, fontSize: '13px', outline: 'none', boxSizing: 'border-box',
   };
 
   return (
     <div style={{ height: 'calc(100vh - 108px)', display: 'flex', background: c.bg, overflow: 'hidden' }}>
 
-      {/* ── LEFT PANEL ─────────────────────────────────────────────── */}
+      {/* â”€â”€ LEFT PANEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div style={{ width: '320px', borderRight: `1px solid ${c.border}`, background: c.card, display: 'flex', flexDirection: 'column', overflowY: 'auto', flexShrink: 0 }}>
 
         {/* Header */}
@@ -209,7 +209,7 @@ export default function LightingController({ isDarkMode }) {
                   No Node.js, no terminal, no install steps — just double-click and go.
                 </div>
                 <div style={{ marginTop: '8px', padding: '8px 10px', background: isDarkMode ? 'rgba(245,158,11,0.1)' : '#fef3c7', borderRadius: '6px', color: isDarkMode ? c.warning : '#92400e', fontSize: '11px', border: `1px solid ${isDarkMode ? 'rgba(245,158,11,0.2)' : '#fde68a'}` }}>
-                  ⚠ Both devices must be on the <strong>same Wi-Fi / LAN</strong>
+                  âš  Both devices must be on the <strong>same Wi-Fi / LAN</strong>
                 </div>
               </div>
             )}
@@ -217,8 +217,8 @@ export default function LightingController({ isDarkMode }) {
         )}
       </div>
 
-      {/* ── RIGHT PANEL — Viewer ────────────────────────────────────── */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: isDarkMode ? '#0d1117' : '#f1f5f9', overflow: 'hidden' }}>
+      {/* â”€â”€ RIGHT PANEL — Viewer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: isDarkMode ? '#0a0a0a' : '#f1f5f9', overflow: 'hidden' }}>
 
         {/* Viewer toolbar */}
         <div style={{ padding: '10px 20px', borderBottom: `1px solid ${c.border}`, background: c.card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
@@ -251,7 +251,7 @@ export default function LightingController({ isDarkMode }) {
                     <div style={{ fontSize: '13px', color: c.muted }}>Reaching {ipAddress}:{port}</div>
                   </>
                 : <>
-                    <div style={{ fontSize: '72px', opacity: 0.25 }}>🎛️</div>
+                    <div style={{ fontSize: '72px', opacity: 0.25 }}>ðŸŽ›ï¸</div>
                     <div style={{ fontSize: '20px', fontWeight: '700', color: c.heading }}>No Software Connected</div>
                     <div style={{ fontSize: '13px', color: c.muted, maxWidth: '400px', lineHeight: '1.7' }}>
                       Select your lighting software on the left, enter the IP of your lighting computer, and click Connect.<br />

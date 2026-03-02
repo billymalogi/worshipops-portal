@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
-import { Save, Upload, Plus, X, Building, MapPin, Clock, Layers, BookOpen, Heart, ChevronDown, ChevronUp } from 'lucide-react';
+import { Save, Upload, Plus, X, Building, MapPin, Clock, Layers, BookOpen, Heart, ChevronDown, ChevronUp, Phone, Eye, EyeOff } from 'lucide-react';
 
 const DEFAULT_VERSE_SAMPLES = [
   'Zephaniah 3:17', 'Philippians 4:13', 'Psalm 46:10', 'Psalm 23:1',
@@ -14,7 +14,36 @@ const DEFAULT_VERSE_SAMPLES = [
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const COUNTRIES = ['US', 'CA', 'GB', 'AU', 'NZ', 'ZA', 'Other'];
 
-// ─────────────────────────────────────────────────────────────────────────────
+// Helper: masked text field for Twilio credentials
+function TwilioField({ label, value, onChange, placeholder, isSecret, disabled, c, lbl, inp }) {
+  const [visible, setVisible] = React.useState(false);
+  return (
+    <div>
+      {lbl(label)}
+      <div style={{ position: 'relative' }}>
+        <input
+          type={isSecret && !visible ? 'password' : 'text'}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder={placeholder}
+          disabled={disabled}
+          style={{ ...inp(disabled), paddingRight: isSecret ? '36px' : '12px' }}
+        />
+        {isSecret && (
+          <button
+            type="button"
+            onClick={() => setVisible(v => !v)}
+            style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: c.muted, padding: 0 }}
+          >
+            {visible ? <EyeOff size={14} /> : <Eye size={14} />}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function OrgSettings({ orgId, isDarkMode, userRole }) {
   const isAdmin = userRole === 'admin';
 
@@ -44,9 +73,13 @@ export default function OrgSettings({ orgId, isDarkMode, userRole }) {
     burnout_prevention_enabled: true,
     burnout_warning_threshold:  3,
     burnout_auto_threshold:     6,
+    twilio_account_sid:         '',
+    twilio_auth_token:          '',
+    twilio_from_phone:          '',
+    twilio_whatsapp_from:       '',
   });
 
-  // ── Load ──────────────────────────────────────────────────────────────────
+  // â”€â”€ Load â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     if (!orgId) return;
     (async () => {
@@ -78,6 +111,10 @@ export default function OrgSettings({ orgId, isDarkMode, userRole }) {
           burnout_prevention_enabled: data.burnout_prevention_enabled    ?? true,
           burnout_warning_threshold:  data.burnout_warning_threshold     ?? 3,
           burnout_auto_threshold:     data.burnout_auto_threshold        ?? 6,
+          twilio_account_sid:         data.twilio_account_sid            || '',
+          twilio_auth_token:          data.twilio_auth_token             || '',
+          twilio_from_phone:          data.twilio_from_phone             || '',
+          twilio_whatsapp_from:       data.twilio_whatsapp_from          || '',
         });
       }
       setLoading(false);
@@ -86,7 +123,7 @@ export default function OrgSettings({ orgId, isDarkMode, userRole }) {
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
 
-  // ── Logo upload ────────────────────────────────────────────────────────────
+  // â”€â”€ Logo upload â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleLogoUpload = async (file) => {
     if (!file) return;
     setUploading(true);
@@ -103,7 +140,7 @@ export default function OrgSettings({ orgId, isDarkMode, userRole }) {
     setUploading(false);
   };
 
-  // ── Save ──────────────────────────────────────────────────────────────────
+  // â”€â”€ Save â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleSave = async () => {
     if (!isAdmin) return;
     setSaving(true);
@@ -124,7 +161,7 @@ export default function OrgSettings({ orgId, isDarkMode, userRole }) {
     }
   };
 
-  // ── Service times helpers ─────────────────────────────────────────────────
+  // â”€â”€ Service times helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const addServiceTime = () => set('service_times', [...form.service_times, { day: 'Sunday', time: '09:00', name: '' }]);
   const updateST = (i, field, val) => {
     const next = [...form.service_times];
@@ -133,7 +170,7 @@ export default function OrgSettings({ orgId, isDarkMode, userRole }) {
   };
   const removeST = (i) => set('service_times', form.service_times.filter((_, idx) => idx !== i));
 
-  // ── Ministry helpers ──────────────────────────────────────────────────────
+  // â”€â”€ Ministry helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const addMinistry = () => set('ministries', [...form.ministries, { name: '', description: '' }]);
   const updateMin = (i, field, val) => {
     const next = [...form.ministries];
@@ -142,7 +179,7 @@ export default function OrgSettings({ orgId, isDarkMode, userRole }) {
   };
   const removeMin = (i) => set('ministries', form.ministries.filter((_, idx) => idx !== i));
 
-  // ── Verse helpers ─────────────────────────────────────────────────────────
+  // â”€â”€ Verse helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const addVerse = () => {
     if (form.custom_verses.length >= 30) return;
     set('custom_verses', [...form.custom_verses, { text: '', reference: '' }]);
@@ -154,24 +191,24 @@ export default function OrgSettings({ orgId, isDarkMode, userRole }) {
   };
   const removeVerse = (i) => set('custom_verses', form.custom_verses.filter((_, idx) => idx !== i));
 
-  // ── Colors ────────────────────────────────────────────────────────────────
+  // â”€â”€ Colors â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const c = {
-    bg:      isDarkMode ? '#111827' : '#f9fafb',
-    card:    isDarkMode ? '#1f2937' : '#ffffff',
-    text:    isDarkMode ? '#d1d5db' : '#374151',
-    heading: isDarkMode ? '#f9fafb' : '#111827',
-    border:  isDarkMode ? '#374151' : '#e5e7eb',
+    bg:      isDarkMode ? '#111111' : '#f9fafb',
+    card:    isDarkMode ? '#1f1f22' : '#ffffff',
+    text:    isDarkMode ? '#d1d5db' : '#27272a',
+    heading: isDarkMode ? '#f9fafb' : '#111111',
+    border:  isDarkMode ? '#27272a' : '#e5e7eb',
     muted:   isDarkMode ? '#6b7280' : '#9ca3af',
-    input:   isDarkMode ? '#111827' : '#f9fafb',
+    input:   isDarkMode ? '#111111' : '#f9fafb',
     primary: '#3b82f6',
     success: '#10b981',
     danger:  '#ef4444',
-    section: isDarkMode ? '#161b22' : '#f0f9ff',
+    section: isDarkMode ? '#0a0a0a' : '#f0f9ff',
   };
 
   const inp = (disabled = false) => ({
     padding: '9px 12px', borderRadius: '7px',
-    border: `1px solid ${c.border}`, background: disabled ? (isDarkMode ? '#161b22' : '#f3f4f6') : c.input,
+    border: `1px solid ${c.border}`, background: disabled ? (isDarkMode ? '#0a0a0a' : '#f3f4f6') : c.input,
     color: disabled ? c.muted : c.heading, fontSize: '13px', outline: 'none',
     width: '100%', boxSizing: 'border-box', cursor: disabled ? 'not-allowed' : 'text',
   });
@@ -223,11 +260,11 @@ export default function OrgSettings({ orgId, isDarkMode, userRole }) {
         {/* Migration warning */}
         {dbErr && (
           <div style={{ background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.3)', borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', fontSize: '13px', color: isDarkMode ? '#fcd34d' : '#92400e' }}>
-            ⚠ {dbErr}
+            âš  {dbErr}
           </div>
         )}
 
-        {/* ── SECTION 1: Identity ─────────────────────────────────────────── */}
+        {/* â”€â”€ SECTION 1: Identity â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {sectionCard('Church / Organization Info', <Building size={15} color={c.primary} />, (
           <div>
             {/* Logo */}
@@ -284,7 +321,7 @@ export default function OrgSettings({ orgId, isDarkMode, userRole }) {
           </div>
         ))}
 
-        {/* ── SECTION 2: Location ─────────────────────────────────────────── */}
+        {/* â”€â”€ SECTION 2: Location â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {sectionCard('Location & Capacity', <MapPin size={15} color={c.primary} />, (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
             <div style={{ gridColumn: '1 / -1' }}>
@@ -316,7 +353,7 @@ export default function OrgSettings({ orgId, isDarkMode, userRole }) {
           </div>
         ))}
 
-        {/* ── SECTION 3: Service Times ─────────────────────────────────────── */}
+        {/* â”€â”€ SECTION 3: Service Times â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {sectionCard('Service Times', <Clock size={15} color={c.primary} />, (
           <div>
             <div style={{ fontSize: '12px', color: c.muted, marginBottom: '14px' }}>
@@ -367,7 +404,7 @@ export default function OrgSettings({ orgId, isDarkMode, userRole }) {
           </div>
         ))}
 
-        {/* ── SECTION 4: Ministries ────────────────────────────────────────── */}
+        {/* â”€â”€ SECTION 4: Ministries â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {sectionCard('Ministries & Positions', <Layers size={15} color={c.primary} />, (
           <div>
             <div style={{ fontSize: '12px', color: c.muted, marginBottom: '14px' }}>
@@ -410,7 +447,7 @@ export default function OrgSettings({ orgId, isDarkMode, userRole }) {
           </div>
         ))}
 
-        {/* ── SECTION 5: Uplifting Verses ──────────────────────────────────── */}
+        {/* â”€â”€ SECTION 5: Uplifting Verses â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {sectionCard('Uplifting Verses', <BookOpen size={15} color={c.primary} />, (
           <div>
             <div style={{ fontSize: '12px', color: c.muted, marginBottom: '14px' }}>
@@ -427,11 +464,11 @@ export default function OrgSettings({ orgId, isDarkMode, userRole }) {
 
             {/* Default verse reference list */}
             {showDefaultVerses && (
-              <div style={{ background: isDarkMode ? '#111827' : '#f8fafc', borderRadius: '8px', border: `1px solid ${c.border}`, padding: '12px 16px', marginBottom: '16px' }}>
+              <div style={{ background: isDarkMode ? '#111111' : '#f8fafc', borderRadius: '8px', border: `1px solid ${c.border}`, padding: '12px 16px', marginBottom: '16px' }}>
                 <div style={{ fontSize: '11px', fontWeight: '700', color: c.muted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Default verse pool (read-only)</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   {DEFAULT_VERSE_SAMPLES.map(r => (
-                    <span key={r} style={{ fontSize: '11px', background: isDarkMode ? '#374151' : '#e5e7eb', color: c.text, padding: '2px 8px', borderRadius: '10px' }}>{r}</span>
+                    <span key={r} style={{ fontSize: '11px', background: isDarkMode ? '#27272a' : '#e5e7eb', color: c.text, padding: '2px 8px', borderRadius: '10px' }}>{r}</span>
                   ))}
                 </div>
               </div>
@@ -481,14 +518,50 @@ export default function OrgSettings({ orgId, isDarkMode, userRole }) {
           </div>
         ))}
 
-        {/* ── SECTION 6: Volunteer Wellbeing (Burnout) ─────────────────────── */}
-        {sectionCard('Volunteer Wellbeing', <Heart size={15} color='#ef4444' />, (
+        {/* â”€â”€ SECTION 6: Volunteer Wellbeing (Burnout) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* Messaging (Twilio / WhatsApp) */}
+        {sectionCard('Messaging', <Phone size={15} color='#0070F3' />, (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ fontSize: '12px', color: c.muted, lineHeight: '1.6', padding: '10px 14px', background: isDarkMode ? 'rgba(0,112,243,0.06)' : 'rgba(0,112,243,0.04)', borderRadius: '8px', borderLeft: '3px solid #0070F380' }}>
+              Connect your <strong>Twilio</strong> account to send SMS or WhatsApp reminders to volunteers directly from the service planner.{' '}
+              <a href="https://console.twilio.com" target="_blank" rel="noreferrer" style={{ color: '#0070F3' }}>Get credentials at console.twilio.com</a>
+            </div>
+            {[
+              { key: 'twilio_account_sid',   label: 'Account SID',         placeholder: 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', isSecret: false },
+              { key: 'twilio_auth_token',    label: 'Auth Token',           placeholder: 'Your Twilio auth token',              isSecret: true  },
+              { key: 'twilio_from_phone',    label: 'SMS From Number',      placeholder: '+12025551234  (E.164 format)',         isSecret: false },
+              { key: 'twilio_whatsapp_from', label: 'WhatsApp From Number', placeholder: 'whatsapp:+14155238886',                isSecret: false },
+            ].map(({ key, label, placeholder, isSecret }) => (
+              <TwilioField
+                key={key}
+                label={label}
+                value={form[key]}
+                onChange={v => set(key, v)}
+                placeholder={placeholder}
+                isSecret={isSecret}
+                disabled={!isAdmin}
+                c={c}
+                lbl={lbl}
+                inp={inp}
+              />
+            ))}
+            <div style={{ fontSize: '11px', color: c.muted, opacity: 0.7 }}>
+              Credentials are stored encrypted in your Supabase org record. Deploy the <code style={{ fontFamily: 'monospace', background: isDarkMode ? '#27272a' : '#f4f4f5', padding: '1px 4px', borderRadius: '3px' }}>send-message</code> Edge Function to activate sending.
+            </div>
+          </div>
+        ))}
+
+        {/* The Sabbath Feature */}
+        {sectionCard('The Sabbath Feature', <Heart size={15} color='#ef4444' />, (
           <div>
+            <div style={{ fontSize: '12px', fontStyle: 'italic', color: c.muted, marginBottom: '16px', padding: '10px 14px', background: isDarkMode ? 'rgba(239,68,68,0.06)' : 'rgba(239,68,68,0.04)', borderRadius: '8px', borderLeft: '3px solid #ef444480', lineHeight: '1.6' }}>
+              "God ordained us humans to rest a day from work. Churches are no different when it comes to volunteers."
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
               <div>
-                <div style={{ fontSize: '14px', fontWeight: '600', color: c.heading }}>Burnout Prevention</div>
+                <div style={{ fontSize: '14px', fontWeight: '600', color: c.heading }}>Sabbath Rest Monitoring</div>
                 <div style={{ fontSize: '12px', color: c.muted, marginTop: '3px' }}>
-                  Automatically flag volunteers who may be over-serving.
+                  Automatically flag volunteers who may be over-serving and need rest.
                 </div>
               </div>
               {/* Toggle */}
@@ -496,7 +569,7 @@ export default function OrgSettings({ orgId, isDarkMode, userRole }) {
                 onClick={() => isAdmin && set('burnout_prevention_enabled', !form.burnout_prevention_enabled)}
                 style={{
                   width: '48px', height: '26px', borderRadius: '13px', border: 'none', cursor: isAdmin ? 'pointer' : 'default',
-                  background: form.burnout_prevention_enabled ? '#10b981' : (isDarkMode ? '#374151' : '#d1d5db'),
+                  background: form.burnout_prevention_enabled ? '#10b981' : (isDarkMode ? '#27272a' : '#d1d5db'),
                   position: 'relative', flexShrink: 0, transition: 'background 0.2s',
                 }}
               >
@@ -510,7 +583,7 @@ export default function OrgSettings({ orgId, isDarkMode, userRole }) {
             </div>
 
             {form.burnout_prevention_enabled && (
-              <div style={{ background: isDarkMode ? '#111827' : '#f8fafc', borderRadius: '10px', border: `1px solid ${c.border}`, padding: '16px' }}>
+              <div style={{ background: isDarkMode ? '#111111' : '#f8fafc', borderRadius: '10px', border: `1px solid ${c.border}`, padding: '16px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                   <div>
                     {lbl('Warning after (consecutive Sundays)')}
@@ -536,8 +609,8 @@ export default function OrgSettings({ orgId, isDarkMode, userRole }) {
                   </div>
                 </div>
                 <div style={{ fontSize: '12px', color: c.muted, lineHeight: '1.7' }}>
-                  <strong style={{ color: c.text }}>Research-backed guidelines:</strong><br />
-                  · No more than 3 consecutive Sundays without a break<br />
+                  <strong style={{ color: c.text }}>Sabbath guidelines (research-backed):</strong><br />
+                  · No more than 3 consecutive Sundays without a Sabbath break<br />
                   · No more than 6 serves in any 60-day period<br />
                   · Every volunteer deserves at least 1 Sunday per month as a congregant<br />
                   <span style={{ opacity: 0.7, fontSize: '11px' }}>Sources: Lifeway Research, Planning Center, Church Juice</span>

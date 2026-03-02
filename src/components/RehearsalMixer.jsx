@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 
-// ─── Track type colors ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Track type colors â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const TYPE_COLORS = {
   drums:  { accent: '#f59e0b', bg: 'rgba(245,158,11,0.12)',  label: '#b45309' },
   bass:   { accent: '#10b981', bg: 'rgba(16,185,129,0.12)',  label: '#065f46' },
@@ -8,7 +8,7 @@ const TYPE_COLORS = {
   keys:   { accent: '#8b5cf6', bg: 'rgba(139,92,246,0.12)', label: '#6d28d9' },
   vocals: { accent: '#06b6d4', bg: 'rgba(6,182,212,0.12)',  label: '#0e7490' },
   click:  { accent: '#eab308', bg: 'rgba(234,179,8,0.12)',  label: '#92400e' },
-  other:  { accent: '#6b7280', bg: 'rgba(107,114,128,0.12)',label: '#374151' },
+  other:  { accent: '#6b7280', bg: 'rgba(107,114,128,0.12)',label: '#27272a' },
 };
 
 const guessType = (name) => {
@@ -29,7 +29,7 @@ const fmtTime = (sec) => {
   return `${m}:${String(s).padStart(2, '0')}`;
 };
 
-// ─── Main component ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Main component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function RehearsalMixer({ isDarkMode }) {
   const [tracks,  setTracks]  = useState([]); // { id, name, type, buffer, volume, muted, solo, loading, error }
   const [playing, setPlaying] = useState(false);
@@ -38,8 +38,8 @@ export default function RehearsalMixer({ isDarkMode }) {
 
   // Audio internals — never cause re-renders
   const ctxRef      = useRef(null);
-  const gainRefs    = useRef({});   // id → GainNode
-  const sourceRefs  = useRef({});   // id → AudioBufferSourceNode
+  const gainRefs    = useRef({});   // id â†’ GainNode
+  const sourceRefs  = useRef({});   // id â†’ AudioBufferSourceNode
   const startedRef  = useRef(0);    // ctx.currentTime when play() was called
   const offsetRef   = useRef(0);    // seconds into the track at last play()
   const playingRef  = useRef(false);
@@ -49,7 +49,7 @@ export default function RehearsalMixer({ isDarkMode }) {
   useEffect(() => { tracksRef.current = tracks; }, [tracks]);
   useEffect(() => { playingRef.current = playing; }, [playing]);
 
-  // ── Get / init AudioContext ─────────────────────────────────────────────────
+  // â”€â”€ Get / init AudioContext â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const getCtx = () => {
     if (!ctxRef.current) {
       ctxRef.current = new (window.AudioContext || window.webkitAudioContext)();
@@ -58,14 +58,14 @@ export default function RehearsalMixer({ isDarkMode }) {
     return ctxRef.current;
   };
 
-  // ── Derive current gain for a track ────────────────────────────────────────
+  // â”€â”€ Derive current gain for a track â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const effectiveGain = (track, allTracks) => {
     const hasSolo = allTracks.some(t => t.solo && t.buffer);
     if (hasSolo) return track.solo ? track.volume : 0;
     return track.muted ? 0 : track.volume;
   };
 
-  // ── Apply gain to all running GainNodes (no restart needed) ────────────────
+  // â”€â”€ Apply gain to all running GainNodes (no restart needed) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const applyGains = useCallback((updatedTracks) => {
     const ctx = ctxRef.current;
     if (!ctx) return;
@@ -77,13 +77,13 @@ export default function RehearsalMixer({ isDarkMode }) {
     });
   }, []);
 
-  // ── Stop all sources ────────────────────────────────────────────────────────
+  // â”€â”€ Stop all sources â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const stopSources = useCallback(() => {
     Object.values(sourceRefs.current).forEach(src => { try { src.stop(); } catch (_) {} });
     sourceRefs.current = {};
   }, []);
 
-  // ── RAF loop — update elapsed time ─────────────────────────────────────────
+  // â”€â”€ RAF loop — update elapsed time â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const tick = useCallback(() => {
     const ctx = ctxRef.current;
     if (!ctx) return;
@@ -102,7 +102,7 @@ export default function RehearsalMixer({ isDarkMode }) {
     rafRef.current = requestAnimationFrame(tick);
   }, [stopSources]);
 
-  // ── Start all sources from `offset` seconds ─────────────────────────────────
+  // â”€â”€ Start all sources from `offset` seconds â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const startSources = useCallback((offset = 0) => {
     const ctx = getCtx();
     const startAt = ctx.currentTime + 0.05;
@@ -130,7 +130,7 @@ export default function RehearsalMixer({ isDarkMode }) {
     offsetRef.current  = offset;
   }, []);
 
-  // ── Transport controls ──────────────────────────────────────────────────────
+  // â”€â”€ Transport controls â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const play = useCallback(() => {
     startSources(offsetRef.current);
     setPlaying(true);
@@ -172,7 +172,7 @@ export default function RehearsalMixer({ isDarkMode }) {
     }
   }, [playing, stopSources, startSources, tick]);
 
-  // ── Load a file into a track ────────────────────────────────────────────────
+  // â”€â”€ Load a file into a track â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const loadFile = useCallback(async (file, id) => {
     setTracks(prev => prev.map(t => t.id === id ? { ...t, loading: true, error: '' } : t));
     try {
@@ -192,7 +192,7 @@ export default function RehearsalMixer({ isDarkMode }) {
     }
   }, []);
 
-  // ── Add a track from a File ─────────────────────────────────────────────────
+  // â”€â”€ Add a track from a File â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const addTrack = useCallback((file) => {
     const id   = `${Date.now()}-${Math.random()}`;
     const type = guessType(file.name);
@@ -201,7 +201,7 @@ export default function RehearsalMixer({ isDarkMode }) {
     loadFile(file, id);
   }, [loadFile]);
 
-  // ── Remove a track ──────────────────────────────────────────────────────────
+  // â”€â”€ Remove a track â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const removeTrack = useCallback((id) => {
     if (sourceRefs.current[id]) { try { sourceRefs.current[id].stop(); } catch (_) {} delete sourceRefs.current[id]; }
     if (gainRefs.current[id])   { try { gainRefs.current[id].disconnect(); } catch (_) {} delete gainRefs.current[id]; }
@@ -213,7 +213,7 @@ export default function RehearsalMixer({ isDarkMode }) {
     });
   }, []);
 
-  // ── Volume slider ───────────────────────────────────────────────────────────
+  // â”€â”€ Volume slider â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const setVolume = useCallback((id, vol) => {
     setTracks(prev => {
       const updated = prev.map(t => t.id === id ? { ...t, volume: vol } : t);
@@ -222,7 +222,7 @@ export default function RehearsalMixer({ isDarkMode }) {
     });
   }, [applyGains]);
 
-  // ── Mute toggle ─────────────────────────────────────────────────────────────
+  // â”€â”€ Mute toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const toggleMute = useCallback((id) => {
     setTracks(prev => {
       const updated = prev.map(t => t.id === id ? { ...t, muted: !t.muted } : t);
@@ -231,7 +231,7 @@ export default function RehearsalMixer({ isDarkMode }) {
     });
   }, [applyGains]);
 
-  // ── Solo toggle ─────────────────────────────────────────────────────────────
+  // â”€â”€ Solo toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const toggleSolo = useCallback((id) => {
     setTracks(prev => {
       const updated = prev.map(t => t.id === id ? { ...t, solo: !t.solo } : t);
@@ -240,7 +240,7 @@ export default function RehearsalMixer({ isDarkMode }) {
     });
   }, [applyGains]);
 
-  // ── Drag-and-drop onto mixer ────────────────────────────────────────────────
+  // â”€â”€ Drag-and-drop onto mixer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const onDrop = (e) => {
     e.preventDefault();
     [...e.dataTransfer.files].forEach(f => {
@@ -248,7 +248,7 @@ export default function RehearsalMixer({ isDarkMode }) {
     });
   };
 
-  // ── Cleanup on unmount ──────────────────────────────────────────────────────
+  // â”€â”€ Cleanup on unmount â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     return () => {
       cancelAnimationFrame(rafRef.current);
@@ -257,23 +257,23 @@ export default function RehearsalMixer({ isDarkMode }) {
     };
   }, [stopSources]);
 
-  // ── Colors ─────────────────────────────────────────────────────────────────
+  // â”€â”€ Colors â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const c = {
-    bg:      isDarkMode ? '#111827' : '#f9fafb',
-    card:    isDarkMode ? '#1f2937' : '#ffffff',
-    text:    isDarkMode ? '#d1d5db' : '#374151',
-    heading: isDarkMode ? '#f9fafb' : '#111827',
-    border:  isDarkMode ? '#374151' : '#e5e7eb',
+    bg:      isDarkMode ? '#111111' : '#f9fafb',
+    card:    isDarkMode ? '#1f1f22' : '#ffffff',
+    text:    isDarkMode ? '#d1d5db' : '#27272a',
+    heading: isDarkMode ? '#f9fafb' : '#111111',
+    border:  isDarkMode ? '#27272a' : '#e5e7eb',
     muted:   isDarkMode ? '#6b7280' : '#9ca3af',
-    hover:   isDarkMode ? '#374151' : '#f3f4f6',
-    stripe:  isDarkMode ? '#161b22' : '#f8fafc',
+    hover:   isDarkMode ? '#27272a' : '#f3f4f6',
+    stripe:  isDarkMode ? '#0a0a0a' : '#f8fafc',
   };
 
   const hasTracks  = tracks.length > 0;
   const progress   = duration > 0 ? Math.min(100, (elapsed / duration) * 100) : 0;
   const hasSolo    = tracks.some(t => t.solo);
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
     <div
       style={{ height: 'calc(100vh - 108px)', display: 'flex', flexDirection: 'column', background: c.bg, overflow: 'hidden' }}
@@ -281,7 +281,7 @@ export default function RehearsalMixer({ isDarkMode }) {
       onDrop={onDrop}
     >
 
-      {/* ── Header bar ──────────────────────────────────────────────────────── */}
+      {/* â”€â”€ Header bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div style={{ padding: '12px 20px', background: c.card, borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0, flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontWeight: '700', fontSize: '15px', color: c.heading }}>Rehearsal Mixer</div>
@@ -305,7 +305,7 @@ export default function RehearsalMixer({ isDarkMode }) {
         </label>
       </div>
 
-      {/* ── Transport bar (only when tracks exist) ───────────────────────────── */}
+      {/* â”€â”€ Transport bar (only when tracks exist) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {hasTracks && (
         <div style={{ padding: '10px 20px', background: c.stripe, borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
 
@@ -315,7 +315,7 @@ export default function RehearsalMixer({ isDarkMode }) {
             title="Back to start"
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.muted, fontSize: '18px', lineHeight: 1, padding: '4px', display: 'flex', alignItems: 'center' }}
           >
-            ⏮
+            â®
           </button>
 
           {/* Play / Pause */}
@@ -328,7 +328,7 @@ export default function RehearsalMixer({ isDarkMode }) {
               alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}
           >
-            {playing ? '⏸' : '▶'}
+            {playing ? 'â¸' : 'â–¶'}
           </button>
 
           {/* Time */}
@@ -338,7 +338,7 @@ export default function RehearsalMixer({ isDarkMode }) {
 
           {/* Scrubber */}
           <div
-            style={{ flex: 1, height: '6px', background: isDarkMode ? '#374151' : '#e5e7eb', borderRadius: '3px', cursor: 'pointer', position: 'relative' }}
+            style={{ flex: 1, height: '6px', background: isDarkMode ? '#27272a' : '#e5e7eb', borderRadius: '3px', cursor: 'pointer', position: 'relative' }}
             onClick={e => {
               if (!duration) return;
               const r = e.currentTarget.getBoundingClientRect();
@@ -358,13 +358,13 @@ export default function RehearsalMixer({ isDarkMode }) {
         </div>
       )}
 
-      {/* ── Channel strips / empty state ─────────────────────────────────────── */}
+      {/* â”€â”€ Channel strips / empty state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div style={{ flex: 1, overflow: 'hidden' }}>
         {!hasTracks ? (
 
-          /* ── Empty state ─────────────────────────────────────────────────── */
+          /* â”€â”€ Empty state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
           <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px', padding: '40px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', opacity: 0.18 }}>🎛️</div>
+            <div style={{ fontSize: '64px', opacity: 0.18 }}>ðŸŽ›ï¸</div>
             <div style={{ fontSize: '22px', fontWeight: '700', color: c.heading }}>Drop Your Stem Files Here</div>
             <div style={{ fontSize: '13px', color: c.muted, maxWidth: '500px', lineHeight: '1.85' }}>
               Download stems from <strong>Multitracks.com</strong>, <strong>Loop Community</strong>, or export them from your DAW.
@@ -386,7 +386,7 @@ export default function RehearsalMixer({ isDarkMode }) {
 
         ) : (
 
-          /* ── Track rows ──────────────────────────────────────────────────── */
+          /* â”€â”€ Track rows â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
           <div style={{ height: '100%', overflowY: 'auto' }}>
 
             {/* Column headers */}
@@ -427,7 +427,7 @@ export default function RehearsalMixer({ isDarkMode }) {
                   {/* Name + type badge */}
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: '13px', fontWeight: '600', color: c.heading, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {track.loading ? '⏳ Decoding…' : track.error ? `⚠ ${track.error}` : track.name}
+                      {track.loading ? 'â³ Decoding…' : track.error ? `âš  ${track.error}` : track.name}
                     </div>
                     <span style={{ display: 'inline-block', marginTop: '3px', padding: '1px 7px', borderRadius: '10px', background: col.bg, color: col.label, fontSize: '10px', fontWeight: '700', textTransform: 'capitalize', border: `1px solid ${col.accent}30` }}>
                       {track.type}
@@ -440,7 +440,7 @@ export default function RehearsalMixer({ isDarkMode }) {
                     disabled={!track.buffer}
                     style={{
                       padding: '5px 0', borderRadius: '6px', border: 'none',
-                      background: track.muted ? '#ef4444' : (isDarkMode ? '#374151' : '#e5e7eb'),
+                      background: track.muted ? '#ef4444' : (isDarkMode ? '#27272a' : '#e5e7eb'),
                       color: track.muted ? 'white' : c.text,
                       fontSize: '11px', fontWeight: '800', cursor: track.buffer ? 'pointer' : 'default',
                       letterSpacing: '0.5px',
@@ -455,7 +455,7 @@ export default function RehearsalMixer({ isDarkMode }) {
                     disabled={!track.buffer}
                     style={{
                       padding: '5px 0', borderRadius: '6px', border: 'none',
-                      background: track.solo ? '#f59e0b' : (isDarkMode ? '#374151' : '#e5e7eb'),
+                      background: track.solo ? '#f59e0b' : (isDarkMode ? '#27272a' : '#e5e7eb'),
                       color: track.solo ? 'white' : c.text,
                       fontSize: '11px', fontWeight: '800', cursor: track.buffer ? 'pointer' : 'default',
                       letterSpacing: '0.5px',
@@ -466,7 +466,7 @@ export default function RehearsalMixer({ isDarkMode }) {
 
                   {/* Mini level meter */}
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-                    <div style={{ width: '10px', height: '28px', background: isDarkMode ? '#374151' : '#e5e7eb', borderRadius: '3px', overflow: 'hidden', display: 'flex', flexDirection: 'column-reverse' }}>
+                    <div style={{ width: '10px', height: '28px', background: isDarkMode ? '#27272a' : '#e5e7eb', borderRadius: '3px', overflow: 'hidden', display: 'flex', flexDirection: 'column-reverse' }}>
                       <div style={{ height: `${gainVal * 100}%`, background: col.accent, transition: 'height 0.08s' }} />
                     </div>
                     <div style={{ fontSize: '9px', color: c.muted }}>{Math.round(gainVal * 100)}%</div>

@@ -3,12 +3,12 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function CalendarWidget({ isDarkMode, onDateSelect }) {
   const colors = {
-    text: isDarkMode ? '#e5e7eb' : '#374151',
+    text: isDarkMode ? '#e5e7eb' : '#27272a',
     subText: isDarkMode ? '#9ca3af' : '#6b7280',
-    hover: isDarkMode ? '#1f2937' : '#f3f4f6',
+    hover: isDarkMode ? '#1f1f22' : '#f3f4f6',
     accent: '#3b82f6',
-    bg: isDarkMode ? '#111827' : '#ffffff',
-    border: isDarkMode ? '#374151' : '#e5e7eb',
+    bg: isDarkMode ? '#111111' : '#ffffff',
+    border: isDarkMode ? '#27272a' : '#e5e7eb',
   };
 
   const today = new Date();

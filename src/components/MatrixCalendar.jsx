@@ -3,11 +3,11 @@ import { ChevronLeft, ChevronRight, Calendar, Clock, Users } from 'lucide-react'
 
 export default function MatrixCalendar({ isDarkMode, services = [], onServiceClick }) {
   const colors = {
-    bg: isDarkMode ? '#111827' : '#f3f4f6',
-    card: isDarkMode ? '#1f2937' : '#ffffff',
+    bg: isDarkMode ? '#111111' : '#f3f4f6',
+    card: isDarkMode ? '#1f1f22' : '#ffffff',
     text: isDarkMode ? '#9ca3af' : '#4b5563',
-    heading: isDarkMode ? '#f9fafb' : '#111827',
-    border: isDarkMode ? '#374151' : '#e5e7eb',
+    heading: isDarkMode ? '#f9fafb' : '#111111',
+    border: isDarkMode ? '#27272a' : '#e5e7eb',
     primary: '#3b82f6',
     accent: '#10b981',
     subText: isDarkMode ? '#6b7280' : '#9ca3af',
@@ -131,7 +131,7 @@ export default function MatrixCalendar({ isDarkMode, services = [], onServiceCli
                 padding: '8px',
                 borderRadius: '6px',
                 border: `1px solid ${colors.border}`,
-                background: isDarkMode ? '#111827' : '#ffffff',
+                background: isDarkMode ? '#111111' : '#ffffff',
                 color: colors.heading,
                 fontSize: '14px',
                 outline: 'none'
@@ -160,7 +160,7 @@ export default function MatrixCalendar({ isDarkMode, services = [], onServiceCli
                 padding: '8px',
                 borderRadius: '6px',
                 border: `1px solid ${colors.border}`,
-                background: isDarkMode ? '#111827' : '#ffffff',
+                background: isDarkMode ? '#111111' : '#ffffff',
                 color: colors.heading,
                 fontSize: '14px',
                 outline: 'none'

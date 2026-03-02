@@ -30,7 +30,7 @@ export default function LyricsDisplay() {
   // Keep a ref to the current local blob so we can revoke it when replaced
   const localBlobRef = useRef('');
 
-  // ── Supabase realtime subscription ─────────────────────────────────────────
+  // â”€â”€ Supabase realtime subscription â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     const ch = supabase.channel(PRESENTER_CHANNEL);
 
@@ -50,14 +50,14 @@ export default function LyricsDisplay() {
     return () => supabase.removeChannel(ch);
   }, []);
 
-  // ── Keyboard shortcut: Escape toggles blank ─────────────────────────────────
+  // â”€â”€ Keyboard shortcut: Escape toggles blank â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') setIsBlack(b => !b); };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
-  // ── Drag & drop handlers ────────────────────────────────────────────────────
+  // â”€â”€ Drag & drop handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleDragOver = (e) => { e.preventDefault(); setIsDragging(true); };
   const handleDragLeave = () => setIsDragging(false);
 
@@ -102,7 +102,7 @@ export default function LyricsDisplay() {
       onDrop={handleDrop}
     >
 
-      {/* ── Layer 0: Background video ─────────────────────────────────────── */}
+      {/* â”€â”€ Layer 0: Background video â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {hasBg && bgType === 'video' && (
         <video
           key={bgUrl}
@@ -116,7 +116,7 @@ export default function LyricsDisplay() {
         />
       )}
 
-      {/* ── Layer 0: Background image ─────────────────────────────────────── */}
+      {/* â”€â”€ Layer 0: Background image â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {hasBg && bgType === 'image' && (
         <img
           key={bgUrl}
@@ -130,7 +130,7 @@ export default function LyricsDisplay() {
         />
       )}
 
-      {/* ── Layer 1: Dark scrim (only when BG is active) ──────────────────── */}
+      {/* â”€â”€ Layer 1: Dark scrim (only when BG is active) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {hasBg && (
         <div style={{
           position: 'absolute', inset: 0,
@@ -139,7 +139,7 @@ export default function LyricsDisplay() {
         }} />
       )}
 
-      {/* ── Drag-over overlay ─────────────────────────────────────────────── */}
+      {/* â”€â”€ Drag-over overlay â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {isDragging && (
         <div style={{
           position: 'absolute', inset: 0, zIndex: 50,
@@ -157,7 +157,7 @@ export default function LyricsDisplay() {
         </div>
       )}
 
-      {/* ── Connection indicator (top-left, very subtle) ──────────────────── */}
+      {/* â”€â”€ Connection indicator (top-left, very subtle) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div style={{
         position: 'absolute', top: '14px', left: '18px', zIndex: 10,
         display: 'flex', alignItems: 'center', gap: '6px',
@@ -170,7 +170,7 @@ export default function LyricsDisplay() {
         {connected ? 'Live' : 'Waiting…'}
       </div>
 
-      {/* ── Clear BG button (top-right, subtle) ──────────────────────────── */}
+      {/* â”€â”€ Clear BG button (top-right, subtle) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {hasBg && (
         <button
           onClick={clearBg}
@@ -185,7 +185,7 @@ export default function LyricsDisplay() {
         </button>
       )}
 
-      {/* ── Layer 2: Lyrics ───────────────────────────────────────────────── */}
+      {/* â”€â”€ Layer 2: Lyrics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div style={{
         position: 'absolute', inset: 0, zIndex: 2,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -212,7 +212,7 @@ export default function LyricsDisplay() {
         )}
       </div>
 
-      {/* ── Song title (bottom center, very subtle) ───────────────────────── */}
+      {/* â”€â”€ Song title (bottom center, very subtle) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {!isBlack && content && song && (
         <div style={{
           position: 'absolute', bottom: '28px', left: 0, right: 0,
@@ -227,7 +227,7 @@ export default function LyricsDisplay() {
         </div>
       )}
 
-      {/* ── Empty-state hint (when no BG and no lyrics) ───────────────────── */}
+      {/* â”€â”€ Empty-state hint (when no BG and no lyrics) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {!hasBg && !content && !isDragging && (
         <div style={{
           position: 'absolute', bottom: '40px', left: 0, right: 0,

@@ -4,13 +4,13 @@ import ServiceTimeModal from './ServiceTimeModal';
 
 export default function PersistentCalendar({ isDarkMode, onDateSelect, services = [], orgId, onRefresh }) {
   const colors = {
-    text: isDarkMode ? '#e5e7eb' : '#374151',
+    text: isDarkMode ? '#e5e7eb' : '#27272a',
     subText: isDarkMode ? '#9ca3af' : '#6b7280',
-    hover: isDarkMode ? '#1f2937' : '#f3f4f6',
+    hover: isDarkMode ? '#1f1f22' : '#f3f4f6',
     accent: '#3b82f6',
-    bg: isDarkMode ? '#0d1117' : '#f8f9fa',
-    border: isDarkMode ? '#21262d' : '#e1e4e8',
-    heading: isDarkMode ? '#f9fafb' : '#111827',
+    bg: isDarkMode ? '#0a0a0a' : '#f8f9fa',
+    border: isDarkMode ? '#111111' : '#e1e4e8',
+    heading: isDarkMode ? '#f9fafb' : '#111111',
   };
 
   const [currentDate, setCurrentDate] = useState(new Date());

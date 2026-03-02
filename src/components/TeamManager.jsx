@@ -6,7 +6,7 @@ import {
   CheckCircle, Clock, Star, ExternalLink,
 } from 'lucide-react';
 
-// ── Burnout helpers ───────────────────────────────────────────────────────────
+// â”€â”€ Burnout helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const SIXTY_DAYS_MS = 60 * 24 * 60 * 60 * 1000;
 
 function getMemberServes(member, services) {
@@ -61,18 +61,18 @@ function calcBurnout(member, services, warningThreshold = 3, autoThreshold = 6) 
   return { status, serves60: serves60.length, consecutiveSundays, totalServes: serves.length, lastServe: serves[0] || null };
 }
 
-// ── Color tokens ──────────────────────────────────────────────────────────────
+// â”€â”€ Color tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const STATUS_META = {
-  active:  { label: 'Active',          color: '#10b981', bg: 'rgba(16,185,129,0.1)',  icon: '🟢' },
-  warning: { label: 'High Serve Load', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',  icon: '🟡' },
-  burnout: { label: 'Possible Burnout',color: '#ef4444', bg: 'rgba(239,68,68,0.1)',   icon: '🔴' },
-  break:   { label: 'On Break',        color: '#3b82f6', bg: 'rgba(59,130,246,0.1)',  icon: '🔵' },
+  active:  { label: 'Active',          color: '#10b981', bg: 'rgba(16,185,129,0.1)',  icon: 'ðŸŸ¢' },
+  warning: { label: 'High Serve Load',   color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', icon: '🟡' },
+  burnout: { label: 'Needs Sabbath Rest', color: '#ef4444', bg: 'rgba(239,68,68,0.1)', icon: '🔴' },
+  break:   { label: 'Sabbath Break',      color: '#3b82f6', bg: 'rgba(59,130,246,0.1)', icon: '🔵' },
 };
 
 const ROLES = ['Worship Leader', 'Vocalist', 'Guitarist', 'Bassist', 'Drummer', 'Keyboardist',
                'Sound Tech', 'Lighting Tech', 'Video Tech', 'Presenter', 'Pastor', 'Other'];
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function TeamManager({ orgId, isDarkMode, userRole, services = [] }) {
   const isAdmin  = userRole === 'admin';
   const isEditor = userRole === 'admin' || userRole === 'editor';
@@ -101,15 +101,15 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
   });
 
   const c = {
-    bg:      isDarkMode ? '#111827' : '#f9fafb',
-    card:    isDarkMode ? '#1f2937' : '#ffffff',
-    text:    isDarkMode ? '#d1d5db' : '#374151',
-    heading: isDarkMode ? '#f9fafb' : '#111827',
-    border:  isDarkMode ? '#374151' : '#e5e7eb',
+    bg:      isDarkMode ? '#111111' : '#f9fafb',
+    card:    isDarkMode ? '#1f1f22' : '#ffffff',
+    text:    isDarkMode ? '#d1d5db' : '#27272a',
+    heading: isDarkMode ? '#f9fafb' : '#111111',
+    border:  isDarkMode ? '#27272a' : '#e5e7eb',
     muted:   isDarkMode ? '#6b7280' : '#9ca3af',
-    hover:   isDarkMode ? '#374151' : '#f3f4f6',
-    input:   isDarkMode ? '#111827' : '#f9fafb',
-    sidebar: isDarkMode ? '#0d1117' : '#f8f9fa',
+    hover:   isDarkMode ? '#27272a' : '#f3f4f6',
+    input:   isDarkMode ? '#111111' : '#f9fafb',
+    sidebar: isDarkMode ? '#0a0a0a' : '#f8f9fa',
     primary: '#3b82f6',
     success: '#10b981',
     warning: '#f59e0b',
@@ -118,12 +118,12 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
 
   const inp = (disabled = false) => ({
     padding: '8px 12px', borderRadius: '6px',
-    border: `1px solid ${c.border}`, background: disabled ? (isDarkMode ? '#161b22' : '#f3f4f6') : c.input,
+    border: `1px solid ${c.border}`, background: disabled ? (isDarkMode ? '#0a0a0a' : '#f3f4f6') : c.input,
     color: disabled ? c.muted : c.heading, fontSize: '13px', outline: 'none',
     width: '100%', boxSizing: 'border-box',
   });
 
-  // ── Fetch team + burnout settings ─────────────────────────────────────────
+  // â”€â”€ Fetch team + burnout settings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const fetchTeam = async () => {
     if (!orgId) return;
     setLoading(true);
@@ -142,7 +142,7 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
 
   useEffect(() => { fetchTeam(); }, [orgId]);
 
-  // ── Compute burnout for all members ──────────────────────────────────────
+  // â”€â”€ Compute burnout for all members â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const burnoutMap = useMemo(() => {
     if (!burnoutEnabled) return {};
     const map = {};
@@ -162,7 +162,7 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
     setBurnoutQueue(triggered);
   }, [burnoutMap, isAdmin, burnoutEnabled, members]);
 
-  // ── Fetch linked user profile when selecting a member ────────────────────
+  // â”€â”€ Fetch linked user profile when selecting a member â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     if (!selectedMember?.linked_user_id) { setLinkedProfile(null); return; }
     setLoadingProfile(true);
@@ -170,7 +170,7 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
       .then(({ data }) => { setLinkedProfile(data || null); setLoadingProfile(false); });
   }, [selectedMember?.linked_user_id]);
 
-  // ── Save member ───────────────────────────────────────────────────────────
+  // â”€â”€ Save member â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleSave = async () => {
     setSaving(true);
     const payload = {
@@ -232,7 +232,7 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
     await fetchTeam();
   };
 
-  // ── Filtered list ─────────────────────────────────────────────────────────
+  // â”€â”€ Filtered list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const filtered = members.filter(m =>
     (m.name  || '').toLowerCase().includes(search.toLowerCase()) ||
     (m.role  || '').toLowerCase().includes(search.toLowerCase()) ||
@@ -245,7 +245,7 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
 
   const ministriesForMember = (m) => Array.isArray(m.ministries) ? m.ministries : [];
 
-  // ── Merge profile (linked user_profile overrides team_member fields) ──────
+  // â”€â”€ Merge profile (linked user_profile overrides team_member fields) â”€â”€â”€â”€â”€â”€
   const mergedProfile = useMemo(() => {
     if (!selectedMember) return null;
     if (!linkedProfile) return selectedMember;
@@ -258,16 +258,16 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
     };
   }, [selectedMember, linkedProfile]);
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
     <div style={{ height: 'calc(100vh - 108px)', display: 'flex', flexDirection: 'column', background: c.bg, overflow: 'hidden' }}>
 
-      {/* ── Burnout alert banner ────────────────────────────────────────────── */}
+      {/* â”€â”€ Burnout alert banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {isAdmin && burnoutEnabled && burnoutQueue.length > 0 && (
         <div style={{ background: 'rgba(245,158,11,0.1)', borderBottom: `1px solid rgba(245,158,11,0.3)`, padding: '10px 24px', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
           <AlertTriangle size={16} color={c.warning} />
           <span style={{ fontSize: '13px', color: isDarkMode ? '#fcd34d' : '#92400e', flex: 1 }}>
-            <strong>{burnoutQueue.length}</strong> volunteer{burnoutQueue.length !== 1 ? 's' : ''} may need a break — review and notify them.
+            <strong>{burnoutQueue.length}</strong> volunteer{burnoutQueue.length !== 1 ? 's' : ''} may need a Sabbath rest — review and notify them.
           </span>
           <button
             onClick={() => {
@@ -283,7 +283,7 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
         </div>
       )}
 
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      {/* â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div style={{ padding: '18px 24px', background: c.card, borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0 }}>
         <div style={{ flex: 1 }}>
           <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '700', color: c.heading }}>Team Roster</h1>
@@ -303,7 +303,7 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
             onClick={() => setShowBurnoutInfo(v => !v)}
             style={{ border: `1px solid ${c.border}`, borderRadius: '6px', padding: '7px 12px', background: 'transparent', color: c.muted, fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
           >
-            <Heart size={13} /> Wellbeing Info
+            <Heart size={13} /> Sabbath Feature
           </button>
         )}
         {isEditor && (
@@ -319,18 +319,19 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
       {/* Burnout info panel */}
       {showBurnoutInfo && (
         <div style={{ background: isDarkMode ? '#1c1508' : '#fffbeb', border: `1px solid rgba(245,158,11,0.3)`, borderLeft: 'none', borderRight: 'none', padding: '14px 24px', flexShrink: 0 }}>
-          <div style={{ fontSize: '13px', fontWeight: '700', color: isDarkMode ? '#fcd34d' : '#92400e', marginBottom: '8px' }}>Volunteer Wellbeing Guidelines</div>
+          <div style={{ fontSize: '13px', fontWeight: '700', color: isDarkMode ? '#fcd34d' : '#92400e', marginBottom: '4px' }}>The Sabbath Feature — Guidelines</div>
+          <div style={{ fontSize: '12px', fontStyle: 'italic', color: isDarkMode ? '#d97706' : '#92400e', marginBottom: '8px', opacity: 0.8 }}>”God ordained us humans to rest a day from work. Churches are no different when it comes to volunteers.”</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '8px', fontSize: '12px', color: isDarkMode ? '#d97706' : '#78350f' }}>
             <span>🟡 Warning: {warningThreshold}+ consecutive Sundays serving</span>
-            <span>🔴 Auto-break: {autoThreshold}+ serves in the last 60 days (14-day rest)</span>
-            <span>🔵 On Break: temporarily unavailable to be scheduled</span>
-            <span>✓ Aim for at least 1 Sunday/month as a congregant</span>
+            <span>🔴 Needs Sabbath Rest: {autoThreshold}+ serves in the last 60 days (14-day break)</span>
+            <span>🔵 Sabbath Break: temporarily resting, not to be scheduled</span>
+            <span>✓ Aim for at least 1 Sunday/month as a congregant, not a server</span>
           </div>
           <div style={{ fontSize: '11px', color: c.muted, marginTop: '6px' }}>Sources: Lifeway Research, Planning Center, Church Juice</div>
         </div>
       )}
 
-      {/* ── Table + Profile Panel ────────────────────────────────────────────── */}
+      {/* â”€â”€ Table + Profile Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
 
         {/* Table */}
@@ -344,7 +345,7 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
               <thead>
-                <tr style={{ background: isDarkMode ? '#161b22' : '#f8fafc', borderBottom: `2px solid ${c.border}` }}>
+                <tr style={{ background: isDarkMode ? '#0a0a0a' : '#f8fafc', borderBottom: `2px solid ${c.border}` }}>
                   {['Name', 'Role', 'Phone', 'Email', 'Ministries', 'Last Serve', 'Status', ''].map(h => (
                     <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: c.muted, whiteSpace: 'nowrap' }}>
                       {h}
@@ -374,7 +375,7 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
                       {/* Name + Avatar */}
                       <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: isDarkMode ? '#374151' : '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '700', color: c.muted, flexShrink: 0, overflow: 'hidden' }}>
+                          <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: isDarkMode ? '#27272a' : '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '700', color: c.muted, flexShrink: 0, overflow: 'hidden' }}>
                             {member.avatar_url
                               ? <img src={member.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                               : getInitials(member.name)}
@@ -386,7 +387,7 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
                       {/* Role */}
                       <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
                         {member.role
-                          ? <span style={{ background: isDarkMode ? '#374151' : '#f3f4f6', color: c.text, padding: '2px 8px', borderRadius: '4px', fontSize: '12px' }}>{member.role}</span>
+                          ? <span style={{ background: isDarkMode ? '#27272a' : '#f3f4f6', color: c.text, padding: '2px 8px', borderRadius: '4px', fontSize: '12px' }}>{member.role}</span>
                           : <span style={{ color: c.muted }}>—</span>}
                       </td>
                       {/* Phone */}
@@ -444,7 +445,7 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
           )}
         </div>
 
-        {/* ── Profile Side Panel ───────────────────────────────────────────── */}
+        {/* â”€â”€ Profile Side Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {selectedMember && (
           <div style={{
             width: '380px', flexShrink: 0, borderLeft: `1px solid ${c.border}`,
@@ -466,7 +467,7 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
             <div style={{ padding: '20px', flex: 1 }}>
               {/* Avatar + Name */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '20px' }}>
-                <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: isDarkMode ? '#374151' : '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: '700', color: c.muted, flexShrink: 0, overflow: 'hidden', border: `2px solid ${c.border}` }}>
+                <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: isDarkMode ? '#27272a' : '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: '700', color: c.muted, flexShrink: 0, overflow: 'hidden', border: `2px solid ${c.border}` }}>
                   {(mergedProfile?.avatar_url)
                     ? <img src={mergedProfile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     : getInitials(mergedProfile?.name || selectedMember.name)}
@@ -529,7 +530,7 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
                   <span style={{ fontSize: '13px', color: c.muted, fontStyle: 'italic' }}>No ministries assigned</span>
                 )}
                 {selectedMember.notes && (
-                  <div style={{ marginTop: '10px', fontSize: '12px', color: c.muted, background: isDarkMode ? '#111827' : '#f8fafc', padding: '8px 10px', borderRadius: '6px', border: `1px solid ${c.border}` }}>
+                  <div style={{ marginTop: '10px', fontSize: '12px', color: c.muted, background: isDarkMode ? '#111111' : '#f8fafc', padding: '8px 10px', borderRadius: '6px', border: `1px solid ${c.border}` }}>
                     <strong>Notes:</strong> {selectedMember.notes}
                   </div>
                 )}
@@ -582,7 +583,7 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
         )}
       </div>
 
-      {/* ── Edit / Add modal ─────────────────────────────────────────────────── */}
+      {/* â”€â”€ Edit / Add modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {showEditModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 999, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: c.card, borderRadius: '14px', border: `1px solid ${c.border}`, width: '100%', maxWidth: '560px', maxHeight: '90vh', overflow: 'auto', boxShadow: '0 24px 60px rgba(0,0,0,0.3)' }}>
@@ -667,7 +668,7 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
   );
 }
 
-// ── Small sub-components ──────────────────────────────────────────────────────
+// â”€â”€ Small sub-components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function SectionBlock({ title, icon, children, c }) {
   return (
     <div style={{ marginBottom: '18px' }}>

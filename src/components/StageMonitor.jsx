@@ -45,30 +45,30 @@ export default function StageMonitor() {
   return (
     <div style={{
       width: '100vw', height: '100vh',
-      background: '#0d1117',
+      background: '#0a0a0a',
       display: 'flex', flexDirection: 'column',
       color: 'white', overflow: 'hidden',
       fontFamily: 'system-ui, -apple-system, sans-serif',
       userSelect: 'none',
     }}>
 
-      {/* ── Top bar ─────────────────────────────────────────────────────────── */}
+      {/* â”€â”€ Top bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div style={{
-        padding: '10px 20px', background: '#161b22',
-        borderBottom: '1px solid #21262d',
+        padding: '10px 20px', background: '#0a0a0a',
+        borderBottom: '1px solid #111111',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         flexShrink: 0,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: connected ? '#10b981' : '#ef4444' }} />
           <span style={{ fontSize: '13px', color: '#8b949e', fontWeight: '500' }}>
-            {current.song ? `♪ ${current.song}` : 'WorshipOps Stage Monitor'}
+            {current.song ? `â™ª ${current.song}` : 'WorshipOps Stage Monitor'}
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           {isBlack && (
             <div style={{ fontSize: '12px', fontWeight: '700', color: '#ef4444', letterSpacing: '1px', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)' }}>
-              ■ BLANK
+              â–  BLANK
             </div>
           )}
           <div style={{ fontFamily: 'monospace', fontSize: '20px', fontWeight: '700', color: '#f0f6fc', letterSpacing: '1px' }}>
@@ -77,10 +77,10 @@ export default function StageMonitor() {
         </div>
       </div>
 
-      {/* ── Current slide ──────────────────────────────────────────────────── */}
+      {/* â”€â”€ Current slide â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div style={{
         flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '30px 50px', background: '#0d1117',
+        padding: '30px 50px', background: '#0a0a0a',
       }}>
         <div style={{ textAlign: 'center', width: '100%' }}>
           {current.label && (
@@ -101,7 +101,7 @@ export default function StageMonitor() {
         </div>
       </div>
 
-      {/* ── Next slide ─────────────────────────────────────────────────────── */}
+      {/* â”€â”€ Next slide â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div style={{
         padding: '16px 50px 20px',
         background: '#0f3460',
@@ -110,7 +110,7 @@ export default function StageMonitor() {
         flexShrink: 0, overflow: 'hidden',
       }}>
         <div style={{ fontSize: '10px', fontWeight: '800', color: '#60a5fa', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '10px' }}>
-          NEXT →
+          NEXT â†’
         </div>
         <div style={{
           color: next ? '#c9d1d9' : '#4b5563',

@@ -75,7 +75,7 @@ export default function VolunteerDashboard({ user }) {
     return (
       <div style={{textAlign:'center', padding:'60px 20px', border:'2px dashed #e5e7eb', borderRadius:'16px', background:'#f9fafb', maxWidth:'600px', margin:'40px auto'}}>
         <div style={{width:'64px', height:'64px', background:'white', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 20px auto', boxShadow:'0 1px 2px 0 rgba(0,0,0,0.05)'}}><Calendar color="#9ca3af" size={32} /></div>
-        <h3 style={{fontSize:'18px', fontWeight:'bold', color:'#111827', margin:'0 0 8px 0'}}>No Upcoming Assignments</h3>
+        <h3 style={{fontSize:'18px', fontWeight:'bold', color:'#111111', margin:'0 0 8px 0'}}>No Upcoming Assignments</h3>
         <p style={{color:'#6b7280', maxWidth:'300px', margin:'0 auto'}}>You are not scheduled for any future services.</p>
       </div>
     );
@@ -101,7 +101,7 @@ export default function VolunteerDashboard({ user }) {
           <div style={{padding:'24px 32px'}}>
             <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'24px'}}>
                 <div>
-                    <h1 style={{fontSize:'24px', fontWeight:'bold', color:'#111827', margin:'0 0 8px 0'}}>{nextUp.service.name}</h1>
+                    <h1 style={{fontSize:'24px', fontWeight:'bold', color:'#111111', margin:'0 0 8px 0'}}>{nextUp.service.name}</h1>
                     <div style={{display:'flex', gap:'16px', color:'#4b5563', fontSize:'14px', fontWeight:'500'}}>
                         <div style={{display:'flex', alignItems:'center', gap:'8px'}}><Calendar size={18} color="#3b82f6" /> {formatDate(nextUp.service.date)}</div>
                         <div style={{display:'flex', alignItems:'center', gap:'8px'}}><Clock size={18} color="#3b82f6" /> {formatTime(nextUp.service.date)}</div>
@@ -116,7 +116,7 @@ export default function VolunteerDashboard({ user }) {
                   </div>
                   <div>
                     <div style={{fontSize:'10px', fontWeight:'bold', color:'#9ca3af', textTransform:'uppercase', letterSpacing:'0.05em'}}>Your Position</div>
-                    <div style={{fontSize:'16px', fontWeight:'bold', color:'#1f2937'}}>{nextUp.role_name}</div>
+                    <div style={{fontSize:'16px', fontWeight:'bold', color:'#1f1f22'}}>{nextUp.role_name}</div>
                   </div>
             </div>
 
@@ -147,7 +147,7 @@ export default function VolunteerDashboard({ user }) {
                   <div style={{display:'flex', alignItems:'center', gap:'16px'}}>
                     <div style={{width:'40px', height:'40px', borderRadius:'50%', background:'#f3f4f6', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:'bold', color:'#4b5563', border:'1px solid #e5e7eb', flexShrink:0}}>{song.song_key || "-"}</div>
                     <div>
-                      <div style={{fontWeight:'bold', color:'#111827'}}>{song.title}</div>
+                      <div style={{fontWeight:'bold', color:'#111111'}}>{song.title}</div>
                       {song.bpm && <div style={{fontSize:'12px', fontWeight:'500', color:'#6b7280'}}>{song.bpm} BPM</div>}
                     </div>
                   </div>

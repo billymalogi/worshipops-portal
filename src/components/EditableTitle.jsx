@@ -38,7 +38,7 @@ const EditableTitle = ({ initialTitle, onSave, isDarkMode }) => {
   const commonStyles = {
     fontSize: '32px', // Big Header Size
     fontWeight: '800',
-    color: isDarkMode ? '#f9fafb' : '#111827',
+    color: isDarkMode ? '#f9fafb' : '#111111',
     lineHeight: '1.2',
     letterSpacing: '-0.02em',
     whiteSpace: 'nowrap',       // <--- PREVENTS WRAPPING TO 2 LINES

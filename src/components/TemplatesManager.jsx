@@ -24,15 +24,15 @@ export default function TemplatesManager({ templates = [], isDarkMode, userRole,
   const [movingId, setMovingId] = useState(null);
 
   const c = {
-    bg:      isDarkMode ? '#111827' : '#f9fafb',
-    card:    isDarkMode ? '#1f2937' : '#ffffff',
-    text:    isDarkMode ? '#d1d5db' : '#374151',
-    heading: isDarkMode ? '#f9fafb' : '#111827',
-    border:  isDarkMode ? '#374151' : '#e5e7eb',
+    bg:      isDarkMode ? '#111111' : '#f9fafb',
+    card:    isDarkMode ? '#1f1f22' : '#ffffff',
+    text:    isDarkMode ? '#d1d5db' : '#27272a',
+    heading: isDarkMode ? '#f9fafb' : '#111111',
+    border:  isDarkMode ? '#27272a' : '#e5e7eb',
     muted:   isDarkMode ? '#6b7280' : '#9ca3af',
-    hover:   isDarkMode ? '#374151' : '#f3f4f6',
-    input:   isDarkMode ? '#111827' : '#f9fafb',
-    sidebar: isDarkMode ? '#0d1117' : '#f8f9fa',
+    hover:   isDarkMode ? '#27272a' : '#f3f4f6',
+    input:   isDarkMode ? '#111111' : '#f9fafb',
+    sidebar: isDarkMode ? '#0a0a0a' : '#f8f9fa',
     primary: '#3b82f6',
     danger:  '#ef4444',
   };
@@ -50,7 +50,7 @@ export default function TemplatesManager({ templates = [], isDarkMode, userRole,
     padding: '8px 16px', background: bg, color: fg, ...extra,
   });
 
-  // ── Fetch folders ─────────────────────────────────────────────────────────
+  // â”€â”€ Fetch folders â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const fetchFolders = async () => {
     if (!orgId) return;
     const { data } = await supabase
@@ -63,7 +63,7 @@ export default function TemplatesManager({ templates = [], isDarkMode, userRole,
 
   useEffect(() => { fetchFolders(); }, [orgId]);
 
-  // ── Create template ───────────────────────────────────────────────────────
+  // â”€â”€ Create template â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleCreate = async () => {
     if (!newName.trim()) { setCreateErr('Please enter a template name.'); return; }
     setCreating(true);
@@ -82,7 +82,7 @@ export default function TemplatesManager({ templates = [], isDarkMode, userRole,
     onOpen(data);
   };
 
-  // ── Delete template ───────────────────────────────────────────────────────
+  // â”€â”€ Delete template â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleDelete = async (e, id, name) => {
     e.stopPropagation();
     if (!window.confirm(`Delete template "${name}"? This cannot be undone.`)) return;
@@ -90,7 +90,7 @@ export default function TemplatesManager({ templates = [], isDarkMode, userRole,
     onRefresh();
   };
 
-  // ── Create folder ─────────────────────────────────────────────────────────
+  // â”€â”€ Create folder â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleCreateFolder = async () => {
     if (!newFolderName.trim()) return;
     setCreatingFolder(true);
@@ -106,7 +106,7 @@ export default function TemplatesManager({ templates = [], isDarkMode, userRole,
     if (data) setSelectedFolder(data);
   };
 
-  // ── Delete folder ─────────────────────────────────────────────────────────
+  // â”€â”€ Delete folder â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleDeleteFolder = async (e, id) => {
     e.stopPropagation();
     if (!window.confirm('Delete this folder? Templates inside become uncategorized.')) return;
@@ -116,7 +116,7 @@ export default function TemplatesManager({ templates = [], isDarkMode, userRole,
     onRefresh();
   };
 
-  // ── Move template to folder ───────────────────────────────────────────────
+  // â”€â”€ Move template to folder â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleMove = async (templateId, folderId) => {
     await supabase.from('service_templates').update({ folder_id: folderId }).eq('id', templateId);
     setMovingId(null);
@@ -132,11 +132,11 @@ export default function TemplatesManager({ templates = [], isDarkMode, userRole,
     ? templates.filter(t => t.folder_id === selectedFolder.id)
     : templates;
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
     <div style={{ height: 'calc(100vh - 108px)', display: 'flex', background: c.bg, overflow: 'hidden' }}>
 
-      {/* ── Left Sidebar ──────────────────────────────────────────────────── */}
+      {/* â”€â”€ Left Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div style={{
         width: '220px',
         background: c.sidebar,
@@ -201,7 +201,7 @@ export default function TemplatesManager({ templates = [], isDarkMode, userRole,
           >
             <LayoutTemplate size={14} style={{ opacity: 0.7 }} />
             <span style={{ flex: 1 }}>All Templates</span>
-            <span style={{ fontSize: '11px', color: c.muted, background: isDarkMode ? '#374151' : '#f3f4f6', padding: '1px 6px', borderRadius: '10px' }}>
+            <span style={{ fontSize: '11px', color: c.muted, background: isDarkMode ? '#27272a' : '#f3f4f6', padding: '1px 6px', borderRadius: '10px' }}>
               {templates.length}
             </span>
           </div>
@@ -228,7 +228,7 @@ export default function TemplatesManager({ templates = [], isDarkMode, userRole,
               >
                 {isActive ? <FolderOpen size={14} /> : <Folder size={14} style={{ opacity: 0.7 }} />}
                 <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{folder.name}</span>
-                <span style={{ fontSize: '11px', color: c.muted, background: isDarkMode ? '#374151' : '#f3f4f6', padding: '1px 6px', borderRadius: '10px', flexShrink: 0 }}>
+                <span style={{ fontSize: '11px', color: c.muted, background: isDarkMode ? '#27272a' : '#f3f4f6', padding: '1px 6px', borderRadius: '10px', flexShrink: 0 }}>
                   {count}
                 </span>
                 {userRole === 'admin' && (
@@ -254,7 +254,7 @@ export default function TemplatesManager({ templates = [], isDarkMode, userRole,
         </div>
       </div>
 
-      {/* ── Right: Header + Grid ──────────────────────────────────────────── */}
+      {/* â”€â”€ Right: Header + Grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* Header */}
@@ -280,7 +280,7 @@ export default function TemplatesManager({ templates = [], isDarkMode, userRole,
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
           {visibleTemplates.length === 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60%', gap: '16px', textAlign: 'center' }}>
-              <div style={{ fontSize: '64px', opacity: 0.18 }}>📋</div>
+              <div style={{ fontSize: '64px', opacity: 0.18 }}>ðŸ“‹</div>
               <div style={{ fontSize: '20px', fontWeight: '700', color: c.heading }}>No Templates Yet</div>
               <div style={{ fontSize: '13px', color: c.muted, maxWidth: '400px', lineHeight: '1.8' }}>
                 {selectedFolder
@@ -404,7 +404,7 @@ export default function TemplatesManager({ templates = [], isDarkMode, userRole,
         </div>
       </div>
 
-      {/* ── Create modal ──────────────────────────────────────────────────── */}
+      {/* â”€â”€ Create modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {showCreate && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 999, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: c.card, borderRadius: '14px', border: `1px solid ${c.border}`, width: '100%', maxWidth: '440px', overflow: 'hidden', boxShadow: '0 24px 60px rgba(0,0,0,0.3)' }}>

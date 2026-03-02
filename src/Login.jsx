@@ -16,12 +16,12 @@ export default function Login() {
 
   // Theme colors matching App.css
   const colors = {
-    bgDark: '#111827',      // --bg-dark
-    bgPanel: '#1f2937',     // --bg-panel
+    bgDark: '#111111',      // --bg-dark
+    bgPanel: '#1f1f22',     // --bg-panel
     textMain: '#f3f4f6',    // --text-main (bright white)
     textMuted: '#9ca3af',   // --text-muted (light gray)
     accent: '#3b82f6',      // --accent (blue)
-    border: '#374151',      // --border
+    border: '#27272a',      // --border
     success: '#10b981',     // Green
     danger: '#ef4444',      // Red
   };
