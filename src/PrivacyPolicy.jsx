@@ -8,7 +8,7 @@ export default function PrivacyPolicy() {
 
       {/* Top nav */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 32px', borderBottom: '1px solid #0f172a' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => navigate('/')}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }} onClick={() => navigate('/')}>
           <img src="/favicon.ico" alt="WorshipOps" style={{ width: '60px', height: '60px', objectFit: 'contain' }} />
           <span style={{ fontSize: '16px', fontWeight: '700', color: '#f1f5f9', letterSpacing: '-0.3px' }}>WorshipOps</span>
         </div>
@@ -37,7 +37,7 @@ export default function PrivacyPolicy() {
           },
           {
             title: '3. Data Storage and Security',
-            body: `Your data is stored securely using Supabase, which operates on industry-standard PostgreSQL infrastructure with row-level security. We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.`,
+            body: `Your data is stored securely in our third-party servers, which operates on industry-standard PostgreSQL infrastructure with row-level security. We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.`,
           },
           {
             title: '4. Sharing of Information',

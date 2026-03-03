@@ -6,7 +6,7 @@ import { ArrowRight, CheckCircle2, Loader, X } from 'lucide-react';
 // ─── Logo mark ───────────────────────────────────────────────────────────────
 function LogoMark() {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
       <img src="/favicon.ico" alt="WorshipOps" style={{ width: '60px', height: '60px', objectFit: 'contain', flexShrink: 0 }} />
       <span style={{ fontWeight: '800', fontSize: '17px', color: '#f1f5f9', letterSpacing: '-0.4px' }}>
         WorshipOps
