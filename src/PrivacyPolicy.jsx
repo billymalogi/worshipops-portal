@@ -9,7 +9,7 @@ export default function PrivacyPolicy() {
       {/* Top nav */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 32px', borderBottom: '1px solid #0f172a' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => navigate('/')}>
-          <img src="/favicon.ico" alt="WorshipOps" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
+          <img src="/favicon.ico" alt="WorshipOps" style={{ width: '60px', height: '60px', objectFit: 'contain' }} />
           <span style={{ fontSize: '16px', fontWeight: '700', color: '#f1f5f9', letterSpacing: '-0.3px' }}>WorshipOps</span>
         </div>
         <button

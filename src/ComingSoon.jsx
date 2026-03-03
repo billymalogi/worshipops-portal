@@ -1,33 +1,13 @@
-/**
- * WorshipOps — Coming Soon Page
- *
- * - Centered layout: "COMING SOON" badge, brand name, taglines, early-access CTA
- * - Top-left logo: click 7 times within 2 seconds each → unlocks /login (beta access)
- * - Footer: Privacy Policy, Terms & Conditions, Admin Login (shows "coming soon" toast)
- * - Early Access modal: collects first name, last name, email, church → saves to Supabase early_access table
- *
- * To use your real logo: replace the <LogoMark /> component below with:
- *   <img src="/logo.png" alt="WorshipOps" style={{ height: '36px' }} />
- *   (put your logo file in the /public folder)
- */
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from './supabaseClient';
 import { ArrowRight, CheckCircle2, Loader, X } from 'lucide-react';
 
 // ─── Logo mark ───────────────────────────────────────────────────────────────
-// Replace this component's return with <img src="/logo.png" ... /> once you add your logo file.
 function LogoMark() {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-      <div style={{ width: '34px', height: '34px', borderRadius: '9px', background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-          <rect x="3"  y="3"  width="7" height="7" rx="1.5" fill="white" fillOpacity="0.95"/>
-          <rect x="14" y="3"  width="7" height="7" rx="1.5" fill="white" fillOpacity="0.95"/>
-          <rect x="3"  y="14" width="7" height="7" rx="1.5" fill="white" fillOpacity="0.95"/>
-          <rect x="14" y="14" width="7" height="7" rx="1.5" fill="white" fillOpacity="0.7"/>
-        </svg>
-      </div>
+      <img src="/favicon.ico" alt="WorshipOps" style={{ width: '60px', height: '60px', objectFit: 'contain', flexShrink: 0 }} />
       <span style={{ fontWeight: '800', fontSize: '17px', color: '#f1f5f9', letterSpacing: '-0.4px' }}>
         WorshipOps
       </span>
