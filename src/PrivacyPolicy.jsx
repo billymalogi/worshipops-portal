@@ -1,20 +1,30 @@
-import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function PrivacyPolicy() {
-  return (
-    <div style={{ minHeight: '100vh', background: '#050810', color: '#e2e8f0', fontFamily: '"Inter", system-ui, sans-serif', padding: '60px 24px' }}>
-      <div style={{ maxWidth: '720px', margin: '0 auto' }}>
+  const navigate = useNavigate();
 
-        {/* Back */}
+  return (
+    <div style={{ minHeight: '100vh', background: '#050810', color: '#e2e8f0', fontFamily: '"Inter", system-ui, sans-serif' }}>
+
+      {/* Top nav */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 32px', borderBottom: '1px solid #0f172a' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => navigate('/')}>
+          <img src="/favicon.ico" alt="WorshipOps" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
+          <span style={{ fontSize: '16px', fontWeight: '700', color: '#f1f5f9', letterSpacing: '-0.3px' }}>WorshipOps</span>
+        </div>
         <button
-          onClick={() => window.history.back()}
-          style={{ background: 'transparent', border: 'none', color: '#475569', cursor: 'pointer', fontSize: '14px', marginBottom: '40px', padding: 0, display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'inherit' }}
+          onClick={() => navigate(-1)}
+          style={{ background: 'transparent', border: '1px solid #1e293b', borderRadius: '8px', color: '#64748b', cursor: 'pointer', fontSize: '13px', padding: '6px 14px', fontFamily: 'inherit' }}
         >
           ← Back
         </button>
+      </div>
+
+      {/* Content */}
+      <div style={{ maxWidth: '720px', margin: '0 auto', padding: '60px 24px' }}>
 
         <h1 style={{ fontSize: '36px', fontWeight: '900', color: '#f1f5f9', letterSpacing: '-1px', margin: '0 0 8px' }}>Privacy Policy</h1>
-        <p style={{ color: '#475569', fontSize: '14px', margin: '0 0 48px' }}>Last updated: March 2025</p>
+        <p style={{ color: '#475569', fontSize: '14px', margin: '0 0 48px' }}>Last updated: March 2026</p>
 
         {[
           {
@@ -65,8 +75,11 @@ export default function PrivacyPolicy() {
         ))}
 
         <div style={{ borderTop: '1px solid #0f172a', paddingTop: '32px', marginTop: '16px', textAlign: 'center' }}>
-          <p style={{ color: '#1e293b', fontSize: '13px' }}>
-            © 2025 WorshipOps · <a href="/terms" style={{ color: '#334155', textDecoration: 'underline' }}>Terms of Service</a>
+          <p style={{ color: '#475569', fontSize: '13px', margin: 0 }}>
+            © 2026 WorshipOps ·{' '}
+            <a href="/terms" style={{ color: '#64748b', textDecoration: 'underline' }}>Terms of Service</a>
+            {' · '}
+            <a href="/" style={{ color: '#64748b', textDecoration: 'underline' }}>Home</a>
           </p>
         </div>
       </div>
