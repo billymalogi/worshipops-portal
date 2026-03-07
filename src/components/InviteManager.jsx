@@ -570,7 +570,6 @@ export default function InviteManager({ isDarkMode, session }) {
             </div>
           </div>
         </div>
-      </div>
 
       {/* Create form */}
       {showForm && (

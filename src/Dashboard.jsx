@@ -90,9 +90,12 @@ const getActiveCategory = (tab) =>
     items.some(i => i.id === tab)
   )?.[0] || 'planner';
 
+// --- MASTER ACCOUNT ---
+const MASTER_EMAIL = 'billy@worshipops.com';
+
 // --- ROLE-BASED TAB PERMISSIONS ---
 const ROLE_TABS = {
-  admin:            ['dashboard','templates','songs','team','myschedule','lighting','stage','rehearsals','profile','organization','billing','invites','featurerequests'],
+  admin:            ['dashboard','templates','songs','team','myschedule','lighting','stage','rehearsals','profile','organization','billing','featurerequests'],
   leader:           ['dashboard','templates','songs','team','myschedule','lighting','stage','rehearsals','profile','organization','featurerequests'],
   campus_leader:    ['dashboard','team','myschedule','profile'],
   editor:           ['dashboard','templates','songs','team','myschedule','lighting','stage','rehearsals','profile','organization','featurerequests'],
@@ -100,7 +103,11 @@ const ROLE_TABS = {
   scheduled_viewer: ['myschedule'],
 };
 const ROLE_LABELS = { admin: 'Admin', leader: 'Leader', campus_leader: 'Campus Leader', editor: 'Editor', viewer: 'Volunteer', scheduled_viewer: 'Volunteer' };
-const getAllowedTabs = (role) => ROLE_TABS[role] ?? [];
+const getAllowedTabs = (role, email) => {
+  const tabs = [...(ROLE_TABS[role] ?? [])];
+  if (email === MASTER_EMAIL) tabs.push('invites');
+  return tabs;
+};
 
 // Active tab highlight: lighter in dark mode, darker in light mode
 const tabActiveBg  = (isDark) => isDark ? '#1F1F22' : '#E4E4E7';
@@ -111,7 +118,7 @@ const CAT_DISPLAY = { myschedule: 'My Schedule', planner: 'Planner', production:
 
 const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, setSelectedService, refreshData, onLogout, session, realRole }) => {
   const activeCategory = getActiveCategory(activeTab);
-  const allowed = getAllowedTabs(realRole);
+  const allowed = getAllowedTabs(realRole, session?.user?.email);
 
   // Only show categories that have at least one accessible tab
   const visibleCats = Object.keys(NAV_CATEGORIES).filter(cat =>
@@ -197,9 +204,9 @@ const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, se
 };
 
 // --- SUB-NAV BAR ---
-const SubNav = ({ colors, activeTab, setActiveTab, setSelectedService, isDarkMode, realRole }) => {
+const SubNav = ({ colors, activeTab, setActiveTab, setSelectedService, isDarkMode, realRole, session }) => {
   const activeCategory = getActiveCategory(activeTab);
-  const allowed = getAllowedTabs(realRole);
+  const allowed = getAllowedTabs(realRole, session?.user?.email);
   const allItems = NAV_CATEGORIES[activeCategory]?.items || [];
   const items = allItems.filter(item => allowed.includes(item.id));
 
@@ -502,7 +509,7 @@ export default function Dashboard() {
 
       <Header colors={colors} activeTab={activeTab} setActiveTab={setActiveTab} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} setSelectedService={setSelectedService} refreshData={() => refreshAllData(orgId)} onLogout={handleLogout} session={session} realRole={realRole} />
 
-      <SubNav colors={colors} activeTab={activeTab} setActiveTab={setActiveTab} setSelectedService={setSelectedService} isDarkMode={isDarkMode} realRole={realRole} />
+      <SubNav colors={colors} activeTab={activeTab} setActiveTab={setActiveTab} setSelectedService={setSelectedService} isDarkMode={isDarkMode} realRole={realRole} session={session} />
 
       {/* MAIN CONTENT - height adjusts: 64px header + optional 44px subnav */}
       <div style={{ display: 'flex', height: `calc(100vh - ${activeTab === 'myschedule' ? 93 : 137}px)` }}>
@@ -559,8 +566,8 @@ export default function Dashboard() {
             <BillingSettings isDarkMode={isDarkMode} teamMembers={teamMembers} services={services} />
           )}
 
-          {/* BETA INVITES TAB */}
-          {activeTab === 'invites' && (
+          {/* BETA INVITES TAB — master account only */}
+          {activeTab === 'invites' && session?.user?.email === MASTER_EMAIL && (
             <InviteManager isDarkMode={isDarkMode} session={session} />
           )}
 
