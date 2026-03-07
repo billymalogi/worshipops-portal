@@ -354,8 +354,7 @@ export default function InviteManager({ isDarkMode, session }) {
           {showTemplate ? <ChevronDown size={15} style={{ color: c.text }} /> : <ChevronRight size={15} style={{ color: c.text }} />}
         </button>
 
-        {showTemplate && (
-          <div style={{ padding: '0 18px 18px', borderTop: `1px solid ${c.border}` }}>
+        <div style={{ padding: '0 18px 18px', borderTop: `1px solid ${c.border}`, display: showTemplate ? 'block' : 'none' }}>
             <p style={{ margin: '14px 0 16px', fontSize: '12px', color: c.text, lineHeight: '1.6' }}>
               Compose your email below with full formatting. Use{' '}
               <code style={{ background: c.input, padding: '1px 6px', borderRadius: '4px', fontSize: '11px', color: c.blue }}>{'{invite_link}'}</code>
@@ -570,7 +569,7 @@ export default function InviteManager({ isDarkMode, session }) {
               </span>
             </div>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Create form */}
