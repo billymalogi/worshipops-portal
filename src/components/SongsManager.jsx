@@ -934,7 +934,7 @@ export default function SongsManager({ songs, isDarkMode, userRole, orgId, onRef
           padding: '14px 24px',
           display: 'flex', gap: '20px', alignItems: 'flex-start', flexShrink: 0,
         }}>
-          <div style={{ fontSize: '26px', flexShrink: 0, lineHeight: 1 }}>ðŸŽµ</div>
+          <Music size={26} style={{ flexShrink: 0 }} />
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: '700', fontSize: '14px', color: isDarkMode ? '#93c5fd' : '#1d4ed8', marginBottom: '4px' }}>
               Unlock 4.5 Million+ Licensed Songs with CCLI SongSelect

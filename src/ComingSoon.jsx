@@ -150,7 +150,7 @@ export default function ComingSoon() {
 
         {/* First tagline */}
         <p style={{ fontSize: '15px', color: '#64748b', fontWeight: '500', margin: '0 0 28px', fontStyle: 'italic', maxWidth: '420px', lineHeight: '1.6' }}>
-          Removing the chaos so you can focus on your call.
+          Removing the chaos so you can focus on your calling.
         </p>
 
         {/* Brand name */}

@@ -280,7 +280,7 @@ export default function TemplatesManager({ templates = [], isDarkMode, userRole,
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
           {visibleTemplates.length === 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60%', gap: '16px', textAlign: 'center' }}>
-              <div style={{ fontSize: '64px', opacity: 0.18 }}>ðŸ“‹</div>
+              <LayoutTemplate size={64} style={{ opacity: 0.18, color: c.muted }} />
               <div style={{ fontSize: '20px', fontWeight: '700', color: c.heading }}>No Templates Yet</div>
               <div style={{ fontSize: '13px', color: c.muted, maxWidth: '400px', lineHeight: '1.8' }}>
                 {selectedFolder

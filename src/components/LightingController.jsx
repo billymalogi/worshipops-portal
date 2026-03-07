@@ -4,7 +4,7 @@ import {
   ChevronRight, ChevronDown, RefreshCw, AlertCircle
 } from 'lucide-react';
 
-// â”€â”€â”€ Software registry â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Software registry --------------------------------------------------------
 const SOFTWARE = [
   {
     id: 'lightkey',
@@ -12,7 +12,7 @@ const SOFTWARE = [
     platform: 'macOS',
     defaultPort: 9090,
     agentRequired: true,
-    logo: 'ðŸ’¡',
+    logo: 'LK',
     desc: 'Timeline-based lighting design for macOS.',
     hint: 'Requires the WorshipOps Lighting Agent running on the Mac.',
   },
@@ -22,7 +22,7 @@ const SOFTWARE = [
     platform: 'Windows / macOS / Linux',
     defaultPort: 8080,
     agentRequired: false,
-    logo: 'ðŸŽ›ï¸',
+    logo: 'MQ',
     desc: 'Professional console software with a built-in web server.',
     hint: 'No agent needed — MagicQ serves a web UI directly on port 8080.',
   },
@@ -32,7 +32,7 @@ const SOFTWARE = [
     platform: 'Windows / macOS',
     defaultPort: 9090,
     agentRequired: true,
-    logo: 'ðŸŒŸ',
+    logo: 'VS',
     desc: 'Timeline-based lighting control from Jands.',
     hint: 'Requires the WorshipOps Lighting Agent running on the Vista machine.',
   },
@@ -42,18 +42,18 @@ const SOFTWARE = [
     platform: 'Any',
     defaultPort: 9090,
     agentRequired: true,
-    logo: 'ðŸ”Œ',
+    logo: '??',
     desc: 'Connect any software via the WorshipOps Lighting Agent.',
     hint: 'Install and run the agent on the lighting computer.',
   },
 ];
 
-// â”€â”€â”€ Setup guide steps â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Setup guide steps --------------------------------------------------------
 const AGENT_STEPS = [
-  { icon: 'â¬‡ï¸', text: 'Download WorshipOps-Lighting-Agent.exe (Windows) or WorshipOps-Lighting-Agent-macOS from your admin portal.' },
-  { icon: 'â–¶ï¸', text: 'Double-click the file on your lighting computer — no install needed, it runs immediately.' },
-  { icon: 'ðŸ“‹', text: 'A small window will open showing your Network IP (e.g. 192.168.1.45). Copy that address.' },
-  { icon: 'ðŸ”—', text: 'Paste the IP here, confirm the port (default 9090), then click Connect.' },
+  'Download WorshipOps-Lighting-Agent.exe (Windows) or WorshipOps-Lighting-Agent-macOS from your admin portal.',
+  'Double-click the file on your lighting computer — no install needed, it runs immediately.',
+  'A small window will open showing your Network IP (e.g. 192.168.1.45). Copy that address.',
+  'Paste the IP here, confirm the port (default 9090), then click Connect.',
 ];
 
 export default function LightingController({ isDarkMode }) {
@@ -81,7 +81,7 @@ export default function LightingController({ isDarkMode }) {
   };
 
   const statusDot = { idle: c.muted, connecting: c.warning, connected: c.success, error: c.danger }[status];
-  const statusText = { idle: 'Not connected', connecting: 'Connecting…', connected: `Connected — ${ipAddress}:${port}`, error: 'Connection failed' }[status];
+  const statusText = { idle: 'Not connected', connecting: 'Connecting...', connected: `Connected — ${ipAddress}:${port}`, error: 'Connection failed' }[status];
 
   const selectSW = (sw) => {
     setSelectedSW(sw);
@@ -111,7 +111,7 @@ export default function LightingController({ isDarkMode }) {
   return (
     <div style={{ height: 'calc(100vh - 108px)', display: 'flex', background: c.bg, overflow: 'hidden' }}>
 
-      {/* â”€â”€ LEFT PANEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* -- LEFT PANEL -------------------------------------------------------- */}
       <div style={{ width: '320px', borderRight: `1px solid ${c.border}`, background: c.card, display: 'flex', flexDirection: 'column', overflowY: 'auto', flexShrink: 0 }}>
 
         {/* Header */}
@@ -138,7 +138,7 @@ export default function LightingController({ isDarkMode }) {
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <span style={{ fontSize: '22px' }}>{sw.logo}</span>
+                  <span style={{ fontSize: '11px', fontWeight: '800', color: c.primary, background: 'rgba(59,130,246,0.12)', padding: '4px 7px', borderRadius: '6px', letterSpacing: '0.5px', flexShrink: 0 }}>{sw.logo}</span>
                   <div>
                     <div style={{ fontWeight: '600', fontSize: '13px', color: c.heading }}>{sw.name}</div>
                     <div style={{ fontSize: '11px', color: c.muted }}>{sw.platform}</div>
@@ -174,7 +174,7 @@ export default function LightingController({ isDarkMode }) {
                 </button>
               : status === 'connecting'
               ? <button disabled style={{ width: '100%', padding: '10px', borderRadius: '8px', border: 'none', background: c.warning, color: 'white', fontWeight: '600', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                  <RefreshCw size={13} /> Connecting…
+                  <RefreshCw size={13} /> Connecting...
                 </button>
               : <button onClick={connect} disabled={!ipAddress || !port} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: 'none', background: (!ipAddress || !port) ? c.hover : c.primary, color: (!ipAddress || !port) ? c.muted : 'white', fontWeight: '600', fontSize: '13px', cursor: (!ipAddress || !port) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                   <Wifi size={14} /> Connect
@@ -199,17 +199,17 @@ export default function LightingController({ isDarkMode }) {
             </button>
             {showGuide && (
               <div style={{ marginTop: '12px', fontSize: '12px', color: c.text }}>
-                {AGENT_STEPS.map((step, i) => (
+                {AGENT_STEPS.map((text, i) => (
                   <div key={i} style={{ display: 'flex', gap: '10px', marginBottom: '10px', alignItems: 'flex-start' }}>
-                    <span style={{ fontSize: '16px', flexShrink: 0, lineHeight: '1.4' }}>{step.icon}</span>
-                    <span style={{ lineHeight: '1.6' }}>{step.text}</span>
+                    <span style={{ fontSize: '11px', fontWeight: '700', color: c.primary, background: 'rgba(59,130,246,0.1)', padding: '2px 6px', borderRadius: '10px', flexShrink: 0, lineHeight: '1.6' }}>{i + 1}</span>
+                    <span style={{ lineHeight: '1.6' }}>{text}</span>
                   </div>
                 ))}
                 <div style={{ marginTop: '6px', padding: '10px 12px', background: 'rgba(59,130,246,0.08)', borderRadius: '8px', border: `1px solid rgba(59,130,246,0.2)`, fontSize: '12px', color: c.primary, fontWeight: '600' }}>
                   No Node.js, no terminal, no install steps — just double-click and go.
                 </div>
-                <div style={{ marginTop: '8px', padding: '8px 10px', background: isDarkMode ? 'rgba(245,158,11,0.1)' : '#fef3c7', borderRadius: '6px', color: isDarkMode ? c.warning : '#92400e', fontSize: '11px', border: `1px solid ${isDarkMode ? 'rgba(245,158,11,0.2)' : '#fde68a'}` }}>
-                  âš  Both devices must be on the <strong>same Wi-Fi / LAN</strong>
+                <div style={{ marginTop: '8px', padding: '8px 10px', background: isDarkMode ? 'rgba(245,158,11,0.1)' : '#fef3c7', borderRadius: '6px', color: isDarkMode ? c.warning : '#92400e', fontSize: '11px', border: `1px solid ${isDarkMode ? 'rgba(245,158,11,0.2)' : '#fde68a'}`, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <AlertCircle size={12} style={{ flexShrink: 0 }} /> Both devices must be on the <strong>same Wi-Fi / LAN</strong>
                 </div>
               </div>
             )}
@@ -217,7 +217,7 @@ export default function LightingController({ isDarkMode }) {
         )}
       </div>
 
-      {/* â”€â”€ RIGHT PANEL — Viewer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* -- RIGHT PANEL — Viewer ---------------------------------------------- */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: isDarkMode ? '#0a0a0a' : '#f1f5f9', overflow: 'hidden' }}>
 
         {/* Viewer toolbar */}
@@ -247,11 +247,11 @@ export default function LightingController({ isDarkMode }) {
               {status === 'connecting'
                 ? <>
                     <RefreshCw size={48} color={c.warning} />
-                    <div style={{ fontSize: '18px', fontWeight: '600', color: c.heading }}>Connecting to {selectedSW?.name}…</div>
+                    <div style={{ fontSize: '18px', fontWeight: '600', color: c.heading }}>Connecting to {selectedSW?.name}...</div>
                     <div style={{ fontSize: '13px', color: c.muted }}>Reaching {ipAddress}:{port}</div>
                   </>
                 : <>
-                    <div style={{ fontSize: '72px', opacity: 0.25 }}>ðŸŽ›ï¸</div>
+                    <Monitor size={72} style={{ opacity: 0.25, color: c.muted }} />
                     <div style={{ fontSize: '20px', fontWeight: '700', color: c.heading }}>No Software Connected</div>
                     <div style={{ fontSize: '13px', color: c.muted, maxWidth: '400px', lineHeight: '1.7' }}>
                       Select your lighting software on the left, enter the IP of your lighting computer, and click Connect.<br />

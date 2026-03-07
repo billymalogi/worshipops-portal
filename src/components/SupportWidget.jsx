@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
+import { HelpCircle, MessageCircle, X } from 'lucide-react';
 
 /**
  * SupportWidget — Fixed bottom-right floating contact buttons.
  * Shown on all settings pages (Profile, Organization, Billing).
  *
- * Ticket   â†’ support@worshipops.com
- * Feedback â†’ billy@worshipops.com
+ * Ticket   -> support@worshipops.com
+ * Feedback -> billy@worshipops.com
  */
 export default function SupportWidget() {
   const [expanded, setExpanded] = useState(false);
@@ -39,7 +40,7 @@ export default function SupportWidget() {
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(59,130,246,0.4)'; }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.25)'; }}
           >
-            ðŸŽ« Submit a Ticket
+            <HelpCircle size={14} /> Submit a Ticket
           </a>
 
           {/* Feedback */}
@@ -58,7 +59,7 @@ export default function SupportWidget() {
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(16,185,129,0.4)'; }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.25)'; }}
           >
-            ðŸ’¡ Send Feedback
+            <MessageCircle size={14} /> Send Feedback
           </a>
         </>
       )}
@@ -73,7 +74,6 @@ export default function SupportWidget() {
           border: 'none',
           background: expanded ? '#27272a' : 'linear-gradient(135deg, #3b82f6, #10b981)',
           color: 'white',
-          fontSize: expanded ? '20px' : '22px',
           cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
@@ -83,7 +83,7 @@ export default function SupportWidget() {
         onMouseEnter={e => { e.currentTarget.style.transform = expanded ? 'rotate(45deg) scale(1.08)' : 'scale(1.08)'; }}
         onMouseLeave={e => { e.currentTarget.style.transform = expanded ? 'rotate(45deg)' : 'rotate(0deg)'; }}
       >
-        {expanded ? 'âœ•' : 'ðŸ’¬'}
+        {expanded ? <X size={20} /> : <MessageCircle size={20} />}
       </button>
     </div>
   );

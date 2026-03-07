@@ -63,7 +63,7 @@ function calcBurnout(member, services, warningThreshold = 3, autoThreshold = 6) 
 
 // â”€â”€ Color tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const STATUS_META = {
-  active:  { label: 'Active',          color: '#10b981', bg: 'rgba(16,185,129,0.1)',  icon: 'ðŸŸ¢' },
+  active:  { label: 'Active',          color: '#10b981', bg: 'rgba(16,185,129,0.1)',  icon: '🟢' },
   warning: { label: 'High Serve Load',   color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', icon: '🟡' },
   burnout: { label: 'Needs Sabbath Rest', color: '#ef4444', bg: 'rgba(239,68,68,0.1)', icon: '🔴' },
   break:   { label: 'Sabbath Break',      color: '#3b82f6', bg: 'rgba(59,130,246,0.1)', icon: '🔵' },

@@ -213,8 +213,8 @@ export default function StageView({ isDarkMode, songs = [], onRefresh }) {
       <div style={{ padding: '10px 20px', background: c.card, borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
         <div style={{ display: 'flex', background: isDarkMode ? '#111111' : '#f3f4f6', borderRadius: '8px', padding: '3px', gap: '2px' }}>
           {[
-            { id: 'propresenter', label: 'ðŸŽ¬ ProPresenter' },
-            { id: 'builtin',      label: 'ðŸ“º Built-in Presenter' },
+            { id: 'propresenter', label: 'ProPresenter' },
+            { id: 'builtin',      label: 'Built-in Presenter' },
           ].map(opt => (
             <button
               key={opt.id}
@@ -261,8 +261,8 @@ export default function StageView({ isDarkMode, songs = [], onRefresh }) {
             <div style={{ width: '1px', height: '24px', background: c.border }} />
 
             {[
-              { id: 'remote', label: 'ðŸ–¥ Remote View',    desc: 'Control slides' },
-              { id: 'stage',  label: 'ðŸŽ¤ Stage Display',  desc: 'Confidence monitor' },
+              { id: 'remote', label: 'Remote View',    desc: 'Control slides' },
+              { id: 'stage',  label: 'Stage Display',  desc: 'Confidence monitor' },
             ].map(v => (
               <button
                 key={v.id}
@@ -284,7 +284,7 @@ export default function StageView({ isDarkMode, songs = [], onRefresh }) {
           {ppConnected && ppIP
             ? <iframe src={ppURL} style={{ flex: 1, border: 'none', width: '100%' }} title="ProPresenter Remote" />
             : <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px', padding: '40px', opacity: 0.6 }}>
-                <div style={{ fontSize: '72px', opacity: 0.3 }}>ðŸŽ¬</div>
+                <Monitor size={72} style={{ opacity: 0.3, color: c.muted }} />
                 <div style={{ fontSize: '20px', fontWeight: '700', color: c.heading, opacity: 1 }}>Connect to ProPresenter 7</div>
                 <div style={{ fontSize: '13px', color: c.muted, textAlign: 'center', maxWidth: '420px', lineHeight: '1.7' }}>
                   Enter the IP address of the Mac running ProPresenter 7 and click Connect.<br />

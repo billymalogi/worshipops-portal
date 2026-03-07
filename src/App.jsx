@@ -7,6 +7,7 @@ import StageMonitor from './components/StageMonitor';
 import ComingSoon from './ComingSoon';
 import PrivacyPolicy from './PrivacyPolicy';
 import TermsConditions from './TermsConditions';
+import InvitePage from './components/InvitePage';
 import { supabase } from './supabaseClient';
 
 function RootPage() {
@@ -35,9 +36,10 @@ export default function App() {
       <Route path="/login"   element={<Login />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/terms"   element={<TermsConditions />} />
-      <Route path="/display" element={<LyricsDisplay />} />
-      <Route path="/stage"   element={<StageMonitor />} />
-      <Route path="/*"       element={<Dashboard />} />
+      <Route path="/display"        element={<LyricsDisplay />} />
+      <Route path="/stage"          element={<StageMonitor />} />
+      <Route path="/invite/:token"  element={<InvitePage />} />
+      <Route path="/*"              element={<Dashboard />} />
     </Routes>
   );
 }

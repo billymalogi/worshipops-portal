@@ -17,13 +17,16 @@ import OrgSettings from './components/OrgSettings';
 import BillingSettings from './components/BillingSettings';
 import SupportWidget from './components/SupportWidget';
 import MyScheduleView from './components/MyScheduleView';
+import InviteManager from './components/InviteManager';
+import FeatureRequestPage from './components/FeatureRequestPage';
 
 // --- ICONS ---
 import {
   Trash2, Plus, Calendar, Music, User,
   LayoutGrid, Sun, Moon,
   LogOut, Folder, ArrowLeft, Users, FolderInput, Zap,
-  Grid3x3, Settings, LayoutTemplate, Monitor, CalendarCheck, Bell, X
+  Grid3x3, Settings, LayoutTemplate, Monitor, CalendarCheck, Bell, X,
+  Link, Lightbulb
 } from 'lucide-react';
 
 // --- DEFAULT VERSES ---
@@ -74,9 +77,11 @@ const NAV_CATEGORIES = {
     { id: 'rehearsals', label: 'Rehearsals', icon: Calendar },
   ]},
   admin:      { first: 'profile', items: [
-    { id: 'profile',      label: 'Profile',       icon: User },
-    { id: 'organization', label: 'Organization',  icon: FolderInput },
-    { id: 'billing',      label: 'Billing',       icon: Settings },
+    { id: 'profile',          label: 'Profile',           icon: User },
+    { id: 'organization',     label: 'Organization',      icon: FolderInput },
+    { id: 'billing',          label: 'Billing',           icon: Settings },
+    { id: 'invites',          label: 'Beta Invites',      icon: Link },
+    { id: 'featurerequests',  label: 'Feature Requests',  icon: Lightbulb },
   ]},
 };
 
@@ -87,10 +92,10 @@ const getActiveCategory = (tab) =>
 
 // --- ROLE-BASED TAB PERMISSIONS ---
 const ROLE_TABS = {
-  admin:            ['dashboard','templates','songs','team','myschedule','lighting','stage','rehearsals','profile','organization','billing'],
-  leader:           ['dashboard','templates','songs','team','myschedule','lighting','stage','rehearsals','profile','organization'],
+  admin:            ['dashboard','templates','songs','team','myschedule','lighting','stage','rehearsals','profile','organization','billing','invites','featurerequests'],
+  leader:           ['dashboard','templates','songs','team','myschedule','lighting','stage','rehearsals','profile','organization','featurerequests'],
   campus_leader:    ['dashboard','team','myschedule','profile'],
-  editor:           ['dashboard','templates','songs','team','myschedule','lighting','stage','rehearsals','profile','organization'],
+  editor:           ['dashboard','templates','songs','team','myschedule','lighting','stage','rehearsals','profile','organization','featurerequests'],
   viewer:           ['myschedule'],
   scheduled_viewer: ['myschedule'],
 };
@@ -552,6 +557,16 @@ export default function Dashboard() {
           {/* BILLING TAB */}
           {activeTab === 'billing' && (
             <BillingSettings isDarkMode={isDarkMode} teamMembers={teamMembers} services={services} />
+          )}
+
+          {/* BETA INVITES TAB */}
+          {activeTab === 'invites' && (
+            <InviteManager isDarkMode={isDarkMode} session={session} />
+          )}
+
+          {/* FEATURE REQUESTS TAB */}
+          {activeTab === 'featurerequests' && (
+            <FeatureRequestPage isDarkMode={isDarkMode} session={session} orgId={orgId} userRole={userRole} />
           )}
 
           {/* SONGS TAB */}

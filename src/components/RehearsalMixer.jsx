@@ -364,7 +364,7 @@ export default function RehearsalMixer({ isDarkMode }) {
 
           /* â”€â”€ Empty state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
           <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px', padding: '40px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', opacity: 0.18 }}>ðŸŽ›ï¸</div>
+            <div style={{ fontSize: '64px', opacity: 0.18, lineHeight: 1 }}>♫</div>
             <div style={{ fontSize: '22px', fontWeight: '700', color: c.heading }}>Drop Your Stem Files Here</div>
             <div style={{ fontSize: '13px', color: c.muted, maxWidth: '500px', lineHeight: '1.85' }}>
               Download stems from <strong>Multitracks.com</strong>, <strong>Loop Community</strong>, or export them from your DAW.
