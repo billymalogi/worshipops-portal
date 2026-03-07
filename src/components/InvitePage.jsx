@@ -3,7 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { CheckCircle2, Loader, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 
-const EDGE_FN_URL = `${import.meta.env.VITE_SUPABASE_URL || 'https://whlmswwvbyysolaxihez.supabase.co'}/functions/v1/process-beta-invite`;
+const SUPABASE_URL = 'https://whlmswwvbyysolaxihez.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndobG1zd3d2Ynl5c29sYXhpaGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NTMwNzcsImV4cCI6MjA4MTUyOTA3N30.cOl0v_qwTcDytpg5fjXX__njOz8hOZkaX0ICqnBXfcw';
+const EDGE_FN_URL = `${SUPABASE_URL}/functions/v1/process-beta-invite`;
 
 export default function InvitePage() {
   const { token }    = useParams();
@@ -50,7 +52,10 @@ export default function InvitePage() {
     try {
       const res  = await fetch(EDGE_FN_URL, {
         method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+        },
         body:    JSON.stringify({ token, email, password, firstName, lastName }),
       });
       const json = await res.json();

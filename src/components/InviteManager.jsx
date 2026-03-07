@@ -1,25 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
-import { Plus, Copy, Trash2, Check, Mail, Link, Users, Clock, ChevronDown, ChevronRight, Save } from 'lucide-react';
+import {
+  Plus, Copy, Trash2, Check, Mail, Link, Users, Clock,
+  ChevronDown, ChevronRight, Save, Image, Bold, Italic,
+  Underline, AlignLeft, AlignCenter, AlignRight, List,
+  ListOrdered, Link2, Upload, X,
+} from 'lucide-react';
 
 const TEMPLATE_KEY = 'worshipops_invite_template';
 
-const DEFAULT_SUBJECT = 'You\'re invited to beta test WorshipOps';
-const DEFAULT_BODY =
-`Hi [First Name],
+const DEFAULT_SUBJECT = "You're invited to beta test WorshipOps";
 
-[Write your personal message here]
-
-Click the link below to create your account and get started:
-
-{invite_link}
-
-This link is for you only — please don't share it.
-
-Looking forward to hearing your thoughts!
-
-Billy
-WorshipOps`;
+const DEFAULT_BODY_HTML = `<p>Hi <strong>[First Name]</strong>,</p>
+<p>[Write your personal message here]</p>
+<p>Click the link below to create your account and get started:</p>
+<p><strong>{invite_link}</strong></p>
+<p>This link is for you only — please don't share it.</p>
+<p>Looking forward to hearing your thoughts!</p>
+<p>Billy<br>WorshipOps</p>`;
 
 export default function InviteManager({ isDarkMode, session }) {
   const [invites,         setInvites]         = useState([]);
@@ -28,11 +26,18 @@ export default function InviteManager({ isDarkMode, session }) {
   const [inviteEmail,     setInviteEmail]     = useState('');
   const [inviteNote,      setInviteNote]      = useState('');
   const [copiedId,        setCopiedId]        = useState(null);
+  const [copiedBodyId,    setCopiedBodyId]    = useState(null);
   const [showForm,        setShowForm]        = useState(false);
   const [showTemplate,    setShowTemplate]    = useState(false);
   const [templateSubject, setTemplateSubject] = useState(DEFAULT_SUBJECT);
-  const [templateBody,    setTemplateBody]    = useState(DEFAULT_BODY);
   const [templateSaved,   setTemplateSaved]   = useState(false);
+  const [editorInitHtml,  setEditorInitHtml]  = useState('');
+  const [showImgModal,    setShowImgModal]    = useState(false);
+  const [imgUrl,          setImgUrl]          = useState('');
+  const [imgWidth,        setImgWidth]        = useState('');
+
+  const editorRef   = useRef(null);
+  const fileRef     = useRef(null);
 
   const c = {
     bg:      isDarkMode ? '#000000' : '#F7F8FA',
@@ -49,30 +54,96 @@ export default function InviteManager({ isDarkMode, session }) {
 
   const getInviteUrl = (token) => `${window.location.origin}/invite/${token}`;
 
-  // ── Load saved template from localStorage ────────────────
+  // ── Load saved template ───────────────────────────────────
   useEffect(() => {
     const saved = localStorage.getItem(TEMPLATE_KEY);
+    let html    = DEFAULT_BODY_HTML;
+    let subject = DEFAULT_SUBJECT;
     if (saved) {
       try {
-        const { subject, body } = JSON.parse(saved);
-        if (subject) setTemplateSubject(subject);
-        if (body)    setTemplateBody(body);
+        const p = JSON.parse(saved);
+        if (p.subject) subject = p.subject;
+        if (p.body)    html    = p.body;
       } catch {}
     }
+    setTemplateSubject(subject);
+    setEditorInitHtml(html);
   }, []);
 
+  // ── Populate editor when panel opens ─────────────────────
+  useEffect(() => {
+    if (showTemplate && editorRef.current && !editorRef.current.innerHTML) {
+      editorRef.current.innerHTML = editorInitHtml || DEFAULT_BODY_HTML;
+    }
+  }, [showTemplate, editorInitHtml]);
+
   const handleSaveTemplate = () => {
-    localStorage.setItem(TEMPLATE_KEY, JSON.stringify({ subject: templateSubject, body: templateBody }));
+    const html = editorRef.current?.innerHTML || '';
+    localStorage.setItem(TEMPLATE_KEY, JSON.stringify({ subject: templateSubject, body: html }));
     setTemplateSaved(true);
     setTimeout(() => setTemplateSaved(false), 2000);
   };
 
-  // ── Open email client with template pre-filled ───────────
+  // ── execCommand helper (keeps editor focus) ───────────────
+  const exec = (cmd, val = null) => {
+    editorRef.current?.focus();
+    document.execCommand(cmd, false, val);
+  };
+
+  // ── Send email: copy rich HTML, open mailto for subject ──
   const handleSendEmail = (invite) => {
-    const inviteUrl  = getInviteUrl(invite.token);
-    const body       = templateBody.replace(/\{invite_link\}/g, inviteUrl);
-    const mailto     = `mailto:${invite.invited_email || ''}?subject=${encodeURIComponent(templateSubject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = mailto;
+    const inviteUrl = getInviteUrl(invite.token);
+    const rawHtml   = editorRef.current?.innerHTML || '';
+    const finalHtml = rawHtml.replace(
+      /\{invite_link\}/g,
+      `<a href="${inviteUrl}" style="color:#3b82f6;font-weight:600">${inviteUrl}</a>`
+    );
+
+    const tryRichCopy = async () => {
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({ 'text/html': new Blob([finalHtml], { type: 'text/html' }) }),
+        ]);
+        setCopiedBodyId(invite.id);
+        setTimeout(() => setCopiedBodyId(null), 5000);
+        window.open(
+          `mailto:${invite.invited_email || ''}?subject=${encodeURIComponent(templateSubject)}`,
+          '_blank'
+        );
+      } catch {
+        // Fallback: plain text mailto
+        const plain   = (editorRef.current?.innerText || '').replace(/\{invite_link\}/g, inviteUrl);
+        const mailto  = `mailto:${invite.invited_email || ''}?subject=${encodeURIComponent(templateSubject)}&body=${encodeURIComponent(plain)}`;
+        window.location.href = mailto;
+      }
+    };
+    tryRichCopy();
+  };
+
+  // ── Insert image by URL ───────────────────────────────────
+  const handleInsertImgUrl = () => {
+    if (!imgUrl.trim()) return;
+    const style = imgWidth ? `max-width:${imgWidth}px;width:100%;height:auto;` : `max-width:100%;height:auto;`;
+    exec('insertHTML', `<img src="${imgUrl}" style="${style}" />`);
+    setShowImgModal(false);
+    setImgUrl('');
+    setImgWidth('');
+  };
+
+  // ── Insert image from file (base64) ──────────────────────
+  const handleImageFile = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => exec('insertImage', ev.target.result);
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  // ── Insert link ───────────────────────────────────────────
+  const handleInsertLink = () => {
+    const url = prompt('Enter URL (include https://):');
+    if (url) exec('createLink', url);
   };
 
   // ── Load invites ─────────────────────────────────────────
@@ -131,10 +202,39 @@ export default function InviteManager({ isDarkMode, session }) {
     ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     : '';
 
+  // ── Toolbar primitives ────────────────────────────────────
+  const TB = ({ onClick, title, children }) => (
+    <button
+      onMouseDown={e => { e.preventDefault(); onClick(); }}
+      title={title}
+      style={{
+        padding: '4px 7px', border: `1px solid ${c.border}`, borderRadius: '5px',
+        background: 'transparent', color: c.text, cursor: 'pointer',
+        fontSize: '12px', fontWeight: '600',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px',
+        minWidth: '28px',
+      }}
+    >
+      {children}
+    </button>
+  );
+
+  const Sep = () => (
+    <div style={{ width: '1px', background: c.border, margin: '2px 4px', alignSelf: 'stretch' }} />
+  );
+
+  const selStyle = {
+    padding: '4px 6px', borderRadius: '5px', border: `1px solid ${c.border}`,
+    background: c.input, color: c.heading, fontSize: '11px', cursor: 'pointer',
+    outline: 'none',
+  };
+
   // ── Invite row ───────────────────────────────────────────
   const InviteRow = ({ invite }) => {
     const isUsed    = !!invite.used_at;
     const isRevoked = !invite.is_active && !invite.used_at;
+    const bodyWasCopied = copiedBodyId === invite.id;
+
     return (
       <div style={{
         display: 'flex', alignItems: 'center', gap: '12px',
@@ -142,10 +242,8 @@ export default function InviteManager({ isDarkMode, session }) {
         border: `1px solid ${c.border}`, background: c.card,
         marginBottom: '8px', opacity: isUsed || isRevoked ? 0.65 : 1,
       }}>
-        {/* Status dot */}
         <div style={{ width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0, background: isUsed ? c.green : isRevoked ? c.red : c.blue }} />
 
-        {/* Info */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: '13px', fontWeight: '600', color: c.heading, marginBottom: '3px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             {invite.invited_email ? (
@@ -161,7 +259,7 @@ export default function InviteManager({ isDarkMode, session }) {
           </div>
           <div style={{ fontSize: '11px', color: c.text, display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={10} /> Created {formatDate(invite.created_at)}</span>
-            {isUsed    && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Check size={10} /> Used {formatDate(invite.used_at)}</span>}
+            {isUsed && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Check size={10} /> Used {formatDate(invite.used_at)}</span>}
             {invite.note && <span style={{ fontStyle: 'italic', opacity: 0.8 }}>{invite.note}</span>}
           </div>
           {!isUsed && !isRevoked && (
@@ -169,20 +267,23 @@ export default function InviteManager({ isDarkMode, session }) {
               {getInviteUrl(invite.token)}
             </code>
           )}
+          {bodyWasCopied && (
+            <div style={{ marginTop: '6px', fontSize: '11px', color: c.green, display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Check size={11} /> Email body copied — paste it (Ctrl+V) into the email window that just opened.
+            </div>
+          )}
         </div>
 
-        {/* Actions */}
         <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
           {!isUsed && !isRevoked && (
             <>
-              {/* Send Email — only shown when invite has an email */}
               {invite.invited_email && (
                 <button
                   onClick={() => handleSendEmail(invite)}
-                  title="Open email client with template"
-                  style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 12px', borderRadius: '7px', border: `1px solid ${c.border}`, background: c.input, color: c.blue, fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+                  title="Copy formatted email body + open email client"
+                  style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 12px', borderRadius: '7px', border: `1px solid ${c.border}`, background: bodyWasCopied ? 'rgba(16,185,129,0.1)' : c.input, color: bodyWasCopied ? c.green : c.blue, fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
                 >
-                  <Mail size={13} /> Send Email
+                  <Mail size={13} /> {bodyWasCopied ? 'Copied!' : 'Send Email'}
                 </button>
               )}
               <button
@@ -227,7 +328,8 @@ export default function InviteManager({ isDarkMode, session }) {
             Beta Invitations
           </h2>
           <p style={{ margin: 0, fontSize: '13px', color: c.text, lineHeight: '1.5' }}>
-            Generate secret invite links for beta testers. Each link is single-use and places the user under the <strong style={{ color: c.heading }}>Beta Tester Admin</strong> organization with full access.
+            Generate secret invite links for beta testers. Each link is single-use and places the user under the{' '}
+            <strong style={{ color: c.heading }}>Beta Tester Admin</strong> organization with full access.
           </p>
         </div>
         <button
@@ -247,7 +349,7 @@ export default function InviteManager({ isDarkMode, session }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Mail size={14} style={{ color: c.blue }} />
             <span style={{ fontSize: '13px', fontWeight: '700' }}>Email Template</span>
-            <span style={{ fontSize: '11px', color: c.text, fontWeight: '400' }}>— write your invite email here</span>
+            <span style={{ fontSize: '11px', color: c.text, fontWeight: '400' }}>— compose your invite email here</span>
           </div>
           {showTemplate ? <ChevronDown size={15} style={{ color: c.text }} /> : <ChevronRight size={15} style={{ color: c.text }} />}
         </button>
@@ -255,11 +357,14 @@ export default function InviteManager({ isDarkMode, session }) {
         {showTemplate && (
           <div style={{ padding: '0 18px 18px', borderTop: `1px solid ${c.border}` }}>
             <p style={{ margin: '14px 0 16px', fontSize: '12px', color: c.text, lineHeight: '1.6' }}>
-              Write your email below. Use <code style={{ background: c.input, padding: '1px 6px', borderRadius: '4px', fontSize: '11px', color: c.blue }}>{'{invite_link}'}</code> anywhere in the body — it will be automatically replaced with the unique invite URL when you click "Send Email".
+              Compose your email below with full formatting. Use{' '}
+              <code style={{ background: c.input, padding: '1px 6px', borderRadius: '4px', fontSize: '11px', color: c.blue }}>{'{invite_link}'}</code>
+              {' '}as a placeholder — it will be swapped for the unique invite URL when you click "Send Email".
+              Clicking "Send Email" copies the formatted body to your clipboard and opens your email client — just paste it in.
             </p>
 
             {/* Subject */}
-            <div style={{ marginBottom: '12px' }}>
+            <div style={{ marginBottom: '14px' }}>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: c.text, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
                 Subject
               </label>
@@ -275,21 +380,195 @@ export default function InviteManager({ isDarkMode, session }) {
               <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: c.text, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
                 Body
               </label>
-              <textarea
-                value={templateBody}
-                onChange={e => setTemplateBody(e.target.value)}
-                rows={14}
-                style={{ width: '100%', padding: '10px 12px', borderRadius: '7px', border: `1px solid ${c.border}`, background: c.input, color: c.heading, fontSize: '13px', outline: 'none', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'monospace', lineHeight: '1.6' }}
+
+              {/* ── Toolbar ── */}
+              <div style={{
+                display: 'flex', flexWrap: 'wrap', gap: '3px', alignItems: 'center',
+                padding: '8px 10px', background: c.hover,
+                border: `1px solid ${c.border}`, borderBottom: 'none',
+                borderRadius: '8px 8px 0 0',
+              }}>
+                {/* Text style */}
+                <TB onClick={() => exec('bold')}          title="Bold">          <Bold size={12} /></TB>
+                <TB onClick={() => exec('italic')}        title="Italic">        <Italic size={12} /></TB>
+                <TB onClick={() => exec('underline')}     title="Underline">     <Underline size={12} /></TB>
+                <TB onClick={() => exec('strikeThrough')} title="Strikethrough"> <s style={{ fontSize: '11px', lineHeight: 1 }}>S</s></TB>
+
+                <Sep />
+
+                {/* Font family */}
+                <select
+                  style={selStyle}
+                  title="Font family"
+                  onChange={e => { exec('fontName', e.target.value); e.target.selectedIndex = 0; }}
+                  defaultValue=""
+                >
+                  <option value="" disabled>Font</option>
+                  <option value="Arial">Arial</option>
+                  <option value="Georgia">Georgia</option>
+                  <option value="Verdana">Verdana</option>
+                  <option value="Trebuchet MS">Trebuchet</option>
+                  <option value="Courier New">Monospace</option>
+                </select>
+
+                {/* Font size */}
+                <select
+                  style={selStyle}
+                  title="Font size"
+                  onChange={e => { exec('fontSize', e.target.value); e.target.selectedIndex = 0; }}
+                  defaultValue=""
+                >
+                  <option value="" disabled>Size</option>
+                  <option value="1">Tiny</option>
+                  <option value="2">Small</option>
+                  <option value="3">Normal</option>
+                  <option value="4">Medium</option>
+                  <option value="5">Large</option>
+                  <option value="6">X-Large</option>
+                  <option value="7">Huge</option>
+                </select>
+
+                {/* Text color */}
+                <label
+                  title="Text color"
+                  style={{ display: 'flex', alignItems: 'center', gap: '2px', cursor: 'pointer', padding: '3px 6px', border: `1px solid ${c.border}`, borderRadius: '5px', background: 'transparent' }}
+                >
+                  <span style={{ fontSize: '11px', fontWeight: '800', color: c.heading }}>A</span>
+                  <input
+                    type="color"
+                    defaultValue="#f3f4f6"
+                    onChange={e => exec('foreColor', e.target.value)}
+                    style={{ width: '16px', height: '16px', border: 'none', padding: 0, cursor: 'pointer', background: 'transparent', borderRadius: '3px' }}
+                  />
+                </label>
+
+                {/* Background/highlight color */}
+                <label
+                  title="Highlight color"
+                  style={{ display: 'flex', alignItems: 'center', gap: '2px', cursor: 'pointer', padding: '3px 6px', border: `1px solid ${c.border}`, borderRadius: '5px', background: 'transparent' }}
+                >
+                  <span style={{ fontSize: '10px', fontWeight: '800', color: c.heading, background: '#fbbf24', padding: '0 3px', borderRadius: '2px' }}>A</span>
+                  <input
+                    type="color"
+                    defaultValue="#fbbf24"
+                    onChange={e => exec('hiliteColor', e.target.value)}
+                    style={{ width: '16px', height: '16px', border: 'none', padding: 0, cursor: 'pointer', background: 'transparent', borderRadius: '3px' }}
+                  />
+                </label>
+
+                <Sep />
+
+                {/* Alignment */}
+                <TB onClick={() => exec('justifyLeft')}   title="Align left">   <AlignLeft size={12} /></TB>
+                <TB onClick={() => exec('justifyCenter')} title="Center">       <AlignCenter size={12} /></TB>
+                <TB onClick={() => exec('justifyRight')}  title="Align right">  <AlignRight size={12} /></TB>
+
+                <Sep />
+
+                {/* Lists */}
+                <TB onClick={() => exec('insertUnorderedList')} title="Bullet list">   <List size={12} /></TB>
+                <TB onClick={() => exec('insertOrderedList')}   title="Numbered list"> <ListOrdered size={12} /></TB>
+
+                <Sep />
+
+                {/* Indent */}
+                <TB onClick={() => exec('indent')}   title="Indent">   <span style={{ fontSize: '11px' }}>→</span></TB>
+                <TB onClick={() => exec('outdent')}  title="Outdent">  <span style={{ fontSize: '11px' }}>←</span></TB>
+
+                <Sep />
+
+                {/* Link & image */}
+                <TB onClick={handleInsertLink}           title="Insert link">  <Link2 size={12} /></TB>
+                <TB onClick={() => setShowImgModal(true)} title="Insert image"> <Image size={12} /></TB>
+
+                {/* Hidden file input */}
+                <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageFile} />
+                <TB onClick={() => fileRef.current?.click()} title="Upload image from computer">
+                  <Upload size={12} />
+                </TB>
+
+                <Sep />
+
+                {/* Horizontal rule */}
+                <TB onClick={() => exec('insertHorizontalRule')} title="Insert divider">
+                  <span style={{ fontSize: '11px' }}>—</span>
+                </TB>
+              </div>
+
+              {/* ── Image Insert Modal ── */}
+              {showImgModal && (
+                <div style={{
+                  border: `1px solid ${c.border}`, background: c.card,
+                  borderRadius: '0', padding: '12px 14px', borderTop: 'none',
+                  display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'flex-end',
+                }}>
+                  <div style={{ flex: '2 1 200px' }}>
+                    <label style={{ display: 'block', fontSize: '10px', fontWeight: '600', color: c.text, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Image URL</label>
+                    <input
+                      autoFocus
+                      value={imgUrl}
+                      onChange={e => setImgUrl(e.target.value)}
+                      placeholder="https://example.com/meme.jpg"
+                      onKeyDown={e => e.key === 'Enter' && handleInsertImgUrl()}
+                      style={{ width: '100%', padding: '7px 10px', borderRadius: '6px', border: `1px solid ${c.border}`, background: c.input, color: c.heading, fontSize: '12px', outline: 'none', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div style={{ flex: '0 0 100px' }}>
+                    <label style={{ display: 'block', fontSize: '10px', fontWeight: '600', color: c.text, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Width (px)</label>
+                    <input
+                      value={imgWidth}
+                      onChange={e => setImgWidth(e.target.value)}
+                      placeholder="500"
+                      type="number"
+                      style={{ width: '100%', padding: '7px 10px', borderRadius: '6px', border: `1px solid ${c.border}`, background: c.input, color: c.heading, fontSize: '12px', outline: 'none', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <button
+                    onMouseDown={e => { e.preventDefault(); handleInsertImgUrl(); }}
+                    style={{ padding: '7px 16px', borderRadius: '6px', background: c.blue, color: '#fff', fontWeight: '700', fontSize: '12px', border: 'none', cursor: 'pointer' }}
+                  >
+                    Insert
+                  </button>
+                  <button
+                    onClick={() => { setShowImgModal(false); setImgUrl(''); setImgWidth(''); }}
+                    style={{ padding: '7px 10px', borderRadius: '6px', background: 'transparent', color: c.text, fontSize: '12px', border: `1px solid ${c.border}`, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                  >
+                    <X size={13} />
+                  </button>
+                </div>
+              )}
+
+              {/* ── ContentEditable Editor ── */}
+              <div
+                ref={editorRef}
+                contentEditable
+                suppressContentEditableWarning
+                style={{
+                  minHeight: '300px', padding: '16px',
+                  outline: 'none', color: c.heading,
+                  fontSize: '14px', lineHeight: '1.8',
+                  background: c.input,
+                  border: `1px solid ${c.border}`,
+                  borderTop: showImgModal ? 'none' : undefined,
+                  borderRadius: showImgModal ? '0 0 8px 8px' : '0 0 8px 8px',
+                  overflowY: 'auto', wordBreak: 'break-word',
+                  fontFamily: 'Arial, sans-serif',
+                }}
               />
             </div>
 
-            <button
-              onClick={handleSaveTemplate}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 18px', borderRadius: '7px', background: templateSaved ? 'rgba(16,185,129,0.1)' : c.blue, color: templateSaved ? c.green : '#fff', fontWeight: '700', fontSize: '12px', border: templateSaved ? `1px solid ${c.green}` : 'none', cursor: 'pointer', transition: 'all 0.2s' }}
-            >
-              {templateSaved ? <Check size={13} /> : <Save size={13} />}
-              {templateSaved ? 'Saved!' : 'Save Template'}
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <button
+                onClick={handleSaveTemplate}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 18px', borderRadius: '7px', background: templateSaved ? 'rgba(16,185,129,0.1)' : c.blue, color: templateSaved ? c.green : '#fff', fontWeight: '700', fontSize: '12px', border: templateSaved ? `1px solid ${c.green}` : 'none', cursor: 'pointer', transition: 'all 0.2s' }}
+              >
+                {templateSaved ? <Check size={13} /> : <Save size={13} />}
+                {templateSaved ? 'Saved!' : 'Save Template'}
+              </button>
+              <span style={{ fontSize: '11px', color: c.text }}>
+                Tip: Save often. Your template is stored in this browser.
+              </span>
+            </div>
           </div>
         )}
       </div>
@@ -303,9 +582,7 @@ export default function InviteManager({ isDarkMode, session }) {
           <div style={{ fontSize: '13px', fontWeight: '700', color: c.heading, marginBottom: '14px' }}>New Invite Link</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: c.text, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
-                Email (optional)
-              </label>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: c.text, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Email (optional)</label>
               <input
                 type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)}
                 placeholder="tester@example.com"
@@ -313,9 +590,7 @@ export default function InviteManager({ isDarkMode, session }) {
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: c.text, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
-                Note (optional)
-              </label>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: c.text, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Note (optional)</label>
               <input
                 type="text" value={inviteNote} onChange={e => setInviteNote(e.target.value)}
                 placeholder="e.g. Worship Director at Grace Church"
