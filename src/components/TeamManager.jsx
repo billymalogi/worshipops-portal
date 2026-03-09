@@ -90,7 +90,7 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
 
   // Invite modal
   const [showInviteModal, setShowInviteModal] = useState(false);
-  const [inviteForm,      setInviteForm]      = useState({ name: '', email: '', role: 'volunteer' });
+  const [inviteForm,      setInviteForm]      = useState({ name: '', email: '', role: 'volunteer', guestWeeks: 1, guestPerms: { teams: false, planner: false, production: false, songs: false } });
   const [inviteSending,   setInviteSending]   = useState(false);
   const [inviteResult,    setInviteResult]    = useState(null); // { url, warning, error }
 
@@ -269,6 +269,8 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
             email: inviteForm.email.trim(),
             name: inviteForm.name.trim() || null,
             role: inviteForm.role,
+            permissions: inviteForm.role === 'guest' ? inviteForm.guestPerms : {},
+            guestDurationWeeks: inviteForm.role === 'guest' ? inviteForm.guestWeeks : 1,
           }),
         }
       );
@@ -277,7 +279,7 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
         setInviteResult({ error: json.error || 'Failed to send invite.' });
       } else {
         setInviteResult({ url: json.inviteUrl, warning: json.warning });
-        setInviteForm({ name: '', email: '', role: 'volunteer' });
+        setInviteForm({ name: '', email: '', role: 'volunteer', guestWeeks: 1, guestPerms: { teams: false, planner: false, production: false, songs: false } });
       }
     } catch (err) {
       setInviteResult({ error: `Error: ${err.message}` });
@@ -838,11 +840,60 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
                       onChange={e => setInviteForm(f => ({ ...f, role: e.target.value }))}
                       style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: `1px solid ${c.border}`, background: c.bg, color: c.text, fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
                     >
-                      <option value="volunteer">Volunteer</option>
-                      <option value="leader">Ministry Leader</option>
-                      <option value="viewer">Viewer</option>
+                      <optgroup label="Full Members">
+                        <option value="org_leader">Org Leader</option>
+                        <option value="leader">Ministry Leader</option>
+                        <option value="weekly_scheduler">Weekly Scheduler</option>
+                        <option value="music_director">Music Director</option>
+                        <option value="campus_leader">Campus Leader</option>
+                        <option value="volunteer">Volunteer</option>
+                        <option value="schedule_viewer">Schedule Viewer</option>
+                      </optgroup>
+                      <optgroup label="Temporary">
+                        <option value="guest">Guest (Temporary Access)</option>
+                      </optgroup>
                     </select>
                   </div>
+
+                  {/* Guest options */}
+                  {inviteForm.role === 'guest' && (
+                    <div style={{ background: isDarkMode ? '#1a1a1a' : '#f4f4f5', border: `1px solid ${c.border}`, borderRadius: '10px', padding: '14px' }}>
+                      <div style={{ fontSize: '12px', fontWeight: '700', color: c.heading, marginBottom: '12px' }}>Guest Access Settings</div>
+                      <div style={{ marginBottom: '12px' }}>
+                        <div style={{ fontSize: '11px', fontWeight: '600', color: c.muted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Duration</div>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          {[1, 2, 3].map(w => (
+                            <button key={w} type="button" onClick={() => setInviteForm(f => ({ ...f, guestWeeks: w }))}
+                              style={{ flex: 1, padding: '7px', borderRadius: '7px', border: `1px solid ${inviteForm.guestWeeks === w ? c.primary : c.border}`, background: inviteForm.guestWeeks === w ? `${c.primary}18` : 'transparent', color: inviteForm.guestWeeks === w ? c.primary : c.text, fontWeight: inviteForm.guestWeeks === w ? '700' : '500', fontSize: '12px', cursor: 'pointer' }}>
+                              {w} week{w > 1 ? 's' : ''}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '11px', fontWeight: '600', color: c.muted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>What can they access?</div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                          {[
+                            { key: 'teams',      label: 'Teams',              desc: 'Team roster for their week' },
+                            { key: 'planner',    label: 'Planner',            desc: 'Assigned service plans' },
+                            { key: 'production', label: 'Stage & Production', desc: 'Stage, lighting, rehearsals' },
+                            { key: 'songs',      label: 'Songs',              desc: 'Song library' },
+                          ].map(({ key, label, desc }) => (
+                            <label key={key} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '8px 10px', borderRadius: '7px', border: `1px solid ${inviteForm.guestPerms[key] ? c.primary : c.border}`, background: inviteForm.guestPerms[key] ? `${c.primary}10` : 'transparent', cursor: 'pointer' }}>
+                              <input type="checkbox" checked={inviteForm.guestPerms[key]}
+                                onChange={e => setInviteForm(f => ({ ...f, guestPerms: { ...f.guestPerms, [key]: e.target.checked } }))}
+                                style={{ marginTop: '2px', flexShrink: 0, accentColor: c.primary }} />
+                              <div>
+                                <div style={{ fontSize: '12px', fontWeight: '600', color: c.heading }}>{label}</div>
+                                <div style={{ fontSize: '10px', color: c.muted, marginTop: '1px' }}>{desc}</div>
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                        <p style={{ margin: '6px 0 0', fontSize: '10px', color: c.muted }}>Billing and Admin are always blocked for guests.</p>
+                      </div>
+                    </div>
+                  )}
                   {inviteResult?.error && (
                     <div style={{ fontSize: '13px', color: '#ef4444', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '8px', padding: '10px 12px' }}>
                       {inviteResult.error}
