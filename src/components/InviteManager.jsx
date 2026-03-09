@@ -27,6 +27,8 @@ export default function InviteManager({ isDarkMode, session }) {
   const [inviteNote,      setInviteNote]      = useState('');
   const [copiedId,        setCopiedId]        = useState(null);
   const [copiedBodyId,    setCopiedBodyId]    = useState(null);
+  const [sendingEmailId,  setSendingEmailId]  = useState(null);
+  const [sentEmailId,     setSentEmailId]     = useState(null);
   const [showForm,        setShowForm]        = useState(false);
   const [showTemplate,    setShowTemplate]    = useState(false);
   const [templateSubject, setTemplateSubject] = useState(DEFAULT_SUBJECT);
@@ -90,8 +92,12 @@ export default function InviteManager({ isDarkMode, session }) {
     document.execCommand(cmd, false, val);
   };
 
-  // ── Send email: copy rich HTML, open mailto for subject ──
-  const handleSendEmail = (invite) => {
+  const SUPABASE_URL = 'https://whlmswwvbyysolaxihez.supabase.co';
+  const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndobG1zd3d2Ynl5c29sYXhpaGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NTMwNzcsImV4cCI6MjA4MTUyOTA3N30.cOl0v_qwTcDytpg5fjXX__njOz8hOZkaX0ICqnBXfcw';
+
+  // ── Send email via Resend, fallback to clipboard + mailto ──
+  const handleSendEmail = async (invite) => {
+    if (!invite.invited_email) return;
     const inviteUrl = getInviteUrl(invite.token);
     const rawHtml   = editorRef.current?.innerHTML || '';
     const finalHtml = rawHtml.replace(
@@ -99,25 +105,41 @@ export default function InviteManager({ isDarkMode, session }) {
       `<a href="${inviteUrl}" style="color:#3b82f6;font-weight:600">${inviteUrl}</a>`
     );
 
-    const tryRichCopy = async () => {
+    setSendingEmailId(invite.id);
+    try {
+      const { data: { session: sess } } = await supabase.auth.getSession();
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/send-beta-invite`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': ANON_KEY,
+          'Authorization': `Bearer ${sess?.access_token}`,
+        },
+        body: JSON.stringify({
+          toEmail:  invite.invited_email,
+          subject:  templateSubject,
+          htmlBody: finalHtml,
+        }),
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+      setSentEmailId(invite.id);
+      setTimeout(() => setSentEmailId(null), 4000);
+    } catch {
+      // Fallback: clipboard + mailto
       try {
         await navigator.clipboard.write([
           new ClipboardItem({ 'text/html': new Blob([finalHtml], { type: 'text/html' }) }),
         ]);
         setCopiedBodyId(invite.id);
         setTimeout(() => setCopiedBodyId(null), 5000);
-        window.open(
-          `mailto:${invite.invited_email || ''}?subject=${encodeURIComponent(templateSubject)}`,
-          '_blank'
-        );
-      } catch {
-        // Fallback: plain text mailto
-        const plain   = (editorRef.current?.innerText || '').replace(/\{invite_link\}/g, inviteUrl);
-        const mailto  = `mailto:${invite.invited_email || ''}?subject=${encodeURIComponent(templateSubject)}&body=${encodeURIComponent(plain)}`;
-        window.location.href = mailto;
-      }
-    };
-    tryRichCopy();
+      } catch {}
+      window.open(
+        `mailto:${invite.invited_email}?subject=${encodeURIComponent(templateSubject)}`,
+        '_blank'
+      );
+    }
+    setSendingEmailId(null);
   };
 
   // ── Insert image by URL ───────────────────────────────────
@@ -231,9 +253,11 @@ export default function InviteManager({ isDarkMode, session }) {
 
   // ── Invite row ───────────────────────────────────────────
   const InviteRow = ({ invite }) => {
-    const isUsed    = !!invite.used_at;
-    const isRevoked = !invite.is_active && !invite.used_at;
-    const bodyWasCopied = copiedBodyId === invite.id;
+    const isUsed      = !!invite.used_at;
+    const isRevoked   = !invite.is_active && !invite.used_at;
+    const bodyWasCopied = copiedBodyId  === invite.id;
+    const isSending   = sendingEmailId  === invite.id;
+    const wasSent     = sentEmailId     === invite.id;
 
     return (
       <div style={{
@@ -280,10 +304,12 @@ export default function InviteManager({ isDarkMode, session }) {
               {invite.invited_email && (
                 <button
                   onClick={() => handleSendEmail(invite)}
-                  title="Copy formatted email body + open email client"
-                  style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 12px', borderRadius: '7px', border: `1px solid ${c.border}`, background: bodyWasCopied ? 'rgba(16,185,129,0.1)' : c.input, color: bodyWasCopied ? c.green : c.blue, fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+                  disabled={isSending}
+                  title="Send invite email via Resend"
+                  style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 12px', borderRadius: '7px', border: `1px solid ${c.border}`, background: wasSent ? 'rgba(16,185,129,0.1)' : bodyWasCopied ? 'rgba(59,130,246,0.08)' : c.input, color: wasSent ? c.green : c.blue, fontSize: '12px', fontWeight: '600', cursor: isSending ? 'not-allowed' : 'pointer', opacity: isSending ? 0.6 : 1 }}
                 >
-                  <Mail size={13} /> {bodyWasCopied ? 'Copied!' : 'Send Email'}
+                  <Mail size={13} />
+                  {isSending ? 'Sending…' : wasSent ? 'Sent!' : bodyWasCopied ? 'Copied! (fallback)' : 'Send Email'}
                 </button>
               )}
               <button
