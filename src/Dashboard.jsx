@@ -18,6 +18,7 @@ import BillingSettings from './components/BillingSettings';
 import SupportWidget from './components/SupportWidget';
 import MyScheduleView from './components/MyScheduleView';
 import InviteManager from './components/InviteManager';
+import OrgInviteManager from './components/OrgInviteManager';
 import FeatureRequestPage from './components/FeatureRequestPage';
 
 // --- ICONS ---
@@ -26,7 +27,7 @@ import {
   LayoutGrid, Sun, Moon,
   LogOut, Folder, ArrowLeft, Users, FolderInput, Zap,
   Grid3x3, Settings, LayoutTemplate, Monitor, CalendarCheck, Bell, X,
-  Link, Lightbulb
+  Link, Lightbulb, UserPlus
 } from 'lucide-react';
 
 // --- DEFAULT VERSES ---
@@ -80,6 +81,7 @@ const NAV_CATEGORIES = {
     { id: 'profile',          label: 'Profile',           icon: User },
     { id: 'organization',     label: 'Organization',      icon: FolderInput },
     { id: 'billing',          label: 'Billing',           icon: Settings },
+    { id: 'org-invites',      label: 'Invitations',       icon: UserPlus },
     { id: 'invites',          label: 'Beta Invites',      icon: Link },
     { id: 'featurerequests',  label: 'Feature Requests',  icon: Lightbulb },
   ]},
@@ -95,15 +97,49 @@ const MASTER_EMAIL = 'billy@worshipops.com';
 
 // --- ROLE-BASED TAB PERMISSIONS ---
 const ROLE_TABS = {
-  admin:            ['dashboard','templates','songs','team','myschedule','lighting','stage','rehearsals','profile','organization','billing','featurerequests'],
-  leader:           ['dashboard','templates','songs','team','myschedule','lighting','stage','rehearsals','profile','organization','featurerequests'],
-  campus_leader:    ['dashboard','team','myschedule','profile'],
-  editor:           ['dashboard','templates','songs','team','myschedule','lighting','stage','rehearsals','profile','organization','featurerequests'],
-  viewer:           ['myschedule'],
-  scheduled_viewer: ['myschedule'],
+  admin:             ['dashboard','templates','songs','team','myschedule','lighting','stage','rehearsals','profile','organization','billing','org-invites','featurerequests'],
+  org_leader:        ['dashboard','templates','songs','team','myschedule','lighting','stage','rehearsals','profile','organization','org-invites','featurerequests'],
+  leader:            ['dashboard','templates','songs','team','myschedule','lighting','stage','rehearsals','profile','organization','org-invites','featurerequests'],
+  weekly_scheduler:  ['dashboard','templates','songs','team','myschedule','lighting','stage','rehearsals','profile'],
+  music_director:    ['songs','templates','dashboard','myschedule','stage','rehearsals','profile'],
+  campus_leader:     ['dashboard','team','myschedule','profile'],
+  schedule_viewer:   ['dashboard','myschedule','profile'],
+  editor:            ['dashboard','templates','songs','team','myschedule','lighting','stage','rehearsals','profile','organization','featurerequests'],
+  viewer:            ['myschedule'],
+  scheduled_viewer:  ['myschedule'],
+  guest:             [], // computed dynamically from permissions
 };
-const ROLE_LABELS = { admin: 'Admin', leader: 'Leader', campus_leader: 'Campus Leader', editor: 'Editor', viewer: 'Volunteer', scheduled_viewer: 'Volunteer' };
-const getAllowedTabs = (role, email) => {
+
+const ROLE_LABELS = {
+  admin:            'Admin',
+  org_leader:       'Org Leader',
+  leader:           'Leader',
+  weekly_scheduler: 'Weekly Scheduler',
+  music_director:   'Music Director',
+  campus_leader:    'Campus Leader',
+  schedule_viewer:  'Schedule Viewer',
+  editor:           'Editor',
+  viewer:           'Volunteer',
+  scheduled_viewer: 'Volunteer',
+  guest:            'Guest',
+};
+
+// Guest permission keys → tabs
+const GUEST_PERM_TABS = {
+  teams:      ['team'],
+  planner:    ['dashboard', 'templates'],
+  production: ['lighting', 'stage', 'rehearsals'],
+  songs:      ['songs'],
+};
+
+const getAllowedTabs = (role, email, guestPermissions = {}) => {
+  if (role === 'guest') {
+    const tabs = ['myschedule', 'profile'];
+    for (const [perm, permTabs] of Object.entries(GUEST_PERM_TABS)) {
+      if (guestPermissions[perm]) tabs.push(...permTabs);
+    }
+    return tabs;
+  }
   const tabs = [...(ROLE_TABS[role] ?? [])];
   if (email === MASTER_EMAIL) tabs.push('invites');
   return tabs;
@@ -116,9 +152,9 @@ const subNavBg     = (isDark) => isDark ? '#0A0A0A' : '#F4F4F5';
 // --- HEADER COMPONENT ---
 const CAT_DISPLAY = { myschedule: 'My Schedule', planner: 'Planner', production: 'Production', admin: 'Admin' };
 
-const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, setSelectedService, refreshData, onLogout, session, realRole }) => {
+const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, setSelectedService, refreshData, onLogout, session, realRole, guestPermissions }) => {
   const activeCategory = getActiveCategory(activeTab);
-  const allowed = getAllowedTabs(realRole, session?.user?.email);
+  const allowed = getAllowedTabs(realRole, session?.user?.email, guestPermissions);
 
   // Only show categories that have at least one accessible tab
   const visibleCats = Object.keys(NAV_CATEGORIES).filter(cat =>
@@ -204,9 +240,9 @@ const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, se
 };
 
 // --- SUB-NAV BAR ---
-const SubNav = ({ colors, activeTab, setActiveTab, setSelectedService, isDarkMode, realRole, session }) => {
+const SubNav = ({ colors, activeTab, setActiveTab, setSelectedService, isDarkMode, realRole, session, guestPermissions }) => {
   const activeCategory = getActiveCategory(activeTab);
-  const allowed = getAllowedTabs(realRole, session?.user?.email);
+  const allowed = getAllowedTabs(realRole, session?.user?.email, guestPermissions);
   const allItems = NAV_CATEGORIES[activeCategory]?.items || [];
   const items = allItems.filter(item => allowed.includes(item.id));
 
@@ -327,6 +363,8 @@ export default function Dashboard() {
 
   const [realRole, setRealRole] = useState('viewer');
   const userRole = realRole; // always reflect true role — no volunteer toggle
+  const [guestPermissions, setGuestPermissions] = useState({});
+  const [guestExpiry,      setGuestExpiry]      = useState(null);
 
   const [activeTab, setActiveTab] = useState('dashboard'); 
   const [currentFolder, setCurrentFolder] = useState(null); 
@@ -410,7 +448,7 @@ export default function Dashboard() {
   const fetchOrgData = async (userId) => {
       const { data: rows, error } = await supabase
           .from('organization_members')
-          .select('organization_id, role')
+          .select('organization_id, role, permissions, account_expires_at')
           .eq('user_id', userId);
 
       if (error) {
@@ -431,9 +469,11 @@ export default function Dashboard() {
           .in('id', orgIds);
 
       const orgsWithMeta = rows.map(r => ({
-          organization_id: r.organization_id,
-          role: r.role || 'viewer',
-          name: orgRows?.find(o => o.id === r.organization_id)?.name || 'My Organization',
+          organization_id:   r.organization_id,
+          role:              r.role || 'viewer',
+          name:              orgRows?.find(o => o.id === r.organization_id)?.name || 'My Organization',
+          permissions:       r.permissions || {},
+          account_expires_at: r.account_expires_at || null,
       }));
       setAllOrgs(orgsWithMeta);
 
@@ -442,7 +482,11 @@ export default function Dashboard() {
       setOrgId(first.organization_id);
       const role = first.role;
       setRealRole(role);
+      setGuestPermissions(first.permissions || {});
+      setGuestExpiry(first.account_expires_at || null);
       if (ROLE_TABS[role]?.length === 1 && ROLE_TABS[role][0] === 'myschedule') {
+          setActiveTab('myschedule');
+      } else if (role === 'guest') {
           setActiveTab('myschedule');
       }
       refreshAllData(first.organization_id);
@@ -451,8 +495,10 @@ export default function Dashboard() {
   const switchOrg = (orgMeta) => {
       setOrgId(orgMeta.organization_id);
       setRealRole(orgMeta.role);
+      setGuestPermissions(orgMeta.permissions || {});
+      setGuestExpiry(orgMeta.account_expires_at || null);
       setSelectedService(null);
-      setActiveTab('dashboard');
+      setActiveTab(orgMeta.role === 'guest' ? 'myschedule' : 'dashboard');
       refreshAllData(orgMeta.organization_id);
   };
 
@@ -503,6 +549,22 @@ export default function Dashboard() {
 
   // --- RENDER ---
   if (!session) return <div style={{height:'100vh', display:'flex', alignItems:'center', justifyContent:'center'}}>Connecting to secure server...</div>;
+
+  // Guest expired screen
+  if (realRole === 'guest' && guestExpiry && new Date(guestExpiry) < new Date()) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '16px', background: colors.bg, fontFamily: 'sans-serif', padding: '24px', textAlign: 'center' }}>
+        <div style={{ fontSize: '48px' }}>⏳</div>
+        <h2 style={{ margin: 0, fontSize: '22px', fontWeight: '800', color: colors.heading }}>Your guest access has expired</h2>
+        <p style={{ margin: 0, fontSize: '14px', color: colors.text, maxWidth: '360px', lineHeight: '1.6' }}>
+          Your temporary access ended on {new Date(guestExpiry).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}. Contact your organization admin to request renewed access.
+        </p>
+        <button onClick={handleLogout} style={{ marginTop: '8px', padding: '10px 28px', borderRadius: '9px', background: colors.primary, color: '#fff', fontWeight: '700', fontSize: '14px', border: 'none', cursor: 'pointer' }}>
+          Log Out
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: '100vh', fontFamily: 'sans-serif', background: colors.bg, color: colors.text }}>
@@ -578,9 +640,21 @@ export default function Dashboard() {
         )}
       </div>
 
-      <Header colors={colors} activeTab={activeTab} setActiveTab={setActiveTab} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} setSelectedService={setSelectedService} refreshData={() => refreshAllData(orgId)} onLogout={handleLogout} session={session} realRole={realRole} />
+      <Header colors={colors} activeTab={activeTab} setActiveTab={setActiveTab} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} setSelectedService={setSelectedService} refreshData={() => refreshAllData(orgId)} onLogout={handleLogout} session={session} realRole={realRole} guestPermissions={guestPermissions} />
 
-      <SubNav colors={colors} activeTab={activeTab} setActiveTab={setActiveTab} setSelectedService={setSelectedService} isDarkMode={isDarkMode} realRole={realRole} session={session} />
+      <SubNav colors={colors} activeTab={activeTab} setActiveTab={setActiveTab} setSelectedService={setSelectedService} isDarkMode={isDarkMode} realRole={realRole} session={session} guestPermissions={guestPermissions} />
+
+      {/* GUEST EXPIRY BANNER */}
+      {realRole === 'guest' && guestExpiry && (() => {
+        const daysLeft = Math.ceil((new Date(guestExpiry) - new Date()) / (1000 * 60 * 60 * 24));
+        if (daysLeft > 3 || daysLeft <= 0) return null;
+        return (
+          <div style={{ background: 'rgba(245,158,11,0.12)', borderBottom: '1px solid rgba(245,158,11,0.3)', padding: '8px 24px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#92400e' }}>
+            <span style={{ fontWeight: '600' }}>Guest access expires in {daysLeft} day{daysLeft !== 1 ? 's' : ''}.</span>
+            <span style={{ opacity: 0.7 }}>Contact your admin to extend access.</span>
+          </div>
+        );
+      })()}
 
       {/* MAIN CONTENT - height adjusts: 64px header + optional 44px subnav */}
       <div style={{ display: 'flex', height: `calc(100vh - ${activeTab === 'myschedule' ? 93 : 137}px)` }}>
@@ -635,6 +709,11 @@ export default function Dashboard() {
           {/* BILLING TAB */}
           {activeTab === 'billing' && (
             <BillingSettings isDarkMode={isDarkMode} teamMembers={teamMembers} services={services} />
+          )}
+
+          {/* ORG INVITATIONS TAB */}
+          {activeTab === 'org-invites' && (
+            <OrgInviteManager isDarkMode={isDarkMode} orgId={orgId} session={session} />
           )}
 
           {/* BETA INVITES TAB — master account only */}

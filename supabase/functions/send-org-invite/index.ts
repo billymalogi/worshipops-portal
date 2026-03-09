@@ -42,7 +42,7 @@ serve(async (req: Request) => {
     )
     if (authErr || !user) throw new Error('Unauthorized')
 
-    const { organizationId, email, name, role } = await req.json()
+    const { organizationId, email, name, role, permissions, guestDurationWeeks } = await req.json()
     if (!organizationId || !email) throw new Error('organizationId and email are required')
 
     // Verify caller is admin/leader in this org
@@ -70,11 +70,13 @@ serve(async (req: Request) => {
     const { data: invite, error: insertErr } = await supabase
       .from('org_invitations')
       .insert([{
-        organization_id: organizationId,
-        invited_by: user.id,
-        email: email.toLowerCase().trim(),
-        name: name?.trim() || null,
-        role: role || 'volunteer',
+        organization_id:      organizationId,
+        invited_by:           user.id,
+        email:                email.toLowerCase().trim(),
+        name:                 name?.trim() || null,
+        role:                 role || 'volunteer',
+        permissions:          permissions || {},
+        guest_duration_weeks: role === 'guest' ? (guestDurationWeeks || 1) : null,
       }])
       .select('token')
       .single()

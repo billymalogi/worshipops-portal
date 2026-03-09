@@ -74,12 +74,19 @@ serve(async (req: Request) => {
     const fullName = `${firstName.trim()} ${lastName.trim()}`
 
     // ── 3. Add to organization_members ───────────────────────
+    const isGuest = invite.role === 'guest'
+    const guestExpiry = isGuest && invite.guest_duration_weeks
+      ? new Date(Date.now() + invite.guest_duration_weeks * 7 * 24 * 60 * 60 * 1000).toISOString()
+      : null
+
     const { error: memberErr } = await supabase
       .from('organization_members')
       .insert([{
-        organization_id: invite.organization_id,
-        user_id: userId,
-        role: invite.role || 'volunteer',
+        organization_id:    invite.organization_id,
+        user_id:            userId,
+        role:               invite.role || 'volunteer',
+        permissions:        invite.permissions || {},
+        account_expires_at: guestExpiry,
       }])
 
     if (memberErr) throw new Error('Failed to add to organization: ' + memberErr.message)
