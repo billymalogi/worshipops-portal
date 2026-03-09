@@ -264,11 +264,66 @@ const SubNav = ({ colors, activeTab, setActiveTab, setSelectedService, isDarkMod
 };
 
 
+// --- ORG SWITCHER ---
+function OrgSwitcher({ orgName, allOrgs, currentOrgId, onSwitch, isDarkMode }) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef(null);
+
+  React.useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  if (allOrgs.length <= 1) {
+    return (
+      <span style={{ fontSize: '11px', fontWeight: '700', color: '#f97316', background: 'rgba(255,255,255,0.95)', padding: '2px 12px', borderRadius: '20px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+        {orgName}
+      </span>
+    );
+  }
+
+  return (
+    <div ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: '700', color: '#f97316', background: 'rgba(255,255,255,0.95)', padding: '3px 10px 3px 12px', borderRadius: '20px', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}
+      >
+        {orgName}
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5L5 6.5L8 3.5" stroke="#f97316" strokeWidth="1.5" strokeLinecap="round"/></svg>
+      </button>
+      {open && (
+        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, minWidth: '220px', background: isDarkMode ? '#1f1f22' : '#ffffff', border: `1px solid ${isDarkMode ? '#27272a' : '#e5e7eb'}`, borderRadius: '10px', boxShadow: '0 8px 32px rgba(0,0,0,0.25)', zIndex: 9999, overflow: 'hidden' }}>
+          <div style={{ padding: '8px 12px', fontSize: '10px', fontWeight: '700', color: isDarkMode ? '#6b7280' : '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.8px', borderBottom: `1px solid ${isDarkMode ? '#27272a' : '#e5e7eb'}` }}>
+            Switch Organization
+          </div>
+          {allOrgs.map(org => {
+            const isCurrent = org.organization_id === currentOrgId;
+            return (
+              <button
+                key={org.organization_id}
+                onClick={() => { setOpen(false); if (!isCurrent) onSwitch(org); }}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: isCurrent ? (isDarkMode ? 'rgba(59,130,246,0.1)' : 'rgba(59,130,246,0.06)') : 'transparent', border: 'none', cursor: isCurrent ? 'default' : 'pointer', textAlign: 'left', gap: '8px' }}
+                onMouseEnter={e => { if (!isCurrent) e.currentTarget.style.background = isDarkMode ? '#27272a' : '#f3f4f6'; }}
+                onMouseLeave={e => { if (!isCurrent) e.currentTarget.style.background = 'transparent'; }}
+              >
+                <span style={{ fontSize: '13px', fontWeight: isCurrent ? '700' : '500', color: isCurrent ? '#3b82f6' : (isDarkMode ? '#d1d5db' : '#27272a') }}>{org.name}</span>
+                <span style={{ fontSize: '10px', color: isDarkMode ? '#6b7280' : '#9ca3af', textTransform: 'capitalize' }}>{org.role}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // --- MAIN DASHBOARD ---
 export default function Dashboard() {
   const router = useNavigate();
   const [session, setSession] = useState(null); 
-  const [orgId, setOrgId] = useState(null); 
+  const [orgId, setOrgId] = useState(null);
+  const [allOrgs, setAllOrgs] = useState([]); // [{organization_id, role, name}]
 
   const [realRole, setRealRole] = useState('viewer');
   const userRole = realRole; // always reflect true role — no volunteer toggle
@@ -353,31 +408,52 @@ export default function Dashboard() {
 
   // --- 2. FETCH ORG DATA (The "Data Loss" Fix) ---
   const fetchOrgData = async (userId) => {
-      
-      const { data, error } = await supabase
+      const { data: rows, error } = await supabase
           .from('organization_members')
           .select('organization_id, role')
-          .eq('user_id', userId)
-          .maybeSingle();
+          .eq('user_id', userId);
 
       if (error) {
           console.error("Org Fetch Error:", error);
           return;
       }
 
-      if (data) {
-          console.log("Organization Found:", data.organization_id);
-          setOrgId(data.organization_id);
-          const role = data.role || 'viewer';
-          setRealRole(role);
-          // Volunteers only have myschedule — land them there directly
-          if (ROLE_TABS[role]?.length === 1 && ROLE_TABS[role][0] === 'myschedule') {
-            setActiveTab('myschedule');
-          }
-          refreshAllData(data.organization_id);
-      } else {
+      if (!rows || rows.length === 0) {
           console.warn("User has no organization linked!");
+          return;
       }
+
+      // Fetch org names for all memberships
+      const orgIds = rows.map(r => r.organization_id);
+      const { data: orgRows } = await supabase
+          .from('organizations')
+          .select('id, name')
+          .in('id', orgIds);
+
+      const orgsWithMeta = rows.map(r => ({
+          organization_id: r.organization_id,
+          role: r.role || 'viewer',
+          name: orgRows?.find(o => o.id === r.organization_id)?.name || 'My Organization',
+      }));
+      setAllOrgs(orgsWithMeta);
+
+      // Use first org by default
+      const first = orgsWithMeta[0];
+      setOrgId(first.organization_id);
+      const role = first.role;
+      setRealRole(role);
+      if (ROLE_TABS[role]?.length === 1 && ROLE_TABS[role][0] === 'myschedule') {
+          setActiveTab('myschedule');
+      }
+      refreshAllData(first.organization_id);
+  };
+
+  const switchOrg = (orgMeta) => {
+      setOrgId(orgMeta.organization_id);
+      setRealRole(orgMeta.role);
+      setSelectedService(null);
+      setActiveTab('dashboard');
+      refreshAllData(orgMeta.organization_id);
   };
 
   const refreshAllData = async (oid) => {
@@ -492,18 +568,13 @@ export default function Dashboard() {
           {verseOfDay ? `"${verseOfDay.text}" — ${verseOfDay.ref}` : ''}
         </span>
         {orgName && (
-          <span style={{
-            fontSize: '11px',
-            fontWeight: '700',
-            color: '#f97316',
-            background: 'rgba(255,255,255,0.95)',
-            padding: '2px 12px',
-            borderRadius: '20px',
-            whiteSpace: 'nowrap',
-            flexShrink: 0,
-          }}>
-            {orgName}
-          </span>
+          <OrgSwitcher
+            orgName={orgName}
+            allOrgs={allOrgs}
+            currentOrgId={orgId}
+            onSwitch={switchOrg}
+            isDarkMode={isDarkMode}
+          />
         )}
       </div>
 

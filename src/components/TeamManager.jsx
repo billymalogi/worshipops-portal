@@ -3,7 +3,7 @@ import { supabase } from '../supabaseClient';
 import {
   Search, Plus, Trash2, Mail, Phone, X, Save, Edit2,
   ChevronRight, User, Info, Heart, Calendar, AlertTriangle,
-  CheckCircle, Clock, Star, ExternalLink,
+  CheckCircle, Clock, Star, ExternalLink, UserPlus, Copy, CheckCheck,
 } from 'lucide-react';
 
 // â”€â”€ Burnout helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -87,6 +87,12 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
   const [editingMember,  setEditingMember]  = useState(null);
   const [saving,         setSaving]         = useState(false);
   const [showBurnoutInfo,setShowBurnoutInfo]= useState(false);
+
+  // Invite modal
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteForm,      setInviteForm]      = useState({ name: '', email: '', role: 'volunteer' });
+  const [inviteSending,   setInviteSending]   = useState(false);
+  const [inviteResult,    setInviteResult]    = useState(null); // { url, warning, error }
 
   // Burnout settings (from organizations table)
   const [burnoutEnabled,   setBurnoutEnabled]   = useState(true);
@@ -213,12 +219,19 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
       ministries: form.ministries, household: form.household,
       organization_id: orgId,
     };
+    let saveError = null;
     if (editingMember?.id) {
-      await supabase.from('team_members').update(payload).eq('id', editingMember.id);
+      const { error } = await supabase.from('team_members').update(payload).eq('id', editingMember.id);
+      saveError = error;
     } else {
-      await supabase.from('team_members').insert([payload]);
+      const { error } = await supabase.from('team_members').insert([payload]);
+      saveError = error;
     }
     setSaving(false);
+    if (saveError) {
+      alert(`Save failed: ${saveError.message}`);
+      return;
+    }
     setShowEditModal(false);
     setEditingMember(null);
     await fetchTeam();
@@ -234,6 +247,42 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
     await supabase.from('team_members').delete().eq('id', id);
     if (selectedMember?.id === id) setSelectedMember(null);
     await fetchTeam();
+  };
+
+  const handleInvite = async (e) => {
+    e.preventDefault();
+    setInviteSending(true);
+    setInviteResult(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(
+        'https://whlmswwvbyysolaxihez.supabase.co/functions/v1/send-org-invite',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndobG1zd3d2Ynl5c29sYXhpaGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NTMwNzcsImV4cCI6MjA4MTUyOTA3N30.cOl0v_qwTcDytpg5fjXX__njOz8hOZkaX0ICqnBXfcw',
+            'Authorization': `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({
+            organizationId: orgId,
+            email: inviteForm.email.trim(),
+            name: inviteForm.name.trim() || null,
+            role: inviteForm.role,
+          }),
+        }
+      );
+      const json = await res.json();
+      if (!res.ok || json.error) {
+        setInviteResult({ error: json.error || 'Failed to send invite.' });
+      } else {
+        setInviteResult({ url: json.inviteUrl, warning: json.warning });
+        setInviteForm({ name: '', email: '', role: 'volunteer' });
+      }
+    } catch (err) {
+      setInviteResult({ error: 'Network error. Please try again.' });
+    }
+    setInviteSending(false);
   };
 
   const openEdit = (member = null) => {
@@ -340,6 +389,14 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
             <Heart size={13} /> Sabbath Feature
           </button>
         )}
+        {isAdmin && (
+          <button
+            onClick={() => { setShowInviteModal(true); setInviteResult(null); }}
+            style={{ border: `1px solid ${c.border}`, borderRadius: '7px', padding: '8px 16px', background: 'transparent', color: c.text, fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <UserPlus size={15} /> Invite
+          </button>
+        )}
         {isEditor && (
           <button
             onClick={() => openEdit()}
@@ -352,16 +409,15 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
 
       {/* Burnout info panel */}
       {showBurnoutInfo && (
-        <div style={{ background: isDarkMode ? '#1c1508' : '#fffbeb', border: `1px solid rgba(245,158,11,0.3)`, borderLeft: 'none', borderRight: 'none', padding: '14px 24px', flexShrink: 0 }}>
-          <div style={{ fontSize: '13px', fontWeight: '700', color: isDarkMode ? '#fcd34d' : '#92400e', marginBottom: '4px' }}>The Sabbath Feature — Guidelines</div>
-          <div style={{ fontSize: '12px', fontStyle: 'italic', color: isDarkMode ? '#d97706' : '#92400e', marginBottom: '8px', opacity: 0.8 }}>”God ordained us humans to rest a day from work. Churches are no different when it comes to volunteers.”</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '8px', fontSize: '12px', color: isDarkMode ? '#d97706' : '#78350f' }}>
+        <div style={{ background: '#ffffff', border: `1px solid rgba(245,158,11,0.3)`, borderLeft: 'none', borderRight: 'none', padding: '14px 24px', flexShrink: 0 }}>
+          <div style={{ fontSize: '13px', fontWeight: '700', color: '#111111', marginBottom: '4px' }}>The Sabbath Feature — Guidelines</div>
+          <div style={{ fontSize: '12px', fontStyle: 'italic', color: '#374151', marginBottom: '8px' }}>”God ordained us humans to rest a day from work. Churches are no different when it comes to volunteers.”</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '8px', fontSize: '12px', color: '#374151' }}>
             <span>🟡 Warning: {warningThreshold}+ consecutive Sundays serving</span>
             <span>🔴 Needs Sabbath Rest: {autoThreshold}+ serves in the last 60 days (14-day break)</span>
             <span>🔵 Sabbath Break: temporarily resting, not to be scheduled</span>
             <span>✓ Aim for at least 1 Sunday/month as a congregant, not a server</span>
           </div>
-          <div style={{ fontSize: '11px', color: c.muted, marginTop: '6px' }}>Sources: Lifeway Research, Planning Center, Church Juice</div>
         </div>
       )}
 
@@ -696,6 +752,112 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
               <button onClick={handleSave} disabled={saving || !form.name.trim()} style={{ border: 'none', borderRadius: '7px', padding: '8px 20px', background: c.primary, color: 'white', fontWeight: '700', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '7px', opacity: (saving || !form.name.trim()) ? 0.65 : 1 }}>
                 <Save size={14} /> {saving ? 'Saving…' : 'Save'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Invite modal */}
+      {showInviteModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+          <div style={{ background: c.card, border: `1px solid ${c.border}`, borderRadius: '16px', width: 'min(440px,100%)', boxShadow: '0 20px 60px rgba(0,0,0,0.5)', overflow: 'hidden' }}>
+            {/* Header */}
+            <div style={{ padding: '20px 24px', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: c.heading }}>Invite to Team</h3>
+                <p style={{ margin: '3px 0 0', fontSize: '12px', color: c.muted }}>They'll receive an email with a signup link.</p>
+              </div>
+              <button onClick={() => { setShowInviteModal(false); setInviteResult(null); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: c.muted, padding: '4px' }}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ padding: '20px 24px' }}>
+              {/* Success state */}
+              {inviteResult && !inviteResult.error && (
+                <div>
+                  <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                    <CheckCircle size={36} color="#10b981" style={{ margin: '0 auto 10px', display: 'block' }} />
+                    <p style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: c.heading }}>Invite sent!</p>
+                    {inviteResult.warning && (
+                      <p style={{ margin: '6px 0 0', fontSize: '12px', color: '#f59e0b' }}>{inviteResult.warning}</p>
+                    )}
+                  </div>
+                  {inviteResult.url && (
+                    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: '8px', padding: '10px 12px', marginBottom: '14px' }}>
+                      <p style={{ margin: '0 0 6px', fontSize: '11px', fontWeight: '600', color: c.muted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Invite Link</p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '12px', color: c.text, flex: 1, wordBreak: 'break-all' }}>{inviteResult.url}</span>
+                        <button
+                          onClick={() => navigator.clipboard.writeText(inviteResult.url)}
+                          style={{ background: 'transparent', border: `1px solid ${c.border}`, borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: c.muted, flexShrink: 0 }}
+                          title="Copy link"
+                        >
+                          <Copy size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                    <button onClick={() => { setInviteResult(null); }} style={{ padding: '8px 16px', borderRadius: '7px', border: `1px solid ${c.border}`, background: 'transparent', color: c.text, fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
+                      Send Another
+                    </button>
+                    <button onClick={() => { setShowInviteModal(false); setInviteResult(null); }} style={{ padding: '8px 16px', borderRadius: '7px', border: 'none', background: c.primary, color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}>
+                      Done
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Form */}
+              {(!inviteResult || inviteResult.error) && (
+                <form onSubmit={handleInvite} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: c.muted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '5px' }}>Name (optional)</label>
+                    <input
+                      value={inviteForm.name}
+                      onChange={e => setInviteForm(f => ({ ...f, name: e.target.value }))}
+                      placeholder="Jane Smith"
+                      style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: `1px solid ${c.border}`, background: c.bg, color: c.text, fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: c.muted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '5px' }}>Email *</label>
+                    <input
+                      required type="email"
+                      value={inviteForm.email}
+                      onChange={e => setInviteForm(f => ({ ...f, email: e.target.value }))}
+                      placeholder="jane@example.com"
+                      style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: `1px solid ${c.border}`, background: c.bg, color: c.text, fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: c.muted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '5px' }}>Role</label>
+                    <select
+                      value={inviteForm.role}
+                      onChange={e => setInviteForm(f => ({ ...f, role: e.target.value }))}
+                      style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: `1px solid ${c.border}`, background: c.bg, color: c.text, fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                    >
+                      <option value="volunteer">Volunteer</option>
+                      <option value="leader">Ministry Leader</option>
+                      <option value="viewer">Viewer</option>
+                    </select>
+                  </div>
+                  {inviteResult?.error && (
+                    <div style={{ fontSize: '13px', color: '#ef4444', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '8px', padding: '10px 12px' }}>
+                      {inviteResult.error}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', paddingTop: '4px' }}>
+                    <button type="button" onClick={() => { setShowInviteModal(false); setInviteResult(null); }} style={{ padding: '8px 18px', borderRadius: '7px', border: `1px solid ${c.border}`, background: 'transparent', color: c.text, fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
+                      Cancel
+                    </button>
+                    <button type="submit" disabled={inviteSending || !inviteForm.email.trim()} style={{ padding: '8px 20px', borderRadius: '7px', border: 'none', background: c.primary, color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer', opacity: (inviteSending || !inviteForm.email.trim()) ? 0.65 : 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <UserPlus size={14} /> {inviteSending ? 'Sending…' : 'Send Invite'}
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         </div>
