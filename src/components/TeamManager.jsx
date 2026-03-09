@@ -280,7 +280,7 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
         setInviteForm({ name: '', email: '', role: 'volunteer' });
       }
     } catch (err) {
-      setInviteResult({ error: 'Network error. Please try again.' });
+      setInviteResult({ error: `Error: ${err.message}` });
     }
     setInviteSending(false);
   };
