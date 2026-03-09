@@ -171,13 +171,12 @@ export default function OrgSettings({ orgId, isDarkMode, userRole }) {
   const removeST = (i) => set('service_times', form.service_times.filter((_, idx) => idx !== i));
 
   // â”€â”€ Ministry helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  const addMinistry = () => set('ministries', [...form.ministries, { name: '', description: '' }]);
-  const updateMin = (i, field, val) => {
-    const next = [...form.ministries];
-    next[i] = { ...next[i], [field]: val };
-    set('ministries', next);
-  };
-  const removeMin = (i) => set('ministries', form.ministries.filter((_, idx) => idx !== i));
+  const addMinistry    = () => set('ministries', [...form.ministries, { name: '', positions: [] }]);
+  const updateMinName  = (i, val) => { const n = [...form.ministries]; n[i] = { ...n[i], name: val }; set('ministries', n); };
+  const removeMin      = (i) => set('ministries', form.ministries.filter((_, idx) => idx !== i));
+  const addPosition    = (mi) => { const n = [...form.ministries]; n[mi] = { ...n[mi], positions: [...(n[mi].positions||[]), ''] }; set('ministries', n); };
+  const updatePosition = (mi, pi, val) => { const n = [...form.ministries]; const p = [...(n[mi].positions||[])]; p[pi] = val; n[mi] = { ...n[mi], positions: p }; set('ministries', n); };
+  const removePosition = (mi, pi) => { const n = [...form.ministries]; n[mi] = { ...n[mi], positions: (n[mi].positions||[]).filter((_,idx) => idx !== pi) }; set('ministries', n); };
 
   // â”€â”€ Verse helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const addVerse = () => {
@@ -407,42 +406,78 @@ export default function OrgSettings({ orgId, isDarkMode, userRole }) {
         {/* â”€â”€ SECTION 4: Ministries â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {sectionCard('Ministries & Positions', <Layers size={15} color={c.primary} />, (
           <div>
-            <div style={{ fontSize: '12px', color: c.muted, marginBottom: '14px' }}>
-              Define the ministry areas and volunteer positions within your organization.
+            <div style={{ fontSize: '12px', color: c.muted, marginBottom: '16px' }}>
+              Define each ministry area and the positions within it. Positions appear as role options in the Teams tab.
             </div>
-            {form.ministries.map((m, i) => (
-              <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 32px', gap: '8px', marginBottom: '10px', alignItems: 'flex-start' }}>
-                <input
-                  style={inp(!isAdmin)}
-                  value={m.name}
-                  onChange={e => updateMin(i, 'name', e.target.value)}
-                  placeholder="Ministry / Position"
-                  disabled={!isAdmin}
-                />
-                <input
-                  style={inp(!isAdmin)}
-                  value={m.description}
-                  onChange={e => updateMin(i, 'description', e.target.value)}
-                  placeholder="Short description (optional)"
-                  disabled={!isAdmin}
-                />
-                {isAdmin && (
-                  <button onClick={() => removeMin(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.danger, display: 'flex', alignItems: 'center', padding: '4px', marginTop: '4px' }}>
-                    <X size={16} />
-                  </button>
-                )}
+
+            {form.ministries.length === 0 && (
+              <div style={{ fontSize: '13px', color: c.muted, fontStyle: 'italic', marginBottom: '12px' }}>No ministries defined yet.</div>
+            )}
+
+            {form.ministries.map((m, mi) => (
+              <div key={mi} style={{ border: `1px solid ${c.border}`, borderRadius: '10px', marginBottom: '12px', overflow: 'hidden' }}>
+                {/* Ministry header row */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', background: c.section, borderBottom: `1px solid ${c.border}` }}>
+                  <Layers size={13} style={{ color: c.primary, flexShrink: 0 }} />
+                  <input
+                    style={{ ...inp(!isAdmin), fontWeight: '700', fontSize: '13px', flex: 1 }}
+                    value={m.name}
+                    onChange={e => updateMinName(mi, e.target.value)}
+                    placeholder="Ministry name (e.g. Worship, Production, Kids)"
+                    disabled={!isAdmin}
+                  />
+                  <span style={{ fontSize: '11px', color: c.muted, whiteSpace: 'nowrap' }}>
+                    {(m.positions || []).length} position{(m.positions || []).length !== 1 ? 's' : ''}
+                  </span>
+                  {isAdmin && (
+                    <button onClick={() => removeMin(mi)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.danger, display: 'flex', padding: '2px' }}>
+                      <X size={15} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Positions list */}
+                <div style={{ padding: '12px 14px' }}>
+                  {(m.positions || []).length === 0 && (
+                    <div style={{ fontSize: '12px', color: c.muted, fontStyle: 'italic', marginBottom: '8px' }}>No positions yet — add one below.</div>
+                  )}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: (m.positions||[]).length > 0 ? '10px' : '0' }}>
+                    {(m.positions || []).map((pos, pi) => (
+                      <div key={pi} style={{ display: 'flex', alignItems: 'center', background: c.card, border: `1px solid ${c.border}`, borderRadius: '20px', padding: '3px 4px 3px 12px', gap: '4px' }}>
+                        <input
+                          value={pos}
+                          onChange={e => updatePosition(mi, pi, e.target.value)}
+                          disabled={!isAdmin}
+                          placeholder="Position"
+                          style={{ border: 'none', background: 'transparent', color: c.heading, fontSize: '12px', outline: 'none', width: `${Math.max(pos.length, 8) + 2}ch`, minWidth: '60px', maxWidth: '200px' }}
+                        />
+                        {isAdmin && (
+                          <button onClick={() => removePosition(mi, pi)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.muted, display: 'flex', padding: '2px', lineHeight: 1 }}>
+                            <X size={11} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  {isAdmin && (
+                    <button
+                      onClick={() => addPosition(mi)}
+                      style={{ border: `1px dashed ${c.border}`, borderRadius: '20px', padding: '3px 12px', background: 'transparent', color: c.muted, fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      <Plus size={11} /> Add position
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
+
             {isAdmin && (
               <button
                 onClick={addMinistry}
-                style={{ border: `1px dashed ${c.border}`, borderRadius: '7px', padding: '7px 14px', background: 'transparent', color: c.muted, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}
+                style={{ border: `1px dashed ${c.border}`, borderRadius: '8px', padding: '8px 16px', background: 'transparent', color: c.muted, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}
               >
-                <Plus size={13} /> Add Ministry / Position
+                <Plus size={13} /> Add Ministry
               </button>
-            )}
-            {form.ministries.length === 0 && (
-              <div style={{ fontSize: '13px', color: c.muted, fontStyle: 'italic' }}>No ministries defined yet.</div>
             )}
           </div>
         ))}

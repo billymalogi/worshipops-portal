@@ -73,7 +73,7 @@ const ROLES = ['Worship Leader', 'Vocalist', 'Guitarist', 'Bassist', 'Drummer', 
                'Sound Tech', 'Lighting Tech', 'Video Tech', 'Presenter', 'Pastor', 'Other'];
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-export default function TeamManager({ orgId, isDarkMode, userRole, services = [] }) {
+export default function TeamManager({ orgId, isDarkMode, userRole, services = [], session }) {
   const isAdmin  = userRole === 'admin';
   const isEditor = userRole === 'admin' || userRole === 'editor';
 
@@ -93,6 +93,10 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
   const [warningThreshold, setWarningThreshold] = useState(3);
   const [autoThreshold,    setAutoThreshold]    = useState(6);
   const [burnoutQueue,     setBurnoutQueue]     = useState([]); // members needing break email
+
+  // Org ministries & positions
+  const [orgMinistries,    setOrgMinistries]    = useState([]); // [{name, positions:[]}]
+  const [addPositionPrompt,setAddPositionPrompt]= useState(null); // { role, resolve } when new role detected
 
   // Edit form
   const [form, setForm] = useState({
@@ -129,13 +133,14 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
     setLoading(true);
     const [{ data: members }, { data: org }] = await Promise.all([
       supabase.from('team_members').select('*').eq('organization_id', orgId).order('name', { ascending: true }),
-      supabase.from('organizations').select('burnout_prevention_enabled, burnout_warning_threshold, burnout_auto_threshold').eq('id', orgId).maybeSingle(),
+      supabase.from('organizations').select('burnout_prevention_enabled, burnout_warning_threshold, burnout_auto_threshold, ministries').eq('id', orgId).maybeSingle(),
     ]);
     setMembers(members || []);
     if (org) {
       setBurnoutEnabled(org.burnout_prevention_enabled ?? true);
       setWarningThreshold(org.burnout_warning_threshold ?? 3);
       setAutoThreshold(org.burnout_auto_threshold ?? 6);
+      setOrgMinistries(Array.isArray(org.ministries) ? org.ministries : []);
     }
     setLoading(false);
   };
@@ -171,7 +176,36 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
   }, [selectedMember?.linked_user_id]);
 
   // â”€â”€ Save member â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Derive flat list of all positions from all org ministries
+  const orgPositions = useMemo(() => {
+    const flat = [];
+    for (const min of orgMinistries) {
+      if (Array.isArray(min.positions)) {
+        for (const p of min.positions) {
+          if (p && !flat.includes(p)) flat.push(p);
+        }
+      }
+    }
+    return flat;
+  }, [orgMinistries]);
+
   const handleSave = async () => {
+    const role = form.role.trim();
+
+    // Check if entered role is new (not in any org ministry positions)
+    if (role && orgPositions.length > 0 && !orgPositions.includes(role)) {
+      // Prompt user to add it as an org position
+      const confirmed = await new Promise(resolve => setAddPositionPrompt({ role, resolve }));
+      if (confirmed) {
+        // Add role to first ministry's positions (or create a "General" ministry if none exist)
+        const updated = orgMinistries.length > 0
+          ? orgMinistries.map((min, i) => i === 0 ? { ...min, positions: [...(min.positions || []), role] } : min)
+          : [{ name: 'General', positions: [role] }];
+        await supabase.from('organizations').update({ ministries: updated }).eq('id', orgId);
+        setOrgMinistries(updated);
+      }
+    }
+
     setSaving(true);
     const payload = {
       name: form.name, email: form.email, phone: form.phone, role: form.role,
@@ -611,7 +645,9 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
                 <div>
                   <label style={{ fontSize: '12px', fontWeight: '600', color: c.text, display: 'block', marginBottom: '5px' }}>Role / Position</label>
                   <input style={inp()} list="role-list" value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} placeholder="e.g. Vocalist" />
-                  <datalist id="role-list">{ROLES.map(r => <option key={r} value={r} />)}</datalist>
+                  <datalist id="role-list">
+                    {(orgPositions.length > 0 ? orgPositions : ROLES).map(r => <option key={r} value={r} />)}
+                  </datalist>
                 </div>
                 <div>
                   <label style={{ fontSize: '12px', fontWeight: '600', color: c.text, display: 'block', marginBottom: '5px' }}>Date of Birth</label>
@@ -659,6 +695,32 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
               </button>
               <button onClick={handleSave} disabled={saving || !form.name.trim()} style={{ border: 'none', borderRadius: '7px', padding: '8px 20px', background: c.primary, color: 'white', fontWeight: '700', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '7px', opacity: (saving || !form.name.trim()) ? 0.65 : 1 }}>
                 <Save size={14} /> {saving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Position to Org prompt */}
+      {addPositionPrompt && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+          <div style={{ background: c.card, border: `1px solid ${c.border}`, borderRadius: '14px', padding: '28px', width: 'min(380px,100%)', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
+            <h3 style={{ margin: '0 0 10px', fontSize: '16px', fontWeight: '700', color: c.heading }}>New Position Detected</h3>
+            <p style={{ margin: '0 0 20px', fontSize: '13px', color: c.muted, lineHeight: '1.6' }}>
+              <em>{addPositionPrompt.role}</em> is not in your org's position list yet. Add it so others can reuse it?
+            </p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => { setAddPositionPrompt(null); addPositionPrompt.resolve(false); }}
+                style={{ padding: '8px 18px', borderRadius: '7px', border: `1px solid ${c.border}`, background: 'transparent', color: c.text, fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
+              >
+                No, skip
+              </button>
+              <button
+                onClick={() => { setAddPositionPrompt(null); addPositionPrompt.resolve(true); }}
+                style={{ padding: '8px 18px', borderRadius: '7px', border: 'none', background: c.primary, color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}
+              >
+                Yes, add it
               </button>
             </div>
           </div>

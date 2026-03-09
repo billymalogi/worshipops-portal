@@ -516,7 +516,7 @@ export default function Dashboard() {
 
         {/* Main Content Area */}
         <div style={{ flex: 1, overflow: 'auto' }}>
-          {activeTab === 'team' && <TeamManager orgId={orgId} isDarkMode={isDarkMode} userRole={userRole} services={services} />}
+          {activeTab === 'team' && <TeamManager orgId={orgId} isDarkMode={isDarkMode} userRole={userRole} services={services} session={session} />}
 
           {activeTab === 'myschedule' && (
             <MyScheduleView session={session} isDarkMode={isDarkMode} colors={colors} />
