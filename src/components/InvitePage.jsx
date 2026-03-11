@@ -3,9 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { CheckCircle2, Loader, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 
-const SUPABASE_URL = 'https://whlmswwvbyysolaxihez.supabase.co';
+const SUPABASE_URL     = 'https://whlmswwvbyysolaxihez.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndobG1zd3d2Ynl5c29sYXhpaGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NTMwNzcsImV4cCI6MjA4MTUyOTA3N30.cOl0v_qwTcDytpg5fjXX__njOz8hOZkaX0ICqnBXfcw';
-const ACCEPT_FN_URL = `${SUPABASE_URL}/functions/v1/accept-org-invite`;
+const ACCEPT_FN_URL     = `${SUPABASE_URL}/functions/v1/accept-org-invite`;
+const BETA_ACCEPT_FN_URL = `${SUPABASE_URL}/functions/v1/process-beta-invite`;
 
 export default function InvitePage() {
   const { token }  = useParams();
@@ -21,36 +22,71 @@ export default function InvitePage() {
   const [password,  setPassword]  = useState('');
   const [showPw,    setShowPw]    = useState(false);
 
+  const [inviteType, setInviteType] = useState('org'); // 'org' | 'beta'
+
   // ── Verify token on mount ──────────────────────────────────
   useEffect(() => {
     if (!token) { setStatus('invalid'); return; }
 
-    supabase
-      .from('org_invitations')
-      .select('id, email, name, role, expires_at, accepted_at, organizations(name)')
-      .eq('token', token)
-      .maybeSingle()
-      .then(({ data, error }) => {
-        if (error || !data) { setStatus('invalid'); return; }
-        if (data.accepted_at) {
+    (async () => {
+      // ── 1. Try beta_invitations first (no joins, simpler RLS) ──
+      const { data: beta } = await supabase
+        .from('beta_invitations')
+        .select('id, invited_email, used_at, is_active')
+        .eq('token', token)
+        .maybeSingle();
+
+      if (beta) {
+        if (!beta.is_active) {
+          setErrorMsg('This beta invite link has been revoked.');
           setStatus('invalid');
+          return;
+        }
+        if (beta.used_at) {
           setErrorMsg('This invite link has already been used.');
-          return;
-        }
-        if (new Date(data.expires_at) < new Date()) {
           setStatus('invalid');
-          setErrorMsg('This invite link has expired. Please ask your admin for a new one.');
           return;
         }
-        setInvite(data);
-        if (data.email) setEmail(data.email);
-        if (data.name) {
-          const parts = data.name.trim().split(' ');
+        setInviteType('beta');
+        setInvite(beta);
+        if (beta.invited_email) setEmail(beta.invited_email);
+        setStatus('valid');
+        return;
+      }
+
+      // ── 2. Try org_invitations ─────────────────────────────
+      const { data: org } = await supabase
+        .from('org_invitations')
+        .select('id, email, name, role, expires_at, accepted_at, organizations(name)')
+        .eq('token', token)
+        .maybeSingle();
+
+      if (org) {
+        if (org.accepted_at) {
+          setErrorMsg('This invite link has already been used.');
+          setStatus('invalid');
+          return;
+        }
+        if (new Date(org.expires_at) < new Date()) {
+          setErrorMsg('This invite link has expired. Please ask your admin for a new one.');
+          setStatus('invalid');
+          return;
+        }
+        setInviteType('org');
+        setInvite(org);
+        if (org.email) setEmail(org.email);
+        if (org.name) {
+          const parts = org.name.trim().split(' ');
           setFirstName(parts[0] || '');
           setLastName(parts.slice(1).join(' ') || '');
         }
         setStatus('valid');
-      });
+        return;
+      }
+
+      // Not found in either table
+      setStatus('invalid');
+    })();
   }, [token]);
 
   // ── Submit ─────────────────────────────────────────────────
@@ -62,7 +98,9 @@ export default function InvitePage() {
     setErrorMsg('');
 
     try {
-      const res  = await fetch(ACCEPT_FN_URL, {
+      // Both flows use their respective edge functions (service role — handles org assignment)
+      const url  = inviteType === 'beta' ? BETA_ACCEPT_FN_URL : ACCEPT_FN_URL;
+      const res  = await fetch(url, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
         body:    JSON.stringify({ token, email, password, firstName, lastName }),
@@ -92,8 +130,9 @@ export default function InvitePage() {
     textTransform: 'uppercase', letterSpacing: '0.5px',
   };
 
-  const orgName = invite?.organizations?.name ?? 'your church';
-  const invitedRole = invite?.role ?? 'volunteer';
+  const isBeta = inviteType === 'beta';
+  const orgName = isBeta ? 'WorshipOps Beta' : (invite?.organizations?.name ?? 'your church');
+  const invitedRole = isBeta ? 'Beta Tester' : (invite?.role ?? 'volunteer');
 
   return (
     <div style={{
@@ -117,7 +156,7 @@ export default function InvitePage() {
             <img src="/favicon.ico" alt="WorshipOps" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
             <span style={{ fontWeight: '800', fontSize: '22px', color: '#f1f5f9', letterSpacing: '-0.5px' }}>WorshipOps</span>
           </div>
-          <p style={{ margin: 0, fontSize: '13px', color: '#475569' }}>Team Invitation</p>
+          <p style={{ margin: 0, fontSize: '13px', color: '#475569' }}>{isBeta ? 'Beta Access' : 'Team Invitation'}</p>
         </div>
 
         {/* Loading */}
@@ -145,7 +184,9 @@ export default function InvitePage() {
             <CheckCircle2 size={48} color="#10b981" style={{ margin: '0 auto 18px', display: 'block' }} />
             <h2 style={{ margin: '0 0 10px', fontSize: '22px', fontWeight: '800', color: '#f1f5f9' }}>Welcome to {orgName}!</h2>
             <p style={{ margin: '0 0 28px', fontSize: '14px', color: '#475569', lineHeight: '1.7' }}>
-              Your account has been created. Log in to view your schedule and connect with your team.
+              {isBeta
+                ? 'Your beta account has been created. Log in to get started and share your feedback!'
+                : 'Your account has been created. Log in to view your schedule and connect with your team.'}
             </p>
             <button
               onClick={() => navigate('/login')}

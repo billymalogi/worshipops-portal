@@ -38,8 +38,13 @@ export default function InviteManager({ isDarkMode, session }) {
   const [imgUrl,          setImgUrl]          = useState('');
   const [imgWidth,        setImgWidth]        = useState('');
 
+  const [sigImgSrc,    setSigImgSrc]    = useState('');
+  const [sigImgWidth,  setSigImgWidth]  = useState(200);
+  const [showSigPanel, setShowSigPanel] = useState(false);
+
   const editorRef   = useRef(null);
   const fileRef     = useRef(null);
+  const sigFileRef  = useRef(null);
 
   const c = {
     bg:      isDarkMode ? '#000000' : '#F7F8FA',
