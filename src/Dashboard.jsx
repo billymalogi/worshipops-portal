@@ -74,7 +74,7 @@ const NAV_CATEGORIES = {
   ]},
   production: { first: 'lighting', items: [
     { id: 'lighting',   label: 'Lighting',   icon: Zap },
-    { id: 'stage',      label: 'Stage View', icon: Monitor },
+    { id: 'stage',      label: 'Slate',      icon: Monitor },
     { id: 'rehearsals', label: 'Rehearsals', icon: Calendar },
   ]},
   admin:      { first: 'profile', items: [
@@ -91,6 +91,17 @@ const getActiveCategory = (tab) =>
   Object.entries(NAV_CATEGORIES).find(([, { items }]) =>
     items.some(i => i.id === tab)
   )?.[0] || 'planner';
+
+// --- RESPONSIVE HOOK ---
+function useWindowWidth() {
+  const [width, setWidth] = React.useState(window.innerWidth);
+  React.useEffect(() => {
+    const fn = () => setWidth(window.innerWidth);
+    window.addEventListener('resize', fn);
+    return () => window.removeEventListener('resize', fn);
+  }, []);
+  return width;
+}
 
 // --- MASTER ACCOUNT ---
 const MASTER_EMAIL = 'billy@worshipops.com';
@@ -151,12 +162,12 @@ const subNavBg     = (isDark) => isDark ? '#0A0A0A' : '#F4F4F5';
 
 // --- HEADER COMPONENT ---
 const CAT_DISPLAY = { myschedule: 'My Schedule', planner: 'Planner', production: 'Production', admin: 'Admin' };
+const CAT_SHORT   = { myschedule: 'Schedule',    planner: 'Planner', production: 'Production', admin: 'Admin' };
 
-const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, setSelectedService, refreshData, onLogout, session, realRole, guestPermissions }) => {
+const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, setSelectedService, refreshData, onLogout, session, realRole, guestPermissions, isMobile, isTablet }) => {
   const activeCategory = getActiveCategory(activeTab);
   const allowed = getAllowedTabs(realRole, session?.user?.email, guestPermissions);
 
-  // Only show categories that have at least one accessible tab
   const visibleCats = Object.keys(NAV_CATEGORIES).filter(cat =>
     NAV_CATEGORIES[cat].items.some(item => allowed.includes(item.id))
   );
@@ -169,70 +180,88 @@ const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, se
     }
   };
 
+  const headerH = isMobile ? '52px' : '64px';
+
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: '1fr auto 1fr',
+      gridTemplateColumns: isMobile ? 'auto 1fr auto' : '1fr auto 1fr',
       alignItems: 'center',
-      height: '64px',
+      height: headerH,
       borderBottom: `1px solid ${colors.border}`,
       background: colors.card,
       position: 'sticky',
       top: 0,
       zIndex: 200,
-      padding: '0 20px',
+      padding: isMobile ? '0 12px' : '0 20px',
     }}>
       {/* LEFT: Logo */}
-      <div onClick={() => { setSelectedService(null); setActiveTab('dashboard'); refreshData(); }} style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', justifySelf: 'start' }}>
-        <img src="/favicon.ico" alt="Logo" onError={(e) => { e.target.style.display = 'none'; }} style={{ height: '40px', width: '40px', borderRadius: '8px', objectFit: 'contain' }} />
-        <span style={{ fontWeight: '800', fontSize: '18px', color: colors.heading, letterSpacing: '-0.5px' }}>Worship Ops</span>
+      <div onClick={() => { setSelectedService(null); setActiveTab('dashboard'); refreshData(); }}
+        style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px', cursor: 'pointer', justifySelf: 'start' }}>
+        <img src="/favicon.ico" alt="Logo" onError={(e) => { e.target.style.display = 'none'; }}
+          style={{ height: isMobile ? '32px' : '40px', width: isMobile ? '32px' : '40px', borderRadius: '8px', objectFit: 'contain' }} />
+        {!isMobile && (
+          <span style={{ fontWeight: '800', fontSize: isTablet ? '15px' : '18px', color: colors.heading, letterSpacing: '-0.5px' }}>Worship Ops</span>
+        )}
       </div>
 
-      {/* CENTER: Category tabs — truly centered via CSS grid */}
-      <div style={{ display: 'flex', height: '100%', alignItems: 'stretch' }}>
-        {visibleCats.map(cat => {
-          const isActive = activeCategory === cat;
-          return (
-            <button
-              key={cat}
-              onClick={() => handleCategoryClick(cat)}
-              style={{
-                background: isActive ? tabActiveBg(isDarkMode) : 'transparent',
-                border: 'none',
-                borderBottom: `2px solid ${isActive ? colors.heading : 'transparent'}`,
-                cursor: 'pointer',
-                padding: '0 24px',
-                fontSize: '14px',
-                fontWeight: isActive ? '700' : '500',
-                color: isActive ? colors.heading : colors.text,
-                textTransform: 'capitalize',
-                transition: 'all 0.15s',
-                whiteSpace: 'nowrap',
-              }}
-              onMouseEnter={e => {
-                if (!isActive) { e.currentTarget.style.background = tabActiveBg(isDarkMode); e.currentTarget.style.color = colors.heading; }
-              }}
-              onMouseLeave={e => {
-                if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = colors.text; }
-              }}
-            >
-              {CAT_DISPLAY[cat]}
-            </button>
-          );
-        })}
-      </div>
+      {/* CENTER: Category tabs (hidden on mobile — bottom nav handles this) */}
+      {!isMobile && (
+        <div style={{ display: 'flex', height: '100%', alignItems: 'stretch' }}>
+          {visibleCats.map(cat => {
+            const isActive = activeCategory === cat;
+            return (
+              <button
+                key={cat}
+                onClick={() => handleCategoryClick(cat)}
+                style={{
+                  background: isActive ? tabActiveBg(isDarkMode) : 'transparent',
+                  border: 'none',
+                  borderBottom: `2px solid ${isActive ? colors.heading : 'transparent'}`,
+                  cursor: 'pointer',
+                  padding: isTablet ? '0 14px' : '0 24px',
+                  fontSize: isTablet ? '12px' : '14px',
+                  fontWeight: isActive ? '700' : '500',
+                  color: isActive ? colors.heading : colors.text,
+                  textTransform: 'capitalize',
+                  transition: 'all 0.15s',
+                  whiteSpace: 'nowrap',
+                }}
+                onMouseEnter={e => {
+                  if (!isActive) { e.currentTarget.style.background = tabActiveBg(isDarkMode); e.currentTarget.style.color = colors.heading; }
+                }}
+                onMouseLeave={e => {
+                  if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = colors.text; }
+                }}
+              >
+                {isTablet ? CAT_SHORT[cat] : CAT_DISPLAY[cat]}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Mobile: app name centered */}
+      {isMobile && (
+        <span style={{ textAlign: 'center', fontWeight: '800', fontSize: '15px', color: colors.heading, letterSpacing: '-0.3px' }}>
+          Worship Ops
+        </span>
+      )}
 
       {/* RIGHT: Controls */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '10px', justifySelf: 'end' }}>
-        {/* Role badge */}
-        <span style={{ fontSize: '11px', fontWeight: '600', color: colors.text, opacity: 0.6, padding: '2px 8px', border: `1px solid ${colors.border}`, borderRadius: '12px', whiteSpace: 'nowrap' }}>
-          {ROLE_LABELS[realRole] || realRole}
-        </span>
-        <button onClick={() => setIsDarkMode(!isDarkMode)} style={{ background: 'transparent', color: colors.text, border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-          {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: isMobile ? '4px' : '10px', justifySelf: 'end' }}>
+        {!isMobile && (
+          <span style={{ fontSize: '11px', fontWeight: '600', color: colors.text, opacity: 0.6, padding: '2px 8px', border: `1px solid ${colors.border}`, borderRadius: '12px', whiteSpace: 'nowrap' }}>
+            {ROLE_LABELS[realRole] || realRole}
+          </span>
+        )}
+        <button onClick={() => setIsDarkMode(!isDarkMode)}
+          style={{ background: 'transparent', color: colors.text, border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+          {isDarkMode ? <Sun size={isMobile ? 20 : 18} /> : <Moon size={isMobile ? 20 : 18} />}
         </button>
-        <button onClick={onLogout} title="Log Out" style={{ background: 'transparent', color: colors.danger, border: 'none', padding: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-          <LogOut size={18} />
+        <button onClick={onLogout} title="Log Out"
+          style={{ background: 'transparent', color: colors.danger, border: 'none', padding: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+          <LogOut size={isMobile ? 20 : 18} />
         </button>
       </div>
     </div>
@@ -240,28 +269,31 @@ const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, se
 };
 
 // --- SUB-NAV BAR ---
-const SubNav = ({ colors, activeTab, setActiveTab, setSelectedService, isDarkMode, realRole, session, guestPermissions }) => {
+const SubNav = ({ colors, activeTab, setActiveTab, setSelectedService, isDarkMode, realRole, session, guestPermissions, isMobile, isTablet, topOffset }) => {
   const activeCategory = getActiveCategory(activeTab);
   const allowed = getAllowedTabs(realRole, session?.user?.email, guestPermissions);
   const allItems = NAV_CATEGORIES[activeCategory]?.items || [];
   const items = allItems.filter(item => allowed.includes(item.id));
 
-  // Hide subnav for single-item categories (e.g. My Schedule)
   if (items.length <= 1) return null;
 
   return (
     <div style={{
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center',
+      justifyContent: isMobile ? 'flex-start' : 'center',
       gap: '2px',
-      padding: '0 30px',
-      height: '44px',
+      padding: isMobile ? '0 8px' : '0 30px',
+      height: isMobile ? '40px' : '44px',
       borderBottom: `1px solid ${colors.border}`,
       background: subNavBg(isDarkMode),
       position: 'sticky',
-      top: '64px',
+      top: `${topOffset}px`,
       zIndex: 199,
+      overflowX: isMobile ? 'auto' : 'visible',
+      scrollbarWidth: 'none',
+      WebkitOverflowScrolling: 'touch',
+      flexShrink: 0,
     }}>
       {items.map(({ id, label, icon: Icon }) => {
         const isActive = activeTab === id;
@@ -272,16 +304,18 @@ const SubNav = ({ colors, activeTab, setActiveTab, setSelectedService, isDarkMod
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '7px',
-              padding: '6px 14px',
+              gap: isMobile ? '5px' : '7px',
+              padding: isMobile ? '5px 12px' : '6px 14px',
               borderRadius: '6px',
               border: 'none',
               background: isActive ? tabActiveBg(isDarkMode) : 'transparent',
               color: isActive ? colors.heading : colors.text,
               fontWeight: isActive ? '700' : '500',
-              fontSize: '13px',
+              fontSize: isMobile ? '12px' : '13px',
               cursor: 'pointer',
               transition: 'all 0.15s',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
             }}
             onMouseEnter={(e) => {
               if (!isActive) { e.currentTarget.style.background = tabActiveBg(isDarkMode); e.currentTarget.style.color = colors.heading; }
@@ -290,7 +324,7 @@ const SubNav = ({ colors, activeTab, setActiveTab, setSelectedService, isDarkMod
               if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = colors.text; }
             }}
           >
-            <Icon size={13} />
+            <Icon size={isMobile ? 12 : 13} />
             {label}
           </button>
         );
@@ -298,6 +332,46 @@ const SubNav = ({ colors, activeTab, setActiveTab, setSelectedService, isDarkMod
     </div>
   );
 };
+
+// --- MOBILE BOTTOM NAV ---
+const CAT_ICONS = {
+  myschedule: CalendarCheck,
+  planner:    LayoutGrid,
+  production: Monitor,
+  admin:      Settings,
+};
+
+const MobileBottomNav = ({ colors, isDarkMode, activeCategory, visibleCats, onCategoryChange }) => (
+  <div style={{
+    position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 300,
+    height: '60px',
+    background: colors.card,
+    borderTop: `1px solid ${colors.border}`,
+    display: 'flex',
+    alignItems: 'stretch',
+    paddingBottom: 'env(safe-area-inset-bottom)',
+  }}>
+    {visibleCats.map(cat => {
+      const Icon    = CAT_ICONS[cat] || LayoutGrid;
+      const isActive = activeCategory === cat;
+      return (
+        <button key={cat} onClick={() => onCategoryChange(cat)}
+          style={{
+            flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+            justifyContent: 'center', gap: '3px',
+            background: 'transparent', border: 'none', cursor: 'pointer',
+            color: isActive ? colors.primary : colors.text,
+            transition: 'color 0.15s',
+          }}>
+          <Icon size={20} strokeWidth={isActive ? 2.5 : 1.75} />
+          <span style={{ fontSize: '10px', fontWeight: isActive ? '700' : '400', letterSpacing: '0.2px' }}>
+            {CAT_SHORT[cat]}
+          </span>
+        </button>
+      );
+    })}
+  </div>
+);
 
 
 // --- ORG SWITCHER ---
@@ -356,8 +430,12 @@ function OrgSwitcher({ orgName, allOrgs, currentOrgId, onSwitch, isDarkMode }) {
 
 // --- MAIN DASHBOARD ---
 export default function Dashboard() {
-  const router = useNavigate();
-  const [session, setSession] = useState(null); 
+  const router    = useNavigate();
+  const winWidth  = useWindowWidth();
+  const isMobile  = winWidth < 640;
+  const isTablet  = winWidth >= 640 && winWidth < 1024;
+
+  const [session, setSession] = useState(null);
   const [orgId, setOrgId] = useState(null);
   const [allOrgs, setAllOrgs] = useState([]); // [{organization_id, role, name}]
 
@@ -566,6 +644,25 @@ export default function Dashboard() {
     );
   }
 
+  const headerH  = isMobile ? 52  : 64;
+  const subNavH  = isMobile ? 40  : 44;
+  const bottomH  = isMobile ? 60  : 0;
+  const verseH   = isMobile ? 0   : 28;
+  const activeCategory = getActiveCategory(activeTab);
+  const allowed = getAllowedTabs(realRole, session?.user?.email, guestPermissions);
+  const visibleCats = Object.keys(NAV_CATEGORIES).filter(cat =>
+    NAV_CATEGORIES[cat].items.some(item => allowed.includes(item.id))
+  );
+  const catHasSubNav = (NAV_CATEGORIES[activeCategory]?.items || [])
+    .filter(item => allowed.includes(item.id)).length > 1;
+  const topBarTotal = headerH + (catHasSubNav ? subNavH : 0) + verseH;
+
+  const handleCategoryChange = (cat) => {
+    setSelectedService(null);
+    const firstAllowed = NAV_CATEGORIES[cat].items.find(item => allowed.includes(item.id));
+    if (firstAllowed) setActiveTab(firstAllowed.id);
+  };
+
   return (
     <div style={{ minHeight: '100vh', fontFamily: 'sans-serif', background: colors.bg, color: colors.text }}>
 
@@ -608,11 +705,11 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* VERSE STATUS BAR */}
+      {/* VERSE STATUS BAR — hidden on mobile */}
       <div style={{
         background: isDarkMode ? '#92400e' : '#f97316',
         padding: '4px 20px',
-        display: 'flex',
+        display: isMobile ? 'none' : 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: '20px',
@@ -640,9 +737,9 @@ export default function Dashboard() {
         )}
       </div>
 
-      <Header colors={colors} activeTab={activeTab} setActiveTab={setActiveTab} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} setSelectedService={setSelectedService} refreshData={() => refreshAllData(orgId)} onLogout={handleLogout} session={session} realRole={realRole} guestPermissions={guestPermissions} />
+      <Header colors={colors} activeTab={activeTab} setActiveTab={setActiveTab} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} setSelectedService={setSelectedService} refreshData={() => refreshAllData(orgId)} onLogout={handleLogout} session={session} realRole={realRole} guestPermissions={guestPermissions} isMobile={isMobile} isTablet={isTablet} />
 
-      <SubNav colors={colors} activeTab={activeTab} setActiveTab={setActiveTab} setSelectedService={setSelectedService} isDarkMode={isDarkMode} realRole={realRole} session={session} guestPermissions={guestPermissions} />
+      <SubNav colors={colors} activeTab={activeTab} setActiveTab={setActiveTab} setSelectedService={setSelectedService} isDarkMode={isDarkMode} realRole={realRole} session={session} guestPermissions={guestPermissions} isMobile={isMobile} isTablet={isTablet} topOffset={headerH + verseH} />
 
       {/* GUEST EXPIRY BANNER */}
       {realRole === 'guest' && guestExpiry && (() => {
@@ -656,15 +753,32 @@ export default function Dashboard() {
         );
       })()}
 
-      {/* MAIN CONTENT - height adjusts: 64px header + optional 44px subnav */}
-      <div style={{ display: 'flex', height: `calc(100vh - ${activeTab === 'myschedule' ? 93 : 137}px)` }}>
+      {/* MOBILE BOTTOM NAV */}
+      {isMobile && (
+        <MobileBottomNav
+          colors={colors}
+          isDarkMode={isDarkMode}
+          activeCategory={activeCategory}
+          visibleCats={visibleCats}
+          onCategoryChange={handleCategoryChange}
+        />
+      )}
+
+      {/* MAIN CONTENT */}
+      <div style={{ display: 'flex', height: `calc(100vh - ${topBarTotal}px - ${bottomH}px)` }}>
 
         {/* Main Content Area */}
-        <div style={{ flex: 1, overflow: 'auto' }}>
+        <div style={{ flex: 1, overflow: 'auto', paddingBottom: isMobile ? `${bottomH}px` : 0 }}>
           {activeTab === 'team' && <TeamManager orgId={orgId} isDarkMode={isDarkMode} userRole={userRole} services={services} session={session} />}
 
           {activeTab === 'myschedule' && (
-            <MyScheduleView session={session} isDarkMode={isDarkMode} colors={colors} />
+            <MyScheduleView
+              session={session}
+              isDarkMode={isDarkMode}
+              colors={colors}
+              orgId={orgId}
+              onNavigate={setActiveTab}
+            />
           )}
 
           {activeTab === 'lighting' && <LightingController isDarkMode={isDarkMode} userRole={userRole} />}
@@ -739,11 +853,12 @@ export default function Dashboard() {
 
 
       {activeTab === 'dashboard' && !selectedService && !selectedTemplate && (
-        <div style={{ display: 'flex', height: 'calc(100vh - 137px)' }}>
+        <div style={{ display: 'flex', height: `calc(100vh - ${topBarTotal}px - ${bottomH}px)` }}>
 
-          {/* LEFT SIDEBAR - Folders & Calendar */}
+          {/* LEFT SIDEBAR - Folders & Calendar — hidden on mobile */}
+          {!isMobile && (
           <div style={{
-            width: '280px',
+            width: isTablet ? '220px' : '280px',
             background: isDarkMode ? '#0a0a0a' : '#f8f9fa',
             borderRight: `1px solid ${colors.border}`,
             display: 'flex',
@@ -910,6 +1025,7 @@ export default function Dashboard() {
 
             </div>
           </div>
+          )} {/* end !isMobile sidebar */}
 
           {/* MAIN CONTENT AREA - All Services Overview */}
           <div style={{
@@ -917,10 +1033,10 @@ export default function Dashboard() {
             overflowY: 'auto',
             background: colors.bg
           }}>
-            <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '30px' }}>
+            <div style={{ maxWidth: '1000px', margin: '0 auto', padding: isMobile ? '16px' : '30px' }}>
 
               {/* Header */}
-              <div style={{ marginBottom: '30px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ marginBottom: isMobile ? '16px' : '30px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                   {currentFolder && (
                     <button
@@ -942,7 +1058,7 @@ export default function Dashboard() {
                     </button>
                   )}
                   <div>
-                    <h1 style={{ margin: 0, fontSize: '28px', color: colors.heading, fontWeight: '700' }}>
+                    <h1 style={{ margin: 0, fontSize: isMobile ? '20px' : '28px', color: colors.heading, fontWeight: '700' }}>
                       {currentFolder ? currentFolder.name : 'All Services'}
                     </h1>
                     <p style={{ margin: '5px 0 0', color: colors.text, fontSize: '14px' }}>
@@ -1115,6 +1231,7 @@ export default function Dashboard() {
                             {localDate.toLocaleDateString('en-US', { weekday: 'long' })} · {service.start_time ? formatTime(service.start_time) : '9:00 AM'}
                           </div>
                         </div>
+                        {!isMobile && (
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                           <button
                             onClick={(e) => handleMoveService(e, service.id)}
@@ -1171,6 +1288,7 @@ export default function Dashboard() {
                             </button>
                           )}
                         </div>
+                        )}
                       </div>
                     );
                   })}
@@ -1185,7 +1303,7 @@ export default function Dashboard() {
 
           {/* Service/Plan Editor - Full Width */}
           {(selectedService || selectedTemplate) && (
-            <div style={{ padding: '20px' }}>
+            <div style={{ padding: isMobile ? '10px' : '20px' }}>
             <ScheduleTable
                 isDarkMode={isDarkMode}
                 serviceData={selectedService || selectedTemplate}
@@ -1204,8 +1322,8 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* PERSISTENT CALENDAR - Only on Dashboard when NOT viewing a service */}
-        {activeTab === 'dashboard' && !selectedService && !selectedTemplate && (
+        {/* PERSISTENT CALENDAR - Right panel, hidden on mobile */}
+        {!isMobile && activeTab === 'dashboard' && !selectedService && !selectedTemplate && (
           <PersistentCalendar
             isDarkMode={isDarkMode}
             onDateSelect={handleQuickCreateService}
