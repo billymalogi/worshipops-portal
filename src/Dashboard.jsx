@@ -294,7 +294,9 @@ const SubNav = ({ colors, activeTab, setActiveTab, setSelectedService, isDarkMod
       scrollbarWidth: 'none',
       WebkitOverflowScrolling: 'touch',
       flexShrink: 0,
-    }}>
+    }}
+    className={isMobile ? 'mobile-subnav' : undefined}
+    >
       {items.map(({ id, label, icon: Icon }) => {
         const isActive = activeTab === id;
         return (
@@ -342,15 +344,17 @@ const CAT_ICONS = {
 };
 
 const MobileBottomNav = ({ colors, isDarkMode, activeCategory, visibleCats, onCategoryChange }) => (
-  <div style={{
-    position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 300,
-    height: '60px',
-    background: colors.card,
-    borderTop: `1px solid ${colors.border}`,
-    display: 'flex',
-    alignItems: 'stretch',
-    paddingBottom: 'env(safe-area-inset-bottom)',
-  }}>
+  <div
+    className="mobile-bottom-nav"
+    style={{
+      position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 300,
+      height: '60px',
+      background: colors.card,
+      borderTop: `1px solid ${colors.border}`,
+      display: 'flex',
+      alignItems: 'stretch',
+    }}
+  >
     {visibleCats.map(cat => {
       const Icon    = CAT_ICONS[cat] || LayoutGrid;
       const isActive = activeCategory === cat;
@@ -664,7 +668,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', fontFamily: 'sans-serif', background: colors.bg, color: colors.text }}>
+    <div style={{ minHeight: isMobile ? '100dvh' : '100vh', fontFamily: 'sans-serif', background: colors.bg, color: colors.text, overflowX: 'hidden' }}>
 
       {/* ALERT OVERLAY — shown on any screen when an alert message is sent */}
       {alertOverlay && (

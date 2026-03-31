@@ -3,10 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>command-center</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Worship Ops</title>
+    <style>
+      * { box-sizing: border-box; }
+      html, body, #root { height: 100%; margin: 0; padding: 0; }
+      /* Hide scrollbars on horizontal sub-nav */
+      .mobile-subnav::-webkit-scrollbar { display: none; }
+      /* Safe-area aware bottom padding */
+      @supports (padding: env(safe-area-inset-bottom)) {
+        .mobile-bottom-nav { padding-bottom: env(safe-area-inset-bottom); }
+      }
+    </style>
   </head>
-  <body>
+  <body style="margin:0;padding:0;overflow-x:hidden;">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
