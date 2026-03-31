@@ -465,12 +465,11 @@ export default function MyScheduleView({ session, isDarkMode, colors, orgId, onN
           border: 'none',
           cursor: 'pointer',
           color: isActive ? c.primary : c.text,
-          padding: '14px 0',
+          minHeight: '76px',
           width: '100%',
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
-          gap: '8px',
+          justifyContent: 'center',
           borderRadius: '0',
           transition: 'all 0.15s',
           position: 'relative',
@@ -483,18 +482,18 @@ export default function MyScheduleView({ session, isDarkMode, colors, orgId, onN
           if (!isActive) e.currentTarget.style.background = 'transparent';
         }}
       >
-        <Icon size={15} />
-        <span style={{
-          writingMode: 'vertical-rl',
-          transform: 'rotate(180deg)',
-          fontSize: '9px',
-          fontWeight: isActive ? '800' : '500',
-          letterSpacing: '0.8px',
-          textTransform: 'uppercase',
-          lineHeight: 1,
-        }}>
-          {label}
-        </span>
+        <div style={{ transform: 'rotate(-90deg)', display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap' }}>
+          <Icon size={11} />
+          <span style={{
+            fontSize: '9px',
+            fontWeight: isActive ? '800' : '500',
+            letterSpacing: '0.8px',
+            textTransform: 'uppercase',
+            lineHeight: 1,
+          }}>
+            {label}
+          </span>
+        </div>
         {badge > 0 && (
           <span style={{
             position: 'absolute', top: '8px', right: '4px',

@@ -450,7 +450,7 @@ export default function Dashboard() {
 
   const [activeTab, setActiveTab] = useState('dashboard'); 
   const [currentFolder, setCurrentFolder] = useState(null); 
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   
   // Data State
   const [songs, setSongs] = useState([]); 

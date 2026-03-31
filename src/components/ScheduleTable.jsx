@@ -3,10 +3,21 @@ import { supabase } from '../supabaseClient';
 import {
   GripVertical, Plus, Trash2, X, Save, Music,
   ChevronDown, ChevronRight, CheckCircle,
-  Users, Monitor, LayoutTemplate, Calendar, Search,
+  Users, LayoutTemplate, Calendar, Search,
   Loader2, Video, FileText, ArrowLeft, Filter,
-  MessageSquare
+  MessageSquare, Clock,
 } from 'lucide-react';
+
+// ── Responsive hook ────────────────────────────────────────────────────────────
+function useWindowWidth() {
+  const [w, setW] = React.useState(window.innerWidth);
+  React.useEffect(() => {
+    const fn = () => setW(window.innerWidth);
+    window.addEventListener('resize', fn);
+    return () => window.removeEventListener('resize', fn);
+  }, []);
+  return w;
+}
 import EditableTitle from './EditableTitle';
 import CalendarWidget from './CalendarWidget';
 import ChatPanel from './ChatPanel';
@@ -38,7 +49,10 @@ export default function ScheduleTable({
   onBack, onSave, isDarkMode, orgId, onCreateService,
   userRole, session, onServiceClick,
 }) {
-  const canEdit = userRole === 'admin' || userRole === 'editor';
+  const canEdit  = userRole === 'admin' || userRole === 'editor';
+  const winWidth = useWindowWidth();
+  const isMobile = winWidth < 640;
+  const isTablet = winWidth >= 640 && winWidth < 1024;
 
   // ── State ────────────────────────────────────────────────────────────────────
   const [items,            setItems]            = useState([]);
@@ -71,6 +85,7 @@ export default function ScheduleTable({
   const [draggedNewItem,   setDraggedNewItem]   = useState(null);
   const [dropTargetIndex,  setDropTargetIndex]  = useState(null);
   const [colorPopoverItemId, setColorPopoverItemId] = useState(null);
+  const [activeRightPanel,   setActiveRightPanel]   = useState(null); // 'calendar'|'teams'|'songs'|'times'
 
   const prevDarkModeRef  = useRef(isDarkMode);
   const autoSaveTimer    = useRef(null);
@@ -319,9 +334,6 @@ export default function ScheduleTable({
           ← Back
         </button>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <button onClick={() => alert('Stage Mode')} style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.text, padding: '7px 14px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Monitor size={15} /> Stage
-          </button>
           {!isTemplate && (
             <button onClick={() => setShowChat(true)} style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.text, padding: '7px 14px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <MessageSquare size={15} /> Chat
@@ -360,10 +372,10 @@ export default function ScheduleTable({
       </div>
 
       {/* ── MAIN CONTENT ── */}
-      <div style={{ display: 'flex', gap: '28px', flex: 1, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', gap: '0', flex: 1, overflow: 'hidden' }}>
 
         {/* LEFT: PLAN EDITOR — scrollable column */}
-        <div className="wop-scroll" style={{ flex: 1, overflowY: 'auto', minWidth: 0 }}>
+        <div className="wop-scroll" style={{ flex: 1, overflowY: 'auto', minWidth: 0, paddingRight: activeRightPanel ? '12px' : '0' }}>
 
           {/* ── STICKY: service header + stats — freeze at top on scroll ── */}
           <div style={{ position: 'sticky', top: 0, zIndex: 10, background: colors.bg, paddingBottom: '16px', marginBottom: '8px' }}>
@@ -371,12 +383,12 @@ export default function ScheduleTable({
             {/* SERVICE HEADER */}
             <div style={{ marginBottom: '18px', paddingTop: '4px' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ flex: 1, minWidth: 0, textAlign: (isMobile || isTablet) ? 'center' : 'left' }}>
                   {canEdit
                     ? <EditableTitle initialTitle={planName} onSave={setPlanName} isDarkMode={isDarkMode} />
                     : <div style={{ fontSize: '26px', fontWeight: '900', color: colors.heading, letterSpacing: '-0.5px' }}>{planName}</div>
                   }
-                  <div style={{ fontSize: '13px', color: colors.subText, marginTop: '5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ fontSize: '13px', color: colors.subText, marginTop: '5px', display: 'flex', alignItems: 'center', justifyContent: (isMobile || isTablet) ? 'center' : 'flex-start', gap: '6px' }}>
                     <CalendarIcon date={planDate} />
                     {!isTemplate && serviceData?.start_time && (
                       <><span style={{ opacity: 0.35 }}>•</span><span>{formatTime(serviceData.start_time)} Service</span></>
@@ -393,14 +405,14 @@ export default function ScheduleTable({
             </div>
 
             {/* STATS ROW */}
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <div style={{ flex: 1, background: colors.card, borderRadius: '12px', border: `1px solid ${colors.border}`, padding: '14px 18px' }}>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: (isMobile || isTablet) ? 'center' : 'flex-start' }}>
+              <div style={{ flex: (isMobile || isTablet) ? 'unset' : 1, background: colors.card, borderRadius: '12px', border: `1px solid ${colors.border}`, padding: '14px 18px', textAlign: (isMobile || isTablet) ? 'center' : 'left' }}>
                 <div style={{ fontSize: '10px', fontWeight: '700', color: colors.subText, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Total Time</div>
-                <div style={{ fontSize: '22px', fontWeight: '800', color: colors.heading, letterSpacing: '-0.5px' }}>
+                <div style={{ fontSize: '22px', fontWeight: '800', color: (isMobile || isTablet) ? colors.subText : colors.heading, letterSpacing: '-0.5px' }}>
                   {totalMinutes > 0 ? `${totalMinutes} Min` : '—'}
                 </div>
               </div>
-              {!isTemplate && (
+              {!isTemplate && !isMobile && !isTablet && (
                 <div style={{ flex: 1, background: colors.card, borderRadius: '12px', border: `1px solid ${colors.border}`, padding: '14px 18px' }}>
                   <div style={{ fontSize: '10px', fontWeight: '700', color: colors.subText, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' }}>Team Status</div>
 
@@ -741,181 +753,245 @@ export default function ScheduleTable({
           )}
         </div>
 
-        {/* ── RIGHT SIDEBAR ── */}
-        <div className="wop-scroll" style={{ width: '300px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '12px', height: '100%', overflowY: 'auto' }}>
+        {/* ── RIGHT AREA: vertical tab strip + conditional panel ── */}
+        <div style={{ display: 'flex', flexShrink: 0, borderLeft: `1px solid ${colors.border}` }}>
 
-          {/* People Picker */}
-          {sidebarView === 'picker' && (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: colors.bg, borderLeft: `1px solid ${colors.border}` }}>
-              <div style={{ padding: '15px', borderBottom: `1px solid ${colors.border}`, display: 'flex', gap: '10px', alignItems: 'center', background: colors.hover }}>
-                <button onClick={() => setSidebarView('main')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.text }}><ArrowLeft size={18}/></button>
+          {/* Conditional panel */}
+          {activeRightPanel && (
+            <div className="wop-scroll" style={{ width: isTablet ? '260px' : '300px', overflowY: 'auto', height: '100%', padding: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+              {/* CALENDAR PANEL */}
+              {activeRightPanel === 'calendar' && (
                 <div>
-                  <div style={{ fontSize: '11px', textTransform: 'uppercase', color: colors.subText, fontWeight: 'bold' }}>Assigning To</div>
-                  <div style={{ fontSize: '14px', fontWeight: '700', color: colors.accent }}>{assigningRole?.role_name}</div>
-                </div>
-              </div>
-              <div style={{ padding: '10px', borderBottom: `1px solid ${colors.border}` }}>
-                <div style={{ position: 'relative', marginBottom: '10px' }}>
-                  <Search size={14} color={colors.subText} style={{ position: 'absolute', left: '10px', top: '9px' }}/>
-                  <input placeholder="Search people..." value={peopleSearch} autoFocus onChange={e => setPeopleSearch(e.target.value)} style={{ width: '100%', padding: '8px 8px 8px 30px', borderRadius: '6px', border: `1px solid ${colors.border}`, background: colors.inputBg, color: colors.text, boxSizing: 'border-box', fontSize: '13px' }} />
-                </div>
-                <div style={{ display: 'flex', gap: '5px' }}>
-                  <button onClick={() => setFilterBySkill(!filterBySkill)} style={{ flex: 1, padding: '6px', borderRadius: '4px', border: `1px solid ${filterBySkill ? colors.accent : colors.border}`, background: filterBySkill ? colors.hover : 'transparent', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', color: filterBySkill ? colors.accent : colors.subText, cursor: 'pointer' }}>
-                    <Filter size={12}/> Match Role
-                  </button>
-                  <button onClick={() => assignPerson(null)} style={{ padding: '6px 10px', borderRadius: '4px', border: `1px solid ${colors.danger}`, background: 'transparent', color: colors.danger, fontSize: '11px', cursor: 'pointer' }}>Clear</button>
-                </div>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '10px' }}>
-                {filteredPeople.length === 0 && (
-                  <div style={{ padding: '20px', textAlign: 'center', color: colors.subText, fontSize: '13px' }}>
-                    No matches found.<br/><span style={{ fontSize: '11px', opacity: 0.7 }}>(Try turning off "Match Role")</span>
-                  </div>
-                )}
-                {filteredPeople.map(person => (
-                  <div key={person.id} onClick={() => assignPerson(person.id)} style={{ padding: '10px', borderRadius: '6px', cursor: 'pointer', background: colors.inputBg, display: 'flex', alignItems: 'center', gap: '10px', border: `1px solid ${colors.border}` }}>
-                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: colors.accent, color: 'white', fontSize: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{person.name.charAt(0)}</div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '13px', fontWeight: '500' }}>{person.name}</div>
-                      {person.skills && (
-                        <div style={{ display: 'flex', gap: '4px', marginTop: '2px', flexWrap: 'wrap' }}>
-                          {person.skills.map(s => <span key={s} style={{ fontSize: '9px', padding: '1px 4px', borderRadius: '3px', background: colors.hover, color: colors.subText }}>{s}</span>)}
+                  <div style={{ fontSize: '11px', fontWeight: '700', color: colors.subText, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' }}>Calendar</div>
+                  <CalendarWidget isDarkMode={isDarkMode} onDateSelect={onCreateService} />
+                  {!isTemplate && sameDayServices.length > 0 && (
+                    <div style={{ marginTop: '12px' }}>
+                      <div style={{ fontSize: '11px', fontWeight: '700', color: colors.subText, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Other Services Today</div>
+                      {sameDayServices.map(svc => (
+                        <div key={svc.id} onClick={() => onServiceClick && onServiceClick(svc.id)} style={{ padding: '10px 12px', borderRadius: '8px', border: `1px solid ${colors.border}`, marginBottom: '6px', cursor: 'pointer' }} onMouseEnter={e => { e.currentTarget.style.background = colors.hover; e.currentTarget.style.borderColor = colors.accent; }} onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = colors.border; }}>
+                          <div style={{ fontWeight: '600', fontSize: '13px', color: colors.text }}>{svc.name}</div>
+                          <div style={{ fontSize: '12px', color: colors.subText }}>{formatTime(svc.start_time)}</div>
                         </div>
-                      )}
+                      ))}
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {sidebarView === 'main' && (
-            <>
-              {/* Calendar */}
-              <div style={{ background: colors.bg, borderRadius: '8px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
-                <div onClick={() => setExpandedSections({...expandedSections, calendar: !expandedSections.calendar})} style={{ padding: '15px', borderBottom: expandedSections.calendar ? `1px solid ${colors.border}` : 'none', background: colors.hover, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><Calendar size={16} color={colors.subText}/><h3 style={{ margin: 0, fontSize: '14px', fontWeight: '700', textTransform: 'uppercase', color: colors.subText }}>Calendar</h3></div>
-                  {expandedSections.calendar ? <ChevronDown size={16} color={colors.subText}/> : <ChevronRight size={16} color={colors.subText}/>}
+                  )}
                 </div>
-                {expandedSections.calendar && <CalendarWidget isDarkMode={isDarkMode} onDateSelect={onCreateService} />}
-              </div>
+              )}
 
-              {/* Library */}
-              <div style={{ background: colors.bg, borderRadius: '8px', border: `1px solid ${colors.border}`, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ padding: '10px', borderBottom: `1px solid ${colors.border}` }}>
+              {/* TEAMS PANEL */}
+              {activeRightPanel === 'teams' && (
+                <div>
+                  <div style={{ fontSize: '11px', fontWeight: '700', color: colors.subText, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' }}>Teams</div>
+                  {ministries.map(m => {
+                    const isExp = expandedMinistries[m.id];
+                    const mPos  = positions.filter(p => p.ministry_id === m.id);
+                    const conf  = mPos.filter(p => p.status === 'confirmed').length;
+                    const need  = mPos.length - conf;
+                    return (
+                      <div key={m.id} style={{ marginBottom: '10px', border: `1px solid ${colors.border}`, borderRadius: '6px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', background: colors.hover, borderRadius: isExp ? '6px 6px 0 0' : '6px' }}>
+                          <div onClick={() => setExpandedMinistries({...expandedMinistries, [m.id]: !isExp})} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', flex: 1 }}>
+                            {isExp ? <ChevronDown size={14} color={colors.subText}/> : <ChevronRight size={14} color={colors.subText}/>}
+                            <div>
+                              <div style={{ fontWeight: '700', fontSize: '13px', color: colors.text }}>{m.name}</div>
+                              <div style={{ fontSize: '11px', color: colors.subText, display: 'flex', gap: '8px', marginTop: '2px' }}>
+                                <span style={{ color: colors.success }}>✓ {conf}</span>
+                                <span style={{ color: colors.danger }}>✗ {need}</span>
+                              </div>
+                            </div>
+                          </div>
+                          {!isTemplate && <button onClick={(e) => { e.stopPropagation(); setChatThread(m.name); setShowChat(true); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: colors.subText, padding: '2px 4px', display: 'flex', opacity: 0.6 }}><MessageSquare size={13}/></button>}
+                          {canEdit && <button onClick={(e) => { e.stopPropagation(); startAddRole(m.id); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: colors.subText }}><Plus size={16}/></button>}
+                        </div>
+                        {isExp && (
+                          <div style={{ padding: '5px' }}>
+                            {mPos.length === 0 && <div style={{ fontSize: '12px', color: colors.subText, fontStyle: 'italic', padding: '5px' }}>No positions yet.</div>}
+                            {mPos.map(pos => {
+                              const assigned = teamMembers.find(t => t.id === pos.member_id);
+                              return (
+                                <div key={pos.id} onClick={() => openPeoplePicker(pos)} style={{ display: 'flex', alignItems: 'center', padding: '8px 6px', marginBottom: '2px', borderRadius: '4px', background: assigned ? 'transparent' : 'rgba(239,68,68,0.05)', cursor: canEdit ? 'pointer' : 'default', border: `1px solid ${assigned ? 'transparent' : 'rgba(239,68,68,0.2)'}` }}>
+                                  <div style={{ flex: 1 }}>
+                                    <div style={{ fontSize: '12px', fontWeight: '600', color: colors.text }}>{pos.role_name}</div>
+                                    <div style={{ fontSize: '12px', color: assigned ? colors.text : colors.danger, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                      {assigned ? <><div style={{ width: '16px', height: '16px', background: colors.accent, borderRadius: '50%', fontSize: '9px', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{assigned.name.charAt(0)}</div>{assigned.name}</> : 'Needed'}
+                                    </div>
+                                  </div>
+                                  {canEdit && <button onClick={(e) => { e.stopPropagation(); handleDeleteRole(pos.id); }} style={{ color: colors.subText, background: 'none', border: 'none', cursor: 'pointer', opacity: 0.5 }}><X size={14}/></button>}
+                                </div>
+                              );
+                            })}
+                            {canEdit && activeMinistryId === m.id && (
+                              <div style={{ padding: '5px', display: 'flex', gap: '5px' }}>
+                                <input autoFocus placeholder="Role Name..." value={newRoleName} onChange={e => setNewRoleName(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveNewRole()} style={{ width: '100%', fontSize: '12px', padding: '6px', borderRadius: '4px', border: `1px solid ${colors.border}`, background: colors.inputBg, color: colors.text }} />
+                                <button onClick={saveNewRole} style={{ background: colors.accent, color: 'white', border: 'none', borderRadius: '4px', padding: '0 8px', cursor: 'pointer' }}><CheckCircle size={14}/></button>
+                                <button onClick={() => setActiveMinistryId(null)} style={{ background: 'transparent', color: colors.subText, border: 'none', cursor: 'pointer' }}><X size={14}/></button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* SONGS PANEL */}
+              {activeRightPanel === 'songs' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ fontSize: '11px', fontWeight: '700', color: colors.subText, textTransform: 'uppercase', letterSpacing: '1px' }}>Songs</div>
                   <div style={{ position: 'relative' }}>
                     <Search size={14} color={colors.subText} style={{ position: 'absolute', left: '10px', top: '9px' }}/>
                     <input placeholder="Search songs..." value={songSearch} onChange={e => setSongSearch(e.target.value)} style={{ width: '100%', padding: '8px 8px 8px 30px', borderRadius: '6px', border: `1px solid ${colors.border}`, background: colors.inputBg, color: colors.text, boxSizing: 'border-box', fontSize: '13px' }} />
                   </div>
-                </div>
-                <div style={{ borderBottom: `1px solid ${colors.border}` }}>
-                  <div onClick={() => setExpandedSections({...expandedSections, playlists: !expandedSections.playlists})} style={{ padding: '10px 15px', background: colors.hover, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><LayoutTemplate size={16} color={colors.subText}/><h3 style={{ margin: 0, fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: colors.subText }}>Playlists</h3></div>
-                    {expandedSections.playlists ? <ChevronDown size={14} color={colors.subText}/> : <ChevronRight size={14} color={colors.subText}/>}
-                  </div>
-                  {expandedSections.playlists && (
-                    <div style={{ padding: '10px' }}>
-                      <div onClick={() => setCurrentPlaylist(null)} style={{ padding: '8px', borderRadius: '6px', cursor: 'pointer', background: !currentPlaylist ? colors.accent : 'transparent', color: !currentPlaylist ? 'white' : colors.text, marginBottom: '4px', fontSize: '13px', fontWeight: '500' }}>All Songs</div>
-                      {playlists.map(pl => (
-                        <div key={pl.id} onClick={() => setCurrentPlaylist(pl)} style={{ padding: '8px', borderRadius: '6px', cursor: 'pointer', background: currentPlaylist?.id === pl.id ? colors.accent : 'transparent', color: currentPlaylist?.id === pl.id ? 'white' : colors.text, marginBottom: '4px', fontSize: '13px', fontWeight: '500', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span>{pl.name}</span><span style={{ fontSize: '11px', opacity: 0.7 }}>({pl.songs.length})</span>
-                        </div>
-                      ))}
-                      {canEdit && (
-                        <button onClick={() => { const name = prompt('Playlist name:'); if (name) setPlaylists([...playlists, { id: Date.now(), name, songs: [] }]); }} style={{ marginTop: '8px', padding: '6px 12px', background: 'transparent', border: `1px dashed ${colors.border}`, borderRadius: '6px', color: colors.accent, fontSize: '12px', cursor: 'pointer', width: '100%', fontWeight: '600' }}>
-                          + New Playlist
-                        </button>
-                      )}
+                  {/* Playlists */}
+                  <div>
+                    <div onClick={() => setExpandedSections({...expandedSections, playlists: !expandedSections.playlists})} style={{ padding: '8px 10px', background: colors.hover, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '6px', marginBottom: '4px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><LayoutTemplate size={14} color={colors.subText}/><span style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: colors.subText }}>Playlists</span></div>
+                      {expandedSections.playlists ? <ChevronDown size={13} color={colors.subText}/> : <ChevronRight size={13} color={colors.subText}/>}
                     </div>
-                  )}
-                </div>
-                <div onClick={() => setExpandedSections({...expandedSections, library: !expandedSections.library})} style={{ padding: '10px 15px', background: colors.hover, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><Music size={16} color={colors.subText}/><h3 style={{ margin: 0, fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', color: colors.subText }}>All Songs</h3></div>
-                  {expandedSections.library ? <ChevronDown size={14} color={colors.subText}/> : <ChevronRight size={14} color={colors.subText}/>}
-                </div>
-                {expandedSections.library && (
-                  <div className="wop-scroll" style={{ maxHeight: '250px', overflowY: 'auto', padding: '5px' }}>
+                    {expandedSections.playlists && (
+                      <div style={{ paddingLeft: '4px' }}>
+                        <div onClick={() => setCurrentPlaylist(null)} style={{ padding: '7px 10px', borderRadius: '6px', cursor: 'pointer', background: !currentPlaylist ? colors.accent : 'transparent', color: !currentPlaylist ? 'white' : colors.text, marginBottom: '3px', fontSize: '13px' }}>All Songs</div>
+                        {playlists.map(pl => (
+                          <div key={pl.id} onClick={() => setCurrentPlaylist(pl)} style={{ padding: '7px 10px', borderRadius: '6px', cursor: 'pointer', background: currentPlaylist?.id === pl.id ? colors.accent : 'transparent', color: currentPlaylist?.id === pl.id ? 'white' : colors.text, marginBottom: '3px', fontSize: '13px', display: 'flex', justifyContent: 'space-between' }}>
+                            <span>{pl.name}</span><span style={{ fontSize: '11px', opacity: 0.7 }}>({pl.songs.length})</span>
+                          </div>
+                        ))}
+                        {canEdit && <button onClick={() => { const name = prompt('Playlist name:'); if (name) setPlaylists([...playlists, { id: Date.now(), name, songs: [] }]); }} style={{ marginTop: '6px', padding: '6px 12px', background: 'transparent', border: `1px dashed ${colors.border}`, borderRadius: '6px', color: colors.accent, fontSize: '12px', cursor: 'pointer', width: '100%' }}>+ New Playlist</button>}
+                      </div>
+                    )}
+                  </div>
+                  {/* All Songs list */}
+                  <div className="wop-scroll" style={{ flex: 1, overflowY: 'auto' }}>
                     {filteredSongs.length === 0
                       ? <div style={{ padding: '20px', textAlign: 'center', color: colors.subText, fontSize: '13px' }}>No songs found</div>
                       : filteredSongs.map(song => (
-                          <div key={song.id} draggable={canEdit} onDragStart={(e) => handleNewDragStart(e, 'song', song)} onClick={() => handleAddItemClick('song', song)} style={{ padding: '8px', borderRadius: '6px', cursor: canEdit ? 'grab' : 'default', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px', background: colors.hover }}>
+                          <div key={song.id} draggable={canEdit} onDragStart={(e) => handleNewDragStart(e, 'song', song)} onClick={() => handleAddItemClick('song', song)} style={{ padding: '8px 10px', borderRadius: '6px', cursor: canEdit ? 'grab' : 'default', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px', background: colors.hover }}>
                             <div style={{ fontSize: '13px', color: colors.text, fontWeight: '500' }}>{song.title}</div>
                             {canEdit && <Plus size={14} color={colors.accent}/>}
                           </div>
                         ))
                     }
                   </div>
-                )}
-              </div>
-
-              {/* Teams */}
-              <div style={{ background: colors.bg, borderRadius: '8px', border: `1px solid ${colors.border}`, overflow: 'visible' }}>
-                <div onClick={() => setExpandedSections({...expandedSections, teams: !expandedSections.teams})} style={{ padding: '15px', borderBottom: expandedSections.teams ? `1px solid ${colors.border}` : 'none', background: colors.hover, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><Users size={16} color={colors.accent}/><h3 style={{ margin: 0, fontSize: '14px', fontWeight: '700', textTransform: 'uppercase', color: colors.subText }}>Teams</h3></div>
-                  {expandedSections.teams ? <ChevronDown size={16} color={colors.subText}/> : <ChevronRight size={16} color={colors.subText}/>}
                 </div>
-                {expandedSections.teams && (
-                  <div style={{ padding: '10px' }}>
-                    {ministries.map(m => {
-                      const isExp = expandedMinistries[m.id];
-                      const mPos  = positions.filter(p => p.ministry_id === m.id);
-                      const conf  = mPos.filter(p => p.status === 'confirmed').length;
-                      const need  = mPos.length - conf;
-                      return (
-                        <div key={m.id} style={{ marginBottom: '10px', border: `1px solid ${colors.border}`, borderRadius: '6px', background: colors.card }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', background: colors.hover, borderTopLeftRadius: '6px', borderTopRightRadius: '6px' }}>
-                            <div onClick={() => setExpandedMinistries({...expandedMinistries, [m.id]: !isExp})} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', flex: 1 }}>
-                              {isExp ? <ChevronDown size={14} color={colors.subText}/> : <ChevronRight size={14} color={colors.subText}/>}
-                              <div>
-                                <div style={{ fontWeight: '700', fontSize: '13px', color: colors.text }}>{m.name}</div>
-                                <div style={{ fontSize: '11px', color: colors.subText, display: 'flex', gap: '8px', marginTop: '2px' }}>
-                                  <span style={{ color: colors.success }}>✓ {conf}</span>
-                                  <span style={{ color: colors.danger }}>✗ {need}</span>
-                                </div>
-                              </div>
-                            </div>
-                            {!isTemplate && (
-                            <button onClick={(e) => { e.stopPropagation(); setChatThread(m.name); setShowChat(true); }} title={`${m.name} chat`} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: colors.subText, padding: '2px 4px', display: 'flex', opacity: 0.6, flexShrink: 0 }}><MessageSquare size={13}/></button>
-                          )}
-                          {canEdit && <button onClick={(e) => { e.stopPropagation(); startAddRole(m.id); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: colors.subText }} title="Add Role"><Plus size={16}/></button>}
-                          </div>
-                          {isExp && (
-                            <div style={{ padding: '5px' }}>
-                              {mPos.length === 0 && <div style={{ fontSize: '12px', color: colors.subText, fontStyle: 'italic', padding: '5px' }}>No positions yet.</div>}
-                              {mPos.map(pos => {
-                                const assigned = teamMembers.find(t => t.id === pos.member_id);
-                                return (
-                                  <div key={pos.id} onClick={() => openPeoplePicker(pos)} style={{ display: 'flex', alignItems: 'center', padding: '8px 6px', marginBottom: '2px', borderRadius: '4px', background: assigned ? 'transparent' : 'rgba(239,68,68,0.05)', cursor: canEdit ? 'pointer' : 'default', border: `1px solid ${assigned ? 'transparent' : 'rgba(239,68,68,0.2)'}` }}>
-                                    <div style={{ flex: 1 }}>
-                                      <div style={{ fontSize: '12px', fontWeight: '600', color: colors.text }}>{pos.role_name}</div>
-                                      <div style={{ fontSize: '12px', color: assigned ? colors.text : colors.danger, display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                        {assigned ? <><div style={{ width: '16px', height: '16px', background: colors.accent, borderRadius: '50%', fontSize: '9px', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{assigned.name.charAt(0)}</div>{assigned.name}</> : 'Needed'}
-                                      </div>
-                                    </div>
-                                    {canEdit && <button onClick={(e) => { e.stopPropagation(); handleDeleteRole(pos.id); }} style={{ color: colors.subText, background: 'none', border: 'none', cursor: 'pointer', opacity: 0.5 }}><X size={14}/></button>}
-                                  </div>
-                                );
-                              })}
-                              {canEdit && activeMinistryId === m.id && (
-                                <div style={{ padding: '5px', display: 'flex', gap: '5px' }}>
-                                  <input autoFocus placeholder="Role Name..." value={newRoleName} onChange={e => setNewRoleName(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveNewRole()} style={{ width: '100%', fontSize: '12px', padding: '6px', borderRadius: '4px', border: `1px solid ${colors.border}`, background: colors.inputBg, color: colors.text }} />
-                                  <button onClick={saveNewRole} style={{ background: colors.accent, color: 'white', border: 'none', borderRadius: '4px', padding: '0 8px', cursor: 'pointer' }}><CheckCircle size={14}/></button>
-                                  <button onClick={() => setActiveMinistryId(null)} style={{ background: 'transparent', color: colors.subText, border: 'none', cursor: 'pointer' }}><X size={14}/></button>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+              )}
+
+              {/* TIMES PANEL */}
+              {activeRightPanel === 'times' && (
+                <div>
+                  <div style={{ fontSize: '11px', fontWeight: '700', color: colors.subText, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' }}>Run Order</div>
+                  <div style={{ fontSize: '12px', color: colors.subText, marginBottom: '14px' }}>
+                    {serviceData?.date && new Date(serviceData.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                    {serviceData?.start_time && <span style={{ marginLeft: '8px', color: colors.accent, fontWeight: '600' }}>{formatTime(serviceData.start_time)}</span>}
                   </div>
-                )}
-              </div>
-            </>
+                  {items.map((item, i) => (
+                    <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0', borderBottom: `1px solid ${colors.border}` }}>
+                      <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: colors.hover, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: colors.subText, flexShrink: 0 }}>{i + 1}</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '13px', fontWeight: '600', color: item.type === 'header' ? colors.accent : colors.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title || item.type}</div>
+                        {item.type === 'song' && item.key && <div style={{ fontSize: '11px', color: colors.subText }}>Key: {item.key}</div>}
+                      </div>
+                      {item.type !== 'header' && item.duration && <div style={{ fontSize: '11px', color: colors.subText, flexShrink: 0 }}>{item.duration}m</div>}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+            </div>
           )}
+
+          {/* Vertical tab strip */}
+          <div style={{ width: '38px', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '8px', borderLeft: activeRightPanel ? `1px solid ${colors.border}` : 'none' }}>
+            {[
+              { key: 'calendar', icon: Calendar, label: 'Calendar' },
+              { key: 'teams',    icon: Users,    label: 'Teams' },
+              { key: 'songs',    icon: Music,    label: 'Songs' },
+              { key: 'times',    icon: Clock,    label: 'Times' },
+            ].map(({ key, icon: Icon, label }) => {
+              const isActive = activeRightPanel === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => setActiveRightPanel(v => v === key ? null : key)}
+                  title={label}
+                  style={{
+                    background: isActive ? (isDarkMode ? 'rgba(59,130,246,0.14)' : 'rgba(59,130,246,0.1)') : 'transparent',
+                    border: 'none',
+                    borderLeft: isActive ? `2px solid ${colors.accent}` : '2px solid transparent',
+                    cursor: 'pointer',
+                    color: isActive ? colors.accent : colors.subText,
+                    width: '38px',
+                    minHeight: '76px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.15s',
+                    padding: '0',
+                  }}
+                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'; }}
+                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
+                >
+                  <div style={{ transform: 'rotate(-90deg)', display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap' }}>
+                    <Icon size={11} />
+                    <span style={{ fontSize: '9px', fontWeight: isActive ? '800' : '500', letterSpacing: '0.8px', textTransform: 'uppercase' }}>{label}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
+
       </div>
     </div>
+
+    {/* ── PEOPLE PICKER MODAL ── */}
+    {sidebarView === 'picker' && (
+      <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ background: colors.bg, borderRadius: '12px', width: '360px', maxHeight: '70vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.4)', border: `1px solid ${colors.border}` }}>
+          <div style={{ padding: '16px', borderBottom: `1px solid ${colors.border}`, display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <button onClick={() => setSidebarView('main')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.text }}><ArrowLeft size={18}/></button>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '11px', textTransform: 'uppercase', color: colors.subText, fontWeight: 'bold' }}>Assigning To</div>
+              <div style={{ fontSize: '15px', fontWeight: '700', color: colors.accent }}>{assigningRole?.role_name}</div>
+            </div>
+            <button onClick={() => setSidebarView('main')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.subText }}><X size={18}/></button>
+          </div>
+          <div style={{ padding: '12px', borderBottom: `1px solid ${colors.border}` }}>
+            <div style={{ position: 'relative', marginBottom: '10px' }}>
+              <Search size={14} color={colors.subText} style={{ position: 'absolute', left: '10px', top: '9px' }}/>
+              <input placeholder="Search people..." value={peopleSearch} autoFocus onChange={e => setPeopleSearch(e.target.value)} style={{ width: '100%', padding: '8px 8px 8px 30px', borderRadius: '6px', border: `1px solid ${colors.border}`, background: colors.inputBg, color: colors.text, boxSizing: 'border-box', fontSize: '13px' }} />
+            </div>
+            <div style={{ display: 'flex', gap: '5px' }}>
+              <button onClick={() => setFilterBySkill(!filterBySkill)} style={{ flex: 1, padding: '6px', borderRadius: '4px', border: `1px solid ${filterBySkill ? colors.accent : colors.border}`, background: filterBySkill ? colors.hover : 'transparent', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', color: filterBySkill ? colors.accent : colors.subText, cursor: 'pointer' }}>
+                <Filter size={12}/> Match Role
+              </button>
+              <button onClick={() => assignPerson(null)} style={{ padding: '6px 10px', borderRadius: '4px', border: `1px solid ${colors.danger}`, background: 'transparent', color: colors.danger, fontSize: '11px', cursor: 'pointer' }}>Clear</button>
+            </div>
+          </div>
+          <div className="wop-scroll" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px', padding: '10px' }}>
+            {filteredPeople.length === 0 && (
+              <div style={{ padding: '20px', textAlign: 'center', color: colors.subText, fontSize: '13px' }}>
+                No matches found.<br/><span style={{ fontSize: '11px', opacity: 0.7 }}>(Try turning off "Match Role")</span>
+              </div>
+            )}
+            {filteredPeople.map(person => (
+              <div key={person.id} onClick={() => assignPerson(person.id)} style={{ padding: '10px', borderRadius: '6px', cursor: 'pointer', background: colors.inputBg, display: 'flex', alignItems: 'center', gap: '10px', border: `1px solid ${colors.border}` }}>
+                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: colors.accent, color: 'white', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{person.name.charAt(0)}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '13px', fontWeight: '500', color: colors.text }}>{person.name}</div>
+                  {person.skills && (
+                    <div style={{ display: 'flex', gap: '4px', marginTop: '2px', flexWrap: 'wrap' }}>
+                      {person.skills.map(s => <span key={s} style={{ fontSize: '9px', padding: '1px 4px', borderRadius: '3px', background: colors.hover, color: colors.subText }}>{s}</span>)}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )}
 
     {/* Chat Panel */}
     <ChatPanel
