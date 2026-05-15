@@ -9,8 +9,9 @@ CREATE TABLE IF NOT EXISTS organization_brand_colors (
   brand_color             TEXT        DEFAULT NULL,  -- nav bar background
   brand_header_color      TEXT        DEFAULT NULL,  -- scripture/verse bar background
   brand_sidebar_color     TEXT        DEFAULT NULL,  -- left sidebar background
-  brand_nav_text_color    TEXT        DEFAULT NULL,  -- nav text override (NULL = auto-detect)
-  brand_header_text_color TEXT        DEFAULT NULL,  -- verse bar text override (NULL = auto-detect)
+  brand_nav_text_color     TEXT        DEFAULT NULL,  -- nav text override (NULL = auto-detect)
+  brand_header_text_color  TEXT        DEFAULT NULL,  -- verse bar text override (NULL = auto-detect)
+  brand_sidebar_text_color TEXT        DEFAULT NULL,  -- sidebar text override (NULL = auto-detect)
   updated_at              TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -51,8 +52,9 @@ CREATE TABLE IF NOT EXISTS brand_color_proposals (
   proposed_color              TEXT        NOT NULL,
   proposed_header_color       TEXT        NOT NULL,
   proposed_sidebar_color      TEXT        NOT NULL,
-  proposed_nav_text_color     TEXT,
-  proposed_header_text_color  TEXT,
+  proposed_nav_text_color      TEXT,
+  proposed_header_text_color   TEXT,
+  proposed_sidebar_text_color  TEXT,
   proposed_by                 UUID        NOT NULL,
   approved_by                 UUID[]      NOT NULL DEFAULT '{}',
   status                      TEXT        NOT NULL DEFAULT 'pending',

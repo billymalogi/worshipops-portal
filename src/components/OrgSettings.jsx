@@ -83,8 +83,9 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
   const [pickedHeaderColor, setPickedHeaderColor] = useState('#111111');
   const [pickedSidebarColor,setPickedSidebarColor]= useState('#0a0a0a');
   // Text color overrides (null = auto-detect from background)
-  const [pickedNavTextColor,    setPickedNavTextColor]    = useState(null);
-  const [pickedHeaderTextColor, setPickedHeaderTextColor] = useState(null);
+  const [pickedNavTextColor,     setPickedNavTextColor]     = useState(null);
+  const [pickedHeaderTextColor,  setPickedHeaderTextColor]  = useState(null);
+  const [pickedSidebarTextColor, setPickedSidebarTextColor] = useState(null);
   const [adminCount,        setAdminCount]        = useState(1);
   const [proposal,          setProposal]          = useState(null);
   const [brandSaving,       setBrandSaving]       = useState(false);
@@ -169,8 +170,9 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
         setBrandColor(brandC);        setPickedColor(brandC);
         setBrandHeaderColor(brandH);  setPickedHeaderColor(brandH);
         setBrandSidebarColor(brandS); setPickedSidebarColor(brandS);
-        setPickedNavTextColor(bc.brand_nav_text_color    || null);
-        setPickedHeaderTextColor(bc.brand_header_text_color || null);
+        setPickedNavTextColor(bc.brand_nav_text_color       || null);
+        setPickedHeaderTextColor(bc.brand_header_text_color  || null);
+        setPickedSidebarTextColor(bc.brand_sidebar_text_color || null);
       }
 
       // Admin count
@@ -258,18 +260,19 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
   const removeVerse = (i) => set('custom_verses', form.custom_verses.filter((_, idx) => idx !== i));
 
   // ── Brand color handlers ─────────────────────────────────────────────────────
-  const applyAllBrandColors = async (primary, header, sidebar, navText, headerText) => {
+  const applyAllBrandColors = async (primary, header, sidebar, navText, headerText, sidebarText) => {
     setBrandSaving(true);
     const { error: updateErr } = await supabase
       .from('organization_brand_colors')
       .upsert({
-        org_id:                 orgId,
-        brand_color:            primary,
-        brand_header_color:     header,
-        brand_sidebar_color:    sidebar,
-        brand_nav_text_color:   navText    || null,
-        brand_header_text_color: headerText || null,
-        updated_at:             new Date().toISOString(),
+        org_id:                  orgId,
+        brand_color:             primary,
+        brand_header_color:      header,
+        brand_sidebar_color:     sidebar,
+        brand_nav_text_color:    navText      || null,
+        brand_header_text_color: headerText   || null,
+        brand_sidebar_text_color: sidebarText || null,
+        updated_at:              new Date().toISOString(),
       }, { onConflict: 'org_id' });
 
     // If columns don't exist (migration not yet run), flag it but still apply visually
@@ -281,9 +284,10 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
     setBrandColor(primary);        setPickedColor(primary);
     setBrandHeaderColor(header);   setPickedHeaderColor(header);
     setBrandSidebarColor(sidebar); setPickedSidebarColor(sidebar);
-    setPickedNavTextColor(navText || null);
-    setPickedHeaderTextColor(headerText || null);
-    onBrandColorsChange?.(primary, header, sidebar, navText || null, headerText || null);
+    setPickedNavTextColor(navText       || null);
+    setPickedHeaderTextColor(headerText  || null);
+    setPickedSidebarTextColor(sidebarText || null);
+    onBrandColorsChange?.(primary, header, sidebar, navText || null, headerText || null, sidebarText || null);
     setBrandSaving(false);
     if (!updateErr) {
       setBrandSaved(true);
@@ -300,8 +304,9 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
       proposed_color:             pickedColor,
       proposed_header_color:      pickedHeaderColor,
       proposed_sidebar_color:     pickedSidebarColor,
-      proposed_nav_text_color:    pickedNavTextColor    || null,
-      proposed_header_text_color: pickedHeaderTextColor || null,
+      proposed_nav_text_color:     pickedNavTextColor     || null,
+      proposed_header_text_color:  pickedHeaderTextColor  || null,
+      proposed_sidebar_text_color: pickedSidebarTextColor || null,
       proposed_by: userId, approved_by: [userId], status: 'pending',
     }).select().maybeSingle();
     setProposal(data);
@@ -322,9 +327,10 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
           brand_color:             proposal.proposed_color,
           brand_header_color:      proposal.proposed_header_color,
           brand_sidebar_color:     proposal.proposed_sidebar_color,
-          brand_nav_text_color:    proposal.proposed_nav_text_color    || null,
-          brand_header_text_color: proposal.proposed_header_text_color || null,
-          updated_at:              new Date().toISOString(),
+          brand_nav_text_color:     proposal.proposed_nav_text_color     || null,
+          brand_header_text_color:  proposal.proposed_header_text_color  || null,
+          brand_sidebar_text_color: proposal.proposed_sidebar_text_color || null,
+          updated_at:               new Date().toISOString(),
         }, { onConflict: 'org_id' });
       setBrandColor(proposal.proposed_color);
       setBrandHeaderColor(proposal.proposed_header_color);
@@ -332,11 +338,12 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
       setPickedColor(proposal.proposed_color);
       setPickedHeaderColor(proposal.proposed_header_color);
       setPickedSidebarColor(proposal.proposed_sidebar_color);
-      setPickedNavTextColor(proposal.proposed_nav_text_color    || null);
-      setPickedHeaderTextColor(proposal.proposed_header_text_color || null);
+      setPickedNavTextColor(proposal.proposed_nav_text_color      || null);
+      setPickedHeaderTextColor(proposal.proposed_header_text_color  || null);
+      setPickedSidebarTextColor(proposal.proposed_sidebar_text_color || null);
       onBrandColorsChange?.(
         proposal.proposed_color, proposal.proposed_header_color, proposal.proposed_sidebar_color,
-        proposal.proposed_nav_text_color || null, proposal.proposed_header_text_color || null
+        proposal.proposed_nav_text_color || null, proposal.proposed_header_text_color || null, proposal.proposed_sidebar_text_color || null
       );
       setProposal(null);
       setBrandSaved(true);
@@ -877,7 +884,7 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
                 {[
                   { label: 'Nav Bar',       desc: 'Logo + category tabs (My Schedule / Planner / Production / Admin)', picked: pickedColor,        set: setPickedColor,        pickedText: pickedNavTextColor,    setText: setPickedNavTextColor },
                   { label: 'Scripture Bar', desc: 'Thin top strip showing the daily verse',                            picked: pickedHeaderColor, set: setPickedHeaderColor,  pickedText: pickedHeaderTextColor, setText: setPickedHeaderTextColor },
-                  { label: 'Sidebar',       desc: 'Left sidebar — calendar, folders, teams',                           picked: pickedSidebarColor,set: setPickedSidebarColor, pickedText: null,                  setText: null },
+                  { label: 'Sidebar',       desc: 'Left sidebar — calendar, folders, teams',                           picked: pickedSidebarColor,set: setPickedSidebarColor, pickedText: pickedSidebarTextColor, setText: setPickedSidebarTextColor },
                 ].map(({ label, desc, picked, set, pickedText, setText }) => {
                   const autoText   = getAutoTextColor(picked);
                   const effectText = pickedText || autoText;
@@ -942,7 +949,7 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                   {(adminCount <= 1 || migrationNeeded) ? (
                     <button
-                      onClick={() => applyAllBrandColors(pickedColor, pickedHeaderColor, pickedSidebarColor, pickedNavTextColor, pickedHeaderTextColor)}
+                      onClick={() => applyAllBrandColors(pickedColor, pickedHeaderColor, pickedSidebarColor, pickedNavTextColor, pickedHeaderTextColor, pickedSidebarTextColor)}
                       disabled={brandSaving}
                       style={{ padding: '9px 22px', borderRadius: '8px', border: 'none', background: pickedColor, color: pickedNavTextColor || getAutoTextColor(pickedColor), fontSize: '13px', fontWeight: '700', cursor: brandSaving ? 'not-allowed' : 'pointer' }}
                     >

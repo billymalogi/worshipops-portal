@@ -20,6 +20,7 @@ import MyScheduleView from './components/MyScheduleView';
 import InviteManager from './components/InviteManager';
 import OrgInviteManager from './components/OrgInviteManager';
 import FeatureRequestPage from './components/FeatureRequestPage';
+import PlanningCenterImport from './components/PlanningCenterImport';
 
 // --- ICONS ---
 import {
@@ -27,7 +28,7 @@ import {
   LayoutGrid, Sun, Moon,
   LogOut, Folder, ArrowLeft, Users, FolderInput, Zap,
   Grid3x3, Settings, LayoutTemplate, Monitor, CalendarCheck, Bell, X,
-  Link, Lightbulb, UserPlus
+  Link, Lightbulb, UserPlus, Download
 } from 'lucide-react';
 
 // --- DEFAULT VERSES ---
@@ -84,6 +85,7 @@ const NAV_CATEGORIES = {
     { id: 'org-invites',      label: 'Invitations',       icon: UserPlus },
     { id: 'invites',          label: 'Beta Invites',      icon: Link },
     { id: 'featurerequests',  label: 'Feature Requests',  icon: Lightbulb },
+    { id: 'import-pco',       label: 'Import from PCO',   icon: Download },
   ]},
 };
 
@@ -108,7 +110,7 @@ const MASTER_EMAIL = 'billy@worshipops.com';
 
 // --- ROLE-BASED TAB PERMISSIONS ---
 const ROLE_TABS = {
-  admin:             ['dashboard','templates','songs','team','myschedule','lighting','stage','rehearsals','profile','organization','billing','org-invites','featurerequests'],
+  admin:             ['dashboard','templates','songs','team','myschedule','lighting','stage','rehearsals','profile','organization','billing','org-invites','featurerequests','import-pco'],
   org_leader:        ['dashboard','templates','songs','team','myschedule','lighting','stage','rehearsals','profile','organization','org-invites','featurerequests'],
   leader:            ['dashboard','templates','songs','team','myschedule','lighting','stage','rehearsals','profile','organization','org-invites','featurerequests'],
   weekly_scheduler:  ['dashboard','templates','songs','team','myschedule','lighting','stage','rehearsals','profile'],
@@ -491,8 +493,9 @@ export default function Dashboard() {
   const [brandColor,            setBrandColor]            = useState(null);
   const [brandHeaderColor,      setBrandHeaderColor]      = useState(null);
   const [brandSidebarColor,     setBrandSidebarColor]     = useState(null);
-  const [brandNavTextColor,     setBrandNavTextColor]     = useState(null); // null = auto-detect
-  const [brandHeaderTextColor,  setBrandHeaderTextColor]  = useState(null); // null = auto-detect
+  const [brandNavTextColor,     setBrandNavTextColor]     = useState(null);
+  const [brandHeaderTextColor,  setBrandHeaderTextColor]  = useState(null);
+  const [brandSidebarTextColor, setBrandSidebarTextColor] = useState(null);
   
   // Data State
   const [songs, setSongs] = useState([]); 
@@ -520,6 +523,11 @@ export default function Dashboard() {
   const _autoHeaderText = getAutoTextColor(_verseBg);
   const _effectiveHeaderText = brandHeaderTextColor || _autoHeaderText;
 
+  // --- COMPUTED SIDEBAR TEXT COLOR ---
+  const _sidebarBg       = brandSidebarColor || (isDarkMode ? '#0a0a0a' : '#f8f9fa');
+  const _autoSidebarText = getAutoTextColor(_sidebarBg);
+  const _effectiveSidebarText = brandSidebarTextColor || _autoSidebarText;
+
   const colors = {
     bg:      isDarkMode ? '#000000' : '#F7F8FA',
     bgSolid: isDarkMode ? '#0A0A0A' : '#FFFFFF',
@@ -538,9 +546,10 @@ export default function Dashboard() {
     navBorder:      brandColor ? (_navBgIsDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.1)')  : (isDarkMode ? '#27272A' : '#E4E4E7'),
     navTabActiveBg: brandColor ? (_navBgIsDark ? 'rgba(255,255,255,0.13)' : 'rgba(0,0,0,0.07)') : (isDarkMode ? '#1F1F22' : '#E4E4E7'),
     // Verse bar bg + adaptive text
-    sidebarBg:  brandSidebarColor || (isDarkMode ? '#0a0a0a' : '#f8f9fa'),
-    verseBg:    _verseBg,
-    verseText:  _effectiveHeaderText,
+    sidebarBg:   _sidebarBg,
+    sidebarText: _effectiveSidebarText,
+    verseBg:     _verseBg,
+    verseText:   _effectiveHeaderText,
   };
 
   // Helper function to format TIME values (e.g., "09:00:00" -> "9:00 AM")
@@ -616,7 +625,7 @@ export default function Dashboard() {
       // Brand colors — dedicated table, graceful if migration not yet run
       const { data: brandRows, error: brandErr } = await supabase
           .from('organization_brand_colors')
-          .select('org_id, brand_color, brand_header_color, brand_sidebar_color, brand_nav_text_color, brand_header_text_color')
+          .select('org_id, brand_color, brand_header_color, brand_sidebar_color, brand_nav_text_color, brand_header_text_color, brand_sidebar_text_color')
           .in('org_id', orgIds);
       const brandMap = (!brandErr && brandRows)
           ? Object.fromEntries(brandRows.map(r => [r.org_id, r]))
@@ -629,8 +638,9 @@ export default function Dashboard() {
           brand_color:           brandMap[r.organization_id]?.brand_color            || null,
           brand_header_color:    brandMap[r.organization_id]?.brand_header_color     || null,
           brand_sidebar_color:   brandMap[r.organization_id]?.brand_sidebar_color    || null,
-          brand_nav_text_color:  brandMap[r.organization_id]?.brand_nav_text_color   || null,
-          brand_header_text_color: brandMap[r.organization_id]?.brand_header_text_color || null,
+          brand_nav_text_color:     brandMap[r.organization_id]?.brand_nav_text_color     || null,
+          brand_header_text_color:  brandMap[r.organization_id]?.brand_header_text_color  || null,
+          brand_sidebar_text_color: brandMap[r.organization_id]?.brand_sidebar_text_color || null,
           permissions:           r.permissions || {},
           account_expires_at:    r.account_expires_at || null,
       }));
@@ -644,8 +654,9 @@ export default function Dashboard() {
       setBrandColor(first.brand_color || null);
       setBrandHeaderColor(first.brand_header_color || null);
       setBrandSidebarColor(first.brand_sidebar_color || null);
-      setBrandNavTextColor(first.brand_nav_text_color || null);
-      setBrandHeaderTextColor(first.brand_header_text_color || null);
+      setBrandNavTextColor(first.brand_nav_text_color      || null);
+      setBrandHeaderTextColor(first.brand_header_text_color  || null);
+      setBrandSidebarTextColor(first.brand_sidebar_text_color || null);
       setGuestPermissions(first.permissions || {});
       setGuestExpiry(first.account_expires_at || null);
       if (ROLE_TABS[role]?.length === 1 && ROLE_TABS[role][0] === 'myschedule') {
@@ -662,8 +673,9 @@ export default function Dashboard() {
       setBrandColor(orgMeta.brand_color || null);
       setBrandHeaderColor(orgMeta.brand_header_color || null);
       setBrandSidebarColor(orgMeta.brand_sidebar_color || null);
-      setBrandNavTextColor(orgMeta.brand_nav_text_color || null);
-      setBrandHeaderTextColor(orgMeta.brand_header_text_color || null);
+      setBrandNavTextColor(orgMeta.brand_nav_text_color      || null);
+      setBrandHeaderTextColor(orgMeta.brand_header_text_color  || null);
+      setBrandSidebarTextColor(orgMeta.brand_sidebar_text_color || null);
       setGuestPermissions(orgMeta.permissions || {});
       setGuestExpiry(orgMeta.account_expires_at || null);
       setSelectedService(null);
@@ -698,15 +710,16 @@ export default function Dashboard() {
       // Brand colors — dedicated table, graceful if migration not yet run
       const { data: brandData, error: brandErr2 } = await supabase
           .from('organization_brand_colors')
-          .select('brand_color, brand_header_color, brand_sidebar_color, brand_nav_text_color, brand_header_text_color')
+          .select('brand_color, brand_header_color, brand_sidebar_color, brand_nav_text_color, brand_header_text_color, brand_sidebar_text_color')
           .eq('org_id', oid)
           .maybeSingle();
       if (!brandErr2 && brandData) {
           setBrandColor(brandData.brand_color || null);
           setBrandHeaderColor(brandData.brand_header_color || null);
           setBrandSidebarColor(brandData.brand_sidebar_color || null);
-          setBrandNavTextColor(brandData.brand_nav_text_color || null);
-          setBrandHeaderTextColor(brandData.brand_header_text_color || null);
+          setBrandNavTextColor(brandData.brand_nav_text_color      || null);
+          setBrandHeaderTextColor(brandData.brand_header_text_color  || null);
+          setBrandSidebarTextColor(brandData.brand_sidebar_text_color || null);
       }
 
   };
@@ -927,12 +940,13 @@ export default function Dashboard() {
               isDarkMode={isDarkMode}
               userRole={userRole}
               session={session}
-              onBrandColorsChange={(primary, header, sidebar, navText, headerText) => {
+              onBrandColorsChange={(primary, header, sidebar, navText, headerText, sidebarText) => {
                 setBrandColor(primary || null);
                 setBrandHeaderColor(header || null);
                 setBrandSidebarColor(sidebar || null);
                 setBrandNavTextColor(navText || null);
                 setBrandHeaderTextColor(headerText || null);
+                setBrandSidebarTextColor(sidebarText || null);
               }}
             />
           )}
@@ -955,6 +969,11 @@ export default function Dashboard() {
           {/* FEATURE REQUESTS TAB */}
           {activeTab === 'featurerequests' && (
             <FeatureRequestPage isDarkMode={isDarkMode} session={session} orgId={orgId} userRole={userRole} />
+          )}
+
+          {/* PLANNING CENTER IMPORT TAB */}
+          {activeTab === 'import-pco' && (
+            <PlanningCenterImport isDarkMode={isDarkMode} orgId={orgId} userRole={userRole} />
           )}
 
           {/* SONGS TAB */}
