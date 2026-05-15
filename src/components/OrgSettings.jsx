@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
+import ColorPicker from './ColorPicker';
 import { Save, Upload, Plus, X, Building, MapPin, Clock, Layers, BookOpen, Heart, ChevronDown, ChevronUp, Phone, Eye, EyeOff } from 'lucide-react';
 
 const DEFAULT_VERSE_SAMPLES = [
@@ -44,8 +45,14 @@ function TwilioField({ label, value, onChange, placeholder, isSecret, disabled, 
 }
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-export default function OrgSettings({ orgId, isDarkMode, userRole }) {
-  const isAdmin = userRole === 'admin';
+const BRAND_PRESETS = [
+  '#6366f1', '#3b82f6', '#0ea5e9', '#10b981', '#f59e0b',
+  '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316',
+];
+
+export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBrandColorsChange }) {
+  const isAdmin  = userRole === 'admin';
+  const userId   = session?.user?.id || null;
 
   const [loading,   setLoading]   = useState(true);
   const [saving,    setSaving]    = useState(false);
@@ -54,7 +61,35 @@ export default function OrgSettings({ orgId, isDarkMode, userRole }) {
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef(null);
 
-  const [showDefaultVerses, setShowDefaultVerses] = useState(false);
+  const [showDefaultVerses,   setShowDefaultVerses]   = useState(false);
+
+  // ── Brand color ──────────────────────────────────────────────────────────────
+  // Auto text color helper (luminance-based)
+  const getAutoTextColor = (hex) => {
+    if (!hex) return '#ffffff';
+    const clean = hex.replace('#', '');
+    if (clean.length !== 6) return '#ffffff';
+    const r = parseInt(clean.slice(0, 2), 16);
+    const g = parseInt(clean.slice(2, 4), 16);
+    const b = parseInt(clean.slice(4, 6), 16);
+    const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return lum > 0.6 ? '#09090B' : '#ffffff';
+  };
+
+  const [brandColor,        setBrandColor]        = useState('#6366f1');
+  const [brandHeaderColor,  setBrandHeaderColor]  = useState('#111111');
+  const [brandSidebarColor, setBrandSidebarColor] = useState('#0a0a0a');
+  const [pickedColor,       setPickedColor]       = useState('#6366f1');
+  const [pickedHeaderColor, setPickedHeaderColor] = useState('#111111');
+  const [pickedSidebarColor,setPickedSidebarColor]= useState('#0a0a0a');
+  // Text color overrides (null = auto-detect from background)
+  const [pickedNavTextColor,    setPickedNavTextColor]    = useState(null);
+  const [pickedHeaderTextColor, setPickedHeaderTextColor] = useState(null);
+  const [adminCount,        setAdminCount]        = useState(1);
+  const [proposal,          setProposal]          = useState(null);
+  const [brandSaving,       setBrandSaving]       = useState(false);
+  const [brandSaved,        setBrandSaved]        = useState(false);
+  const [migrationNeeded,   setMigrationNeeded]   = useState(false); // true if add_brand_color.sql not yet run
   const [form, setForm] = useState({
     name:                       '',
     logo_url:                   '',
@@ -84,15 +119,20 @@ export default function OrgSettings({ orgId, isDarkMode, userRole }) {
     if (!orgId) return;
     (async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('organizations')
-        .select('*')
-        .eq('id', orgId)
-        .maybeSingle();
 
-      if (error?.code === '42P01') {
+      // Load org settings + brand colors + admin count + proposals in parallel
+      const [orgResult, bcResult, countResult, propRow] = await Promise.all([
+        supabase.from('organizations').select('*').eq('id', orgId).maybeSingle(),
+        supabase.from('organization_brand_colors').select('*').eq('org_id', orgId).maybeSingle(),
+        supabase.from('organization_members').select('*', { count: 'exact', head: true }).eq('organization_id', orgId).eq('role', 'admin'),
+        supabase.from('brand_color_proposals').select('*').eq('org_id', orgId).eq('status', 'pending').maybeSingle(),
+      ]);
+
+      // Org settings
+      if (orgResult.error?.code === '42P01') {
         setDbErr('Run the migration SQL first: supabase/add_profile_org_tables.sql');
-      } else if (data) {
+      } else if (orgResult.data) {
+        const data = orgResult.data;
         setForm({
           name:                       data.name            || '',
           logo_url:                   data.logo_url        || '',
@@ -117,6 +157,33 @@ export default function OrgSettings({ orgId, isDarkMode, userRole }) {
           twilio_whatsapp_from:       data.twilio_whatsapp_from          || '',
         });
       }
+
+      // Brand colors (from dedicated table)
+      if (bcResult.error?.code === '42P01') {
+        setMigrationNeeded(true); // table doesn't exist yet
+      } else if (bcResult.data) {
+        const bc = bcResult.data;
+        const brandC  = bc.brand_color         || '#6366f1';
+        const brandH  = bc.brand_header_color  || '#111111';
+        const brandS  = bc.brand_sidebar_color || '#0a0a0a';
+        setBrandColor(brandC);        setPickedColor(brandC);
+        setBrandHeaderColor(brandH);  setPickedHeaderColor(brandH);
+        setBrandSidebarColor(brandS); setPickedSidebarColor(brandS);
+        setPickedNavTextColor(bc.brand_nav_text_color    || null);
+        setPickedHeaderTextColor(bc.brand_header_text_color || null);
+      }
+
+      // Admin count
+      setAdminCount(countResult.count || 1);
+
+      // Proposals
+      if (propRow.error?.code === '42P01') {
+        setMigrationNeeded(true);
+        setProposal(null);
+      } else {
+        setProposal(propRow.data || null);
+      }
+
       setLoading(false);
     })();
   }, [orgId]);
@@ -189,6 +256,103 @@ export default function OrgSettings({ orgId, isDarkMode, userRole }) {
     set('custom_verses', next);
   };
   const removeVerse = (i) => set('custom_verses', form.custom_verses.filter((_, idx) => idx !== i));
+
+  // ── Brand color handlers ─────────────────────────────────────────────────────
+  const applyAllBrandColors = async (primary, header, sidebar, navText, headerText) => {
+    setBrandSaving(true);
+    const { error: updateErr } = await supabase
+      .from('organization_brand_colors')
+      .upsert({
+        org_id:                 orgId,
+        brand_color:            primary,
+        brand_header_color:     header,
+        brand_sidebar_color:    sidebar,
+        brand_nav_text_color:   navText    || null,
+        brand_header_text_color: headerText || null,
+        updated_at:             new Date().toISOString(),
+      }, { onConflict: 'org_id' });
+
+    // If columns don't exist (migration not yet run), flag it but still apply visually
+    if (updateErr?.code === '42703' || updateErr?.code === '42P01') {
+      setMigrationNeeded(true);
+    }
+
+    // Always update local + parent state so colors preview immediately
+    setBrandColor(primary);        setPickedColor(primary);
+    setBrandHeaderColor(header);   setPickedHeaderColor(header);
+    setBrandSidebarColor(sidebar); setPickedSidebarColor(sidebar);
+    setPickedNavTextColor(navText || null);
+    setPickedHeaderTextColor(headerText || null);
+    onBrandColorsChange?.(primary, header, sidebar, navText || null, headerText || null);
+    setBrandSaving(false);
+    if (!updateErr) {
+      setBrandSaved(true);
+      setTimeout(() => setBrandSaved(false), 2500);
+    }
+  };
+
+  const proposeBrandColor = async () => {
+    if (!userId) return;
+    setBrandSaving(true);
+    await supabase.from('brand_color_proposals').update({ status: 'rejected' }).eq('org_id', orgId).eq('status', 'pending');
+    const { data } = await supabase.from('brand_color_proposals').insert({
+      org_id: orgId,
+      proposed_color:             pickedColor,
+      proposed_header_color:      pickedHeaderColor,
+      proposed_sidebar_color:     pickedSidebarColor,
+      proposed_nav_text_color:    pickedNavTextColor    || null,
+      proposed_header_text_color: pickedHeaderTextColor || null,
+      proposed_by: userId, approved_by: [userId], status: 'pending',
+    }).select().maybeSingle();
+    setProposal(data);
+    setBrandSaving(false);
+  };
+
+  const approveBrandColor = async () => {
+    if (!proposal || !userId) return;
+    setBrandSaving(true);
+    const newApprovals = [...new Set([...(proposal.approved_by || []), userId])];
+    const quorum = Math.min(adminCount, 2);
+    if (newApprovals.length >= quorum) {
+      await supabase.from('brand_color_proposals').update({ approved_by: newApprovals, status: 'approved' }).eq('id', proposal.id);
+      await supabase
+        .from('organization_brand_colors')
+        .upsert({
+          org_id:                  orgId,
+          brand_color:             proposal.proposed_color,
+          brand_header_color:      proposal.proposed_header_color,
+          brand_sidebar_color:     proposal.proposed_sidebar_color,
+          brand_nav_text_color:    proposal.proposed_nav_text_color    || null,
+          brand_header_text_color: proposal.proposed_header_text_color || null,
+          updated_at:              new Date().toISOString(),
+        }, { onConflict: 'org_id' });
+      setBrandColor(proposal.proposed_color);
+      setBrandHeaderColor(proposal.proposed_header_color);
+      setBrandSidebarColor(proposal.proposed_sidebar_color);
+      setPickedColor(proposal.proposed_color);
+      setPickedHeaderColor(proposal.proposed_header_color);
+      setPickedSidebarColor(proposal.proposed_sidebar_color);
+      setPickedNavTextColor(proposal.proposed_nav_text_color    || null);
+      setPickedHeaderTextColor(proposal.proposed_header_text_color || null);
+      onBrandColorsChange?.(
+        proposal.proposed_color, proposal.proposed_header_color, proposal.proposed_sidebar_color,
+        proposal.proposed_nav_text_color || null, proposal.proposed_header_text_color || null
+      );
+      setProposal(null);
+      setBrandSaved(true);
+      setTimeout(() => setBrandSaved(false), 2500);
+    } else {
+      const { data } = await supabase.from('brand_color_proposals').update({ approved_by: newApprovals }).eq('id', proposal.id).select().maybeSingle();
+      setProposal(data);
+    }
+    setBrandSaving(false);
+  };
+
+  const rejectBrandColor = async () => {
+    if (!proposal) return;
+    await supabase.from('brand_color_proposals').update({ status: 'rejected' }).eq('id', proposal.id);
+    setProposal(null);
+  };
 
   // â”€â”€ Colors â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const c = {
@@ -650,6 +814,169 @@ export default function OrgSettings({ orgId, isDarkMode, userRole }) {
                   · Every volunteer deserves at least 1 Sunday per month as a congregant<br />
                   <span style={{ opacity: 0.7, fontSize: '11px' }}>Sources: Lifeway Research, Planning Center, Church Juice</span>
                 </div>
+              </div>
+            )}
+          </div>
+        ))}
+
+        {/* ── BRAND COLOR ── */}
+        {sectionCard('Brand Color', <span style={{ width: 16, height: 16, borderRadius: '50%', background: brandColor, display: 'inline-block', boxShadow: `0 0 0 2px ${brandColor}44` }} />, (
+          <div>
+            {/* Pending proposal banner */}
+            {proposal && (
+              <div style={{ marginBottom: '20px', padding: '14px 16px', borderRadius: '10px', background: isDarkMode ? 'rgba(99,102,241,0.12)' : 'rgba(99,102,241,0.07)', border: `1px solid ${isDarkMode ? 'rgba(99,102,241,0.3)' : 'rgba(99,102,241,0.25)'}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    {[proposal.proposed_color, proposal.proposed_header_color, proposal.proposed_sidebar_color].map((col, i) => (
+                      <span key={i} title={['Primary','Top Bar','Sidebar'][i]} style={{ width: 20, height: 20, borderRadius: '50%', background: col || '#888', flexShrink: 0, border: '2px solid rgba(255,255,255,0.3)' }} />
+                    ))}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: c.heading }}>Brand color change pending approval</div>
+                    <div style={{ fontSize: '11px', color: c.muted, marginTop: '2px' }}>
+                      {(proposal.approved_by || []).length} of {Math.min(adminCount, 2)} admin approval{Math.min(adminCount, 2) > 1 ? 's' : ''} received
+                    </div>
+                  </div>
+                </div>
+                {isAdmin && !(proposal.approved_by || []).includes(userId) && (
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={approveBrandColor} disabled={brandSaving} style={{ flex: 1, padding: '7px', borderRadius: '7px', border: 'none', background: c.success, color: '#fff', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>Approve</button>
+                    <button onClick={rejectBrandColor} style={{ flex: 1, padding: '7px', borderRadius: '7px', border: `1px solid ${c.border}`, background: 'transparent', color: c.danger, fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>Reject</button>
+                  </div>
+                )}
+                {isAdmin && (proposal.approved_by || []).includes(userId) && (
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <span style={{ fontSize: '12px', color: c.muted }}>Your approval is recorded. Waiting for other admins.</span>
+                    <button onClick={rejectBrandColor} style={{ marginLeft: 'auto', padding: '5px 10px', borderRadius: '6px', border: `1px solid ${c.border}`, background: 'transparent', color: c.danger, fontSize: '11px', cursor: 'pointer' }}>Cancel</button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {isAdmin && (
+              <div>
+                {/* Current swatches */}
+                <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                  {[
+                    { label: 'Nav Bar',       color: brandColor },
+                    { label: 'Scripture Bar', color: brandHeaderColor },
+                    { label: 'Sidebar',       color: brandSidebarColor },
+                  ].map(({ label, color }) => (
+                    <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ width: 32, height: 32, borderRadius: '8px', background: color, boxShadow: `0 0 0 2px ${color}55`, flexShrink: 0 }} />
+                      <div>
+                        <div style={{ fontSize: '10px', fontWeight: '700', color: c.muted, textTransform: 'uppercase', letterSpacing: '0.6px' }}>{label}</div>
+                        <div style={{ fontSize: '11px', color: c.text, fontFamily: 'monospace' }}>{color}</div>
+                      </div>
+                    </div>
+                  ))}
+                  {brandSaved && <span style={{ fontSize: '12px', color: c.success, fontWeight: '700', alignSelf: 'center' }}>✓ Applied</span>}
+                </div>
+
+                {/* 3 pickers */}
+                {[
+                  { label: 'Nav Bar',       desc: 'Logo + category tabs (My Schedule / Planner / Production / Admin)', picked: pickedColor,        set: setPickedColor,        pickedText: pickedNavTextColor,    setText: setPickedNavTextColor },
+                  { label: 'Scripture Bar', desc: 'Thin top strip showing the daily verse',                            picked: pickedHeaderColor, set: setPickedHeaderColor,  pickedText: pickedHeaderTextColor, setText: setPickedHeaderTextColor },
+                  { label: 'Sidebar',       desc: 'Left sidebar — calendar, folders, teams',                           picked: pickedSidebarColor,set: setPickedSidebarColor, pickedText: null,                  setText: null },
+                ].map(({ label, desc, picked, set, pickedText, setText }) => {
+                  const autoText   = getAutoTextColor(picked);
+                  const effectText = pickedText || autoText;
+                  return (
+                  <div key={label} style={{ marginBottom: '14px', padding: '14px', borderRadius: '12px', border: `1px solid ${c.border}` }}>
+                    {/* Zone header row */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      {/* Live preview chip */}
+                      <div style={{ width: 44, height: 44, borderRadius: '10px', background: picked, flexShrink: 0, boxShadow: `0 2px 10px ${picked}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1.5px solid ${c.border}` }}>
+                        {setText && <span style={{ fontSize: '11px', fontWeight: '800', color: effectText, letterSpacing: '-0.5px' }}>Aa</span>}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '13px', fontWeight: '700', color: c.heading }}>{label}</div>
+                        <div style={{ fontSize: '11px', color: c.muted, marginTop: '1px' }}>{desc}</div>
+                      </div>
+                      {/* Color picker swatch */}
+                      <ColorPicker
+                        value={picked}
+                        onChange={set}
+                        isDarkMode={isDarkMode}
+                        presets={BRAND_PRESETS}
+                        label={`${label} Background`}
+                        align="right"
+                      />
+                    </div>
+
+                    {/* Text color row (nav + scripture bar only) */}
+                    {setText && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px', paddingTop: '12px', borderTop: `1px solid ${c.border}` }}>
+                        <span style={{ fontSize: '11px', fontWeight: '600', color: c.muted, whiteSpace: 'nowrap' }}>Text color:</span>
+                        <button
+                          onClick={() => setText(null)}
+                          style={{ fontSize: '10px', fontWeight: '700', padding: '3px 10px', borderRadius: '20px', border: `1.5px solid ${!pickedText ? c.primary : c.border}`, background: !pickedText ? (isDarkMode ? 'rgba(59,130,246,0.15)' : '#eff6ff') : 'transparent', color: !pickedText ? c.primary : c.muted, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s' }}
+                        >Auto</button>
+                        <button onClick={() => setText('#ffffff')} title="White" style={{ width: 22, height: 22, borderRadius: '50%', background: '#ffffff', border: `2px solid ${pickedText === '#ffffff' ? c.primary : c.border}`, cursor: 'pointer', flexShrink: 0 }} />
+                        <button onClick={() => setText('#09090B')} title="Black" style={{ width: 22, height: 22, borderRadius: '50%', background: '#09090B', border: `2px solid ${pickedText === '#09090B' ? c.primary : c.border}`, cursor: 'pointer', flexShrink: 0 }} />
+                        <ColorPicker
+                          value={effectText}
+                          onChange={setText}
+                          isDarkMode={isDarkMode}
+                          label="Custom Text Color"
+                          align="right"
+                        />
+                        {/* Live preview chip */}
+                        <div style={{ marginLeft: 'auto', padding: '4px 12px', borderRadius: '8px', background: picked, color: effectText, fontSize: '12px', fontWeight: '700', letterSpacing: '0.1px', whiteSpace: 'nowrap' }}>
+                          Aa Preview
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  );
+                })}
+
+                {/* Migration warning */}
+                {migrationNeeded && (
+                  <div style={{ marginBottom: '14px', padding: '10px 14px', borderRadius: '8px', background: isDarkMode ? 'rgba(239,68,68,0.12)' : '#fef2f2', border: '1px solid rgba(239,68,68,0.3)', fontSize: '12px', color: isDarkMode ? '#fca5a5' : '#b91c1c', lineHeight: '1.6' }}>
+                    <strong>Migration required:</strong> Run <code style={{ fontFamily: 'monospace', background: 'rgba(0,0,0,0.08)', padding: '1px 5px', borderRadius: '3px' }}>add_brand_color.sql</code> in Supabase SQL Editor to persist brand colors. Colors will preview below but won't save until the migration is run.
+                  </div>
+                )}
+
+                {/* Action */}
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  {(adminCount <= 1 || migrationNeeded) ? (
+                    <button
+                      onClick={() => applyAllBrandColors(pickedColor, pickedHeaderColor, pickedSidebarColor, pickedNavTextColor, pickedHeaderTextColor)}
+                      disabled={brandSaving}
+                      style={{ padding: '9px 22px', borderRadius: '8px', border: 'none', background: pickedColor, color: pickedNavTextColor || getAutoTextColor(pickedColor), fontSize: '13px', fontWeight: '700', cursor: brandSaving ? 'not-allowed' : 'pointer' }}
+                    >
+                      {brandSaving ? 'Applying…' : migrationNeeded ? 'Preview Colors' : 'Apply Brand Colors'}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={proposeBrandColor}
+                      disabled={brandSaving || !!proposal}
+                      style={{ padding: '9px 22px', borderRadius: '8px', border: 'none', background: pickedColor, color: '#fff', fontSize: '13px', fontWeight: '700', cursor: brandSaving || !!proposal ? 'not-allowed' : 'pointer', opacity: !!proposal ? 0.5 : 1 }}
+                    >
+                      {brandSaving ? 'Submitting…' : 'Propose Color Change'}
+                    </button>
+                  )}
+                  {adminCount > 1 && !migrationNeeded && <span style={{ fontSize: '12px', color: c.muted }}>Requires {Math.min(adminCount, 2)} admin approvals</span>}
+                </div>
+              </div>
+            )}
+
+            {!isAdmin && (
+              <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
+                {[
+                  { label: 'Nav Bar',           color: brandColor },
+                  { label: 'Scripture Bar',     color: brandHeaderColor },
+                  { label: 'Sidebar',           color: brandSidebarColor },
+                ].map(({ label, color }) => (
+                  <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: 32, height: 32, borderRadius: '8px', background: color, boxShadow: `0 0 0 2px ${color}55` }} />
+                    <div>
+                      <div style={{ fontSize: '10px', fontWeight: '700', color: c.muted, textTransform: 'uppercase' }}>{label}</div>
+                      <div style={{ fontSize: '11px', color: c.text, fontFamily: 'monospace' }}>{color}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>

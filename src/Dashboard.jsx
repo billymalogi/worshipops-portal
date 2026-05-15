@@ -188,8 +188,8 @@ const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, se
       gridTemplateColumns: isMobile ? 'auto 1fr auto' : '1fr auto 1fr',
       alignItems: 'center',
       height: headerH,
-      borderBottom: `1px solid ${colors.border}`,
-      background: colors.card,
+      borderBottom: `1px solid ${colors.navBorder}`,
+      background: colors.headerBg,
       position: 'sticky',
       top: 0,
       zIndex: 200,
@@ -201,7 +201,7 @@ const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, se
         <img src="/favicon.ico" alt="Logo" onError={(e) => { e.target.style.display = 'none'; }}
           style={{ height: isMobile ? '32px' : '40px', width: isMobile ? '32px' : '40px', borderRadius: '8px', objectFit: 'contain' }} />
         {!isMobile && (
-          <span style={{ fontWeight: '800', fontSize: isTablet ? '15px' : '18px', color: colors.heading, letterSpacing: '-0.5px' }}>Worship Ops</span>
+          <span style={{ fontWeight: '800', fontSize: isTablet ? '15px' : '18px', color: colors.navText, letterSpacing: '-0.5px' }}>Worship Ops</span>
         )}
       </div>
 
@@ -215,23 +215,23 @@ const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, se
                 key={cat}
                 onClick={() => handleCategoryClick(cat)}
                 style={{
-                  background: isActive ? tabActiveBg(isDarkMode) : 'transparent',
+                  background: isActive ? colors.navTabActiveBg : 'transparent',
                   border: 'none',
-                  borderBottom: `2px solid ${isActive ? colors.heading : 'transparent'}`,
+                  borderBottom: `2px solid ${isActive ? colors.navText : 'transparent'}`,
                   cursor: 'pointer',
                   padding: isTablet ? '0 14px' : '0 24px',
                   fontSize: isTablet ? '12px' : '14px',
                   fontWeight: isActive ? '700' : '500',
-                  color: isActive ? colors.heading : colors.text,
+                  color: isActive ? colors.navText : colors.navSubText,
                   textTransform: 'capitalize',
                   transition: 'all 0.15s',
                   whiteSpace: 'nowrap',
                 }}
                 onMouseEnter={e => {
-                  if (!isActive) { e.currentTarget.style.background = tabActiveBg(isDarkMode); e.currentTarget.style.color = colors.heading; }
+                  if (!isActive) { e.currentTarget.style.background = colors.navTabActiveBg; e.currentTarget.style.color = colors.navText; }
                 }}
                 onMouseLeave={e => {
-                  if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = colors.text; }
+                  if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = colors.navSubText; }
                 }}
               >
                 {isTablet ? CAT_SHORT[cat] : CAT_DISPLAY[cat]}
@@ -243,7 +243,7 @@ const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, se
 
       {/* Mobile: app name centered */}
       {isMobile && (
-        <span style={{ textAlign: 'center', fontWeight: '800', fontSize: '15px', color: colors.heading, letterSpacing: '-0.3px' }}>
+        <span style={{ textAlign: 'center', fontWeight: '800', fontSize: '15px', color: colors.navText, letterSpacing: '-0.3px' }}>
           Worship Ops
         </span>
       )}
@@ -251,16 +251,16 @@ const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, se
       {/* RIGHT: Controls */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: isMobile ? '4px' : '10px', justifySelf: 'end' }}>
         {!isMobile && (
-          <span style={{ fontSize: '11px', fontWeight: '600', color: colors.text, opacity: 0.6, padding: '2px 8px', border: `1px solid ${colors.border}`, borderRadius: '12px', whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: '11px', fontWeight: '600', color: colors.navSubText, padding: '2px 8px', border: `1px solid ${colors.navBorder}`, borderRadius: '12px', whiteSpace: 'nowrap' }}>
             {ROLE_LABELS[realRole] || realRole}
           </span>
         )}
         <button onClick={() => setIsDarkMode(!isDarkMode)}
-          style={{ background: 'transparent', color: colors.text, border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+          style={{ background: 'transparent', color: colors.navSubText, border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
           {isDarkMode ? <Sun size={isMobile ? 20 : 18} /> : <Moon size={isMobile ? 20 : 18} />}
         </button>
         <button onClick={onLogout} title="Log Out"
-          style={{ background: 'transparent', color: colors.danger, border: 'none', padding: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+          style={{ background: 'transparent', color: colors.navSubText, border: 'none', padding: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
           <LogOut size={isMobile ? 20 : 18} />
         </button>
       </div>
@@ -378,10 +378,27 @@ const MobileBottomNav = ({ colors, isDarkMode, activeCategory, visibleCats, onCa
 );
 
 
+// --- AUTO TEXT COLOR (luminance-based) ---
+// Returns '#ffffff' for dark backgrounds, '#09090B' for light backgrounds
+const getAutoTextColor = (hex) => {
+  if (!hex) return '#ffffff';
+  const clean = hex.replace('#', '');
+  if (clean.length !== 6) return '#ffffff';
+  const r = parseInt(clean.slice(0, 2), 16);
+  const g = parseInt(clean.slice(2, 4), 16);
+  const b = parseInt(clean.slice(4, 6), 16);
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return lum > 0.6 ? '#09090B' : '#ffffff';
+};
+
 // --- ORG SWITCHER ---
 function OrgSwitcher({ orgName, allOrgs, currentOrgId, onSwitch, isDarkMode }) {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef(null);
+
+  const currentOrg  = allOrgs.find(o => o.organization_id === currentOrgId);
+  const activeColor = currentOrg?.brand_color || '#6366f1';
+  const pillText    = currentOrg?.brand_nav_text_color || getAutoTextColor(activeColor);
 
   React.useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
@@ -389,39 +406,59 @@ function OrgSwitcher({ orgName, allOrgs, currentOrgId, onSwitch, isDarkMode }) {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  const pill = (children, onClick, extra = {}) => (
+    <span
+      onClick={onClick}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: '7px',
+        fontSize: '11px', fontWeight: '700', color: pillText,
+        background: activeColor, padding: '3px 12px', borderRadius: '20px',
+        whiteSpace: 'nowrap', flexShrink: 0,
+        cursor: onClick ? 'pointer' : 'default',
+        boxShadow: `0 0 0 3px ${activeColor}33`,
+        ...extra,
+      }}
+    >
+      {children}
+    </span>
+  );
+
   if (allOrgs.length <= 1) {
-    return (
-      <span style={{ fontSize: '11px', fontWeight: '700', color: '#f97316', background: 'rgba(255,255,255,0.95)', padding: '2px 12px', borderRadius: '20px', whiteSpace: 'nowrap', flexShrink: 0 }}>
-        {orgName}
-      </span>
+    return pill(
+      <><span style={{ width: 7, height: 7, borderRadius: '50%', background: pillText === '#ffffff' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.35)', display: 'inline-block' }} />{orgName}</>
     );
   }
 
   return (
     <div ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
-      <button
-        onClick={() => setOpen(v => !v)}
-        style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: '700', color: '#f97316', background: 'rgba(255,255,255,0.95)', padding: '3px 10px 3px 12px', borderRadius: '20px', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}
-      >
-        {orgName}
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5L5 6.5L8 3.5" stroke="#f97316" strokeWidth="1.5" strokeLinecap="round"/></svg>
-      </button>
+      {pill(
+        <>
+          <span style={{ width: 7, height: 7, borderRadius: '50%', background: pillText === '#ffffff' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.35)', display: 'inline-block' }} />
+          {orgName}
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5L5 6.5L8 3.5" stroke={pillText === '#ffffff' ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.5)'} strokeWidth="1.5" strokeLinecap="round"/></svg>
+        </>,
+        () => setOpen(v => !v),
+        { border: 'none' }
+      )}
       {open && (
-        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, minWidth: '220px', background: isDarkMode ? '#1f1f22' : '#ffffff', border: `1px solid ${isDarkMode ? '#27272a' : '#e5e7eb'}`, borderRadius: '10px', boxShadow: '0 8px 32px rgba(0,0,0,0.25)', zIndex: 9999, overflow: 'hidden' }}>
-          <div style={{ padding: '8px 12px', fontSize: '10px', fontWeight: '700', color: isDarkMode ? '#6b7280' : '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.8px', borderBottom: `1px solid ${isDarkMode ? '#27272a' : '#e5e7eb'}` }}>
+        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, minWidth: '240px', background: isDarkMode ? '#1f1f22' : '#ffffff', border: `1px solid ${isDarkMode ? '#27272a' : '#e5e7eb'}`, borderRadius: '12px', boxShadow: '0 8px 32px rgba(0,0,0,0.25)', zIndex: 9999, overflow: 'hidden' }}>
+          <div style={{ padding: '8px 14px', fontSize: '10px', fontWeight: '700', color: isDarkMode ? '#6b7280' : '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.8px', borderBottom: `1px solid ${isDarkMode ? '#27272a' : '#e5e7eb'}` }}>
             Switch Organization
           </div>
           {allOrgs.map(org => {
             const isCurrent = org.organization_id === currentOrgId;
+            const dot = org.brand_color || '#6366f1';
             return (
               <button
                 key={org.organization_id}
                 onClick={() => { setOpen(false); if (!isCurrent) onSwitch(org); }}
-                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: isCurrent ? (isDarkMode ? 'rgba(59,130,246,0.1)' : 'rgba(59,130,246,0.06)') : 'transparent', border: 'none', cursor: isCurrent ? 'default' : 'pointer', textAlign: 'left', gap: '8px' }}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: isCurrent ? (isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)') : 'transparent', border: 'none', cursor: isCurrent ? 'default' : 'pointer', textAlign: 'left' }}
                 onMouseEnter={e => { if (!isCurrent) e.currentTarget.style.background = isDarkMode ? '#27272a' : '#f3f4f6'; }}
-                onMouseLeave={e => { if (!isCurrent) e.currentTarget.style.background = 'transparent'; }}
+                onMouseLeave={e => { if (!isCurrent) e.currentTarget.style.background = isCurrent ? (isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)') : 'transparent'; }}
               >
-                <span style={{ fontSize: '13px', fontWeight: isCurrent ? '700' : '500', color: isCurrent ? '#3b82f6' : (isDarkMode ? '#d1d5db' : '#27272a') }}>{org.name}</span>
+                {/* Brand color dot */}
+                <span style={{ width: 10, height: 10, borderRadius: '50%', background: dot, flexShrink: 0, boxShadow: isCurrent ? `0 0 0 2px ${dot}55` : 'none' }} />
+                <span style={{ flex: 1, fontSize: '13px', fontWeight: isCurrent ? '700' : '500', color: isDarkMode ? '#d1d5db' : '#27272a' }}>{org.name}</span>
                 <span style={{ fontSize: '10px', color: isDarkMode ? '#6b7280' : '#9ca3af', textTransform: 'capitalize' }}>{org.role}</span>
               </button>
             );
@@ -451,6 +488,11 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('dashboard'); 
   const [currentFolder, setCurrentFolder] = useState(null); 
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [brandColor,            setBrandColor]            = useState(null);
+  const [brandHeaderColor,      setBrandHeaderColor]      = useState(null);
+  const [brandSidebarColor,     setBrandSidebarColor]     = useState(null);
+  const [brandNavTextColor,     setBrandNavTextColor]     = useState(null); // null = auto-detect
+  const [brandHeaderTextColor,  setBrandHeaderTextColor]  = useState(null); // null = auto-detect
   
   // Data State
   const [songs, setSongs] = useState([]); 
@@ -467,6 +509,17 @@ export default function Dashboard() {
   const [verseOfDay, setVerseOfDay] = useState(() => pickVerse(DEFAULT_VERSES));
   const [alertOverlay, setAlertOverlay] = useState(null); // { message, sender_name, serviceName, thread }
 
+  // --- COMPUTED NAV TEXT COLOR ---
+  // User override → auto-detect from nav bg → dark/light mode fallback
+  const _autoNavText    = brandColor ? getAutoTextColor(brandColor) : null;
+  const _effectiveNavText = brandNavTextColor || _autoNavText || (isDarkMode ? '#EDEDED' : '#09090B');
+  const _navBgIsDark    = brandColor ? (_effectiveNavText !== '#09090B') : isDarkMode;
+
+  // --- COMPUTED VERSE BAR TEXT COLOR ---
+  const _verseBg        = brandHeaderColor || (isDarkMode ? '#92400e' : '#f97316');
+  const _autoHeaderText = getAutoTextColor(_verseBg);
+  const _effectiveHeaderText = brandHeaderTextColor || _autoHeaderText;
+
   const colors = {
     bg:      isDarkMode ? '#000000' : '#F7F8FA',
     bgSolid: isDarkMode ? '#0A0A0A' : '#FFFFFF',
@@ -475,9 +528,19 @@ export default function Dashboard() {
     heading: isDarkMode ? '#EDEDED' : '#09090B',
     border:  isDarkMode ? '#27272A' : '#E4E4E7',
     hover:   isDarkMode ? '#1F1F22' : '#F4F4F5',
-    primary: '#0070F3',
-    accent:  '#10B981',
-    danger:  '#EF4444',
+    primary:    brandColor || '#0070F3',
+    accent:     brandColor || '#10B981',
+    danger:     '#EF4444',
+    // Nav bar bg + adaptive text
+    headerBg:       brandColor || (isDarkMode ? '#111111' : '#ffffff'),
+    navText:        brandColor ? _effectiveNavText : (isDarkMode ? '#EDEDED' : '#09090B'),
+    navSubText:     brandColor ? (_navBgIsDark ? 'rgba(255,255,255,0.65)' : 'rgba(0,0,0,0.5)') : (isDarkMode ? '#A1A1AA' : '#52525B'),
+    navBorder:      brandColor ? (_navBgIsDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.1)')  : (isDarkMode ? '#27272A' : '#E4E4E7'),
+    navTabActiveBg: brandColor ? (_navBgIsDark ? 'rgba(255,255,255,0.13)' : 'rgba(0,0,0,0.07)') : (isDarkMode ? '#1F1F22' : '#E4E4E7'),
+    // Verse bar bg + adaptive text
+    sidebarBg:  brandSidebarColor || (isDarkMode ? '#0a0a0a' : '#f8f9fa'),
+    verseBg:    _verseBg,
+    verseText:  _effectiveHeaderText,
   };
 
   // Helper function to format TIME values (e.g., "09:00:00" -> "9:00 AM")
@@ -496,7 +559,7 @@ export default function Dashboard() {
     supabase.auth.getSession().then(({ data: { session } }) => {
         if (!session) {
             console.log("No session found. Redirecting to login.");
-            router('/login');
+            router('/login', { replace: true });
         } else {
             console.log("Session found:", session.user.email);
             setSession(session);
@@ -504,12 +567,12 @@ export default function Dashboard() {
         }
     });
 
-    // B. Listen for changes (Login, Logout, Auto-Refresh)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        if (!session) {
+    // B. Listen for auth events — only redirect on explicit sign-out, not on token refresh
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_OUT') {
             setSession(null);
-            router('/login');
-        } else {
+            router('/login', { replace: true });
+        } else if (session) {
             setSession(session);
             // If we have a session but no Org ID yet, fetch it
             if (!orgId) fetchOrgData(session.user.id);
@@ -550,12 +613,26 @@ export default function Dashboard() {
           .select('id, name')
           .in('id', orgIds);
 
+      // Brand colors — dedicated table, graceful if migration not yet run
+      const { data: brandRows, error: brandErr } = await supabase
+          .from('organization_brand_colors')
+          .select('org_id, brand_color, brand_header_color, brand_sidebar_color, brand_nav_text_color, brand_header_text_color')
+          .in('org_id', orgIds);
+      const brandMap = (!brandErr && brandRows)
+          ? Object.fromEntries(brandRows.map(r => [r.org_id, r]))
+          : {};
+
       const orgsWithMeta = rows.map(r => ({
-          organization_id:   r.organization_id,
-          role:              r.role || 'viewer',
-          name:              orgRows?.find(o => o.id === r.organization_id)?.name || 'My Organization',
-          permissions:       r.permissions || {},
-          account_expires_at: r.account_expires_at || null,
+          organization_id:       r.organization_id,
+          role:                  r.role || 'viewer',
+          name:                  orgRows?.find(o => o.id === r.organization_id)?.name || 'My Organization',
+          brand_color:           brandMap[r.organization_id]?.brand_color            || null,
+          brand_header_color:    brandMap[r.organization_id]?.brand_header_color     || null,
+          brand_sidebar_color:   brandMap[r.organization_id]?.brand_sidebar_color    || null,
+          brand_nav_text_color:  brandMap[r.organization_id]?.brand_nav_text_color   || null,
+          brand_header_text_color: brandMap[r.organization_id]?.brand_header_text_color || null,
+          permissions:           r.permissions || {},
+          account_expires_at:    r.account_expires_at || null,
       }));
       setAllOrgs(orgsWithMeta);
 
@@ -564,6 +641,11 @@ export default function Dashboard() {
       setOrgId(first.organization_id);
       const role = first.role;
       setRealRole(role);
+      setBrandColor(first.brand_color || null);
+      setBrandHeaderColor(first.brand_header_color || null);
+      setBrandSidebarColor(first.brand_sidebar_color || null);
+      setBrandNavTextColor(first.brand_nav_text_color || null);
+      setBrandHeaderTextColor(first.brand_header_text_color || null);
       setGuestPermissions(first.permissions || {});
       setGuestExpiry(first.account_expires_at || null);
       if (ROLE_TABS[role]?.length === 1 && ROLE_TABS[role][0] === 'myschedule') {
@@ -577,6 +659,11 @@ export default function Dashboard() {
   const switchOrg = (orgMeta) => {
       setOrgId(orgMeta.organization_id);
       setRealRole(orgMeta.role);
+      setBrandColor(orgMeta.brand_color || null);
+      setBrandHeaderColor(orgMeta.brand_header_color || null);
+      setBrandSidebarColor(orgMeta.brand_sidebar_color || null);
+      setBrandNavTextColor(orgMeta.brand_nav_text_color || null);
+      setBrandHeaderTextColor(orgMeta.brand_header_text_color || null);
       setGuestPermissions(orgMeta.permissions || {});
       setGuestExpiry(orgMeta.account_expires_at || null);
       setSelectedService(null);
@@ -608,12 +695,26 @@ export default function Dashboard() {
           if (cv.length > 0) setVerseOfDay(pickVerse(cv));
       }
 
+      // Brand colors — dedicated table, graceful if migration not yet run
+      const { data: brandData, error: brandErr2 } = await supabase
+          .from('organization_brand_colors')
+          .select('brand_color, brand_header_color, brand_sidebar_color, brand_nav_text_color, brand_header_text_color')
+          .eq('org_id', oid)
+          .maybeSingle();
+      if (!brandErr2 && brandData) {
+          setBrandColor(brandData.brand_color || null);
+          setBrandHeaderColor(brandData.brand_header_color || null);
+          setBrandSidebarColor(brandData.brand_sidebar_color || null);
+          setBrandNavTextColor(brandData.brand_nav_text_color || null);
+          setBrandHeaderTextColor(brandData.brand_header_text_color || null);
+      }
+
   };
 
   // --- ACTIONS ---
   const handleLogout = async () => {
       await supabase.auth.signOut();
-      router('/login');
+      router('/login', { replace: true });
   };
 
   const handleCreateFolder = async () => { if (userRole !== 'admin') return; const name = prompt("Series Name (e.g., Weekend Services, Night of Worship):"); if(!name) return; await supabase.from('service_folders').insert([{ name, organization_id: orgId }]); refreshAllData(orgId); };
@@ -711,7 +812,7 @@ export default function Dashboard() {
 
       {/* VERSE STATUS BAR — hidden on mobile */}
       <div style={{
-        background: isDarkMode ? '#92400e' : '#f97316',
+        background: colors.verseBg,
         padding: '4px 20px',
         display: isMobile ? 'none' : 'flex',
         alignItems: 'center',
@@ -722,7 +823,7 @@ export default function Dashboard() {
         <span style={{
           fontSize: '11px',
           fontStyle: 'italic',
-          color: 'rgba(255,255,255,0.92)',
+          color: colors.verseText,
           flex: 1,
           overflow: 'hidden',
           textOverflow: 'ellipsis',
@@ -821,7 +922,19 @@ export default function Dashboard() {
 
           {/* ORGANIZATION TAB */}
           {activeTab === 'organization' && (
-            <OrgSettings orgId={orgId} isDarkMode={isDarkMode} userRole={userRole} />
+            <OrgSettings
+              orgId={orgId}
+              isDarkMode={isDarkMode}
+              userRole={userRole}
+              session={session}
+              onBrandColorsChange={(primary, header, sidebar, navText, headerText) => {
+                setBrandColor(primary || null);
+                setBrandHeaderColor(header || null);
+                setBrandSidebarColor(sidebar || null);
+                setBrandNavTextColor(navText || null);
+                setBrandHeaderTextColor(headerText || null);
+              }}
+            />
           )}
 
           {/* BILLING TAB */}
@@ -863,7 +976,7 @@ export default function Dashboard() {
           {!isMobile && (
           <div style={{
             width: isTablet ? '220px' : '280px',
-            background: isDarkMode ? '#0a0a0a' : '#f8f9fa',
+            background: colors.sidebarBg,
             borderRight: `1px solid ${colors.border}`,
             display: 'flex',
             flexDirection: 'column',

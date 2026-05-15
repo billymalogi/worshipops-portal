@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import { LayoutGrid, Loader, Lock, Mail, User, Building2, AlertCircle, CheckCircle2 } from 'lucide-react';
 
@@ -137,6 +137,13 @@ function showBetaWelcome(firstName, onDismiss) {
 // -----------------------------------------------------------------------------
 
 export default function Login() {
+  // If already authenticated, go straight to the app (removes /login from history)
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) window.location.replace('/');
+    });
+  }, []);
+
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState(null);
@@ -191,7 +198,7 @@ export default function Login() {
             }
 
             setSuccessMessage("Workspace created successfully! Redirecting...");
-            setTimeout(() => { window.location.href = '/'; }, 1500);
+            setTimeout(() => { window.location.replace('/'); }, 1500);
           }, 500);
         }
 
@@ -250,16 +257,16 @@ export default function Login() {
             setTimeout(() => {
               showBetaWelcome(firstName, async () => {
                 await supabase.auth.updateUser({ data: { beta_welcomed: true } });
-                window.location.href = '/';
+                window.location.replace('/');
               });
             }, 1000);
           } else {
             setSuccessMessage("Welcome back! Redirecting...");
-            setTimeout(() => { window.location.href = '/'; }, 1000);
+            setTimeout(() => { window.location.replace('/'); }, 1000);
           }
         } else {
           setSuccessMessage("Login successful! Redirecting...");
-          setTimeout(() => { window.location.href = '/'; }, 1000);
+          setTimeout(() => { window.location.replace('/'); }, 1000);
         }
       }
     } catch (err) {

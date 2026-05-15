@@ -758,7 +758,7 @@ export default function ScheduleTable({
 
           {/* Conditional panel */}
           {activeRightPanel && (
-            <div className="wop-scroll" style={{ width: isTablet ? '260px' : '300px', overflowY: 'auto', height: '100%', padding: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div className="wop-scroll" style={{ width: isTablet ? '260px' : '300px', overflowY: 'auto', height: '100%', padding: '12px', display: 'flex', flexDirection: 'column', gap: '12px', background: isDarkMode ? '#000000' : '#ffffff' }}>
 
               {/* CALENDAR PANEL */}
               {activeRightPanel === 'calendar' && (

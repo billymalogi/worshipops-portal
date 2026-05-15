@@ -4,6 +4,36 @@ body {
   padding: 0;
 }
 
+/* ── react-colorful overrides (Apple-style) ─────────────────────────────── */
+.wo-color-picker .react-colorful {
+  width: 100% !important;
+  height: 160px;
+  gap: 10px;
+}
+
+.wo-color-picker .react-colorful__saturation {
+  border-radius: 10px !important;
+  border-bottom: none !important;
+}
+
+.wo-color-picker .react-colorful__hue {
+  height: 12px !important;
+  border-radius: 6px !important;
+}
+
+.wo-color-picker .react-colorful__pointer {
+  width: 18px !important;
+  height: 18px !important;
+  border: 2.5px solid #ffffff !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.08) !important;
+  cursor: grab;
+}
+
+.wo-color-picker .react-colorful__pointer:active {
+  cursor: grabbing;
+  transform: scale(1.1);
+}
+
 /* Animations */
 @keyframes spin {
   from {
