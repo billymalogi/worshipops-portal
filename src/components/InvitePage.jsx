@@ -105,10 +105,11 @@ export default function InvitePage() {
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
         body:    JSON.stringify({ token, email, password, firstName, lastName }),
       });
-      const json = await res.json();
+      const json = await res.json().catch(() => ({}));
 
       if (!res.ok || json.error) {
-        setErrorMsg(json.error || 'Something went wrong. Please try again.');
+        // Supabase relay errors return `message` not `error`
+        setErrorMsg(json.error || json.message || `Something went wrong (status ${res.status}). Please try again.`);
         setStatus('valid');
       } else {
         setStatus('success');

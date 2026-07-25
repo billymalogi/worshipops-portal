@@ -173,18 +173,19 @@ export default function PlanningCenterImport({ orgId, isDarkMode, userRole }) {
       setOverview(ov);
       setStep(1);
     } catch (e) {
-      const msg = e.message || '';
-      const isEdgeFnError = msg.includes('Failed to send') || msg.includes('not found') || msg.includes('Edge Function') || msg.includes('FunctionsHttpError');
+      const msg = e.message || String(e);
+      // Only show "not deployed" for the specific relay error (function truly missing)
+      const isFnMissing = msg.includes('Failed to send a request to the Edge Function') || msg.includes('FunctionsRelayError');
       setConnErr(
-        isEdgeFnError
-          ? 'Edge Function not deployed — click "Setup help" above to deploy it first.'
+        isFnMissing
+          ? 'Edge Function not found — make sure it is named exactly "pco-import" in your Supabase project.'
           : msg.includes('401') || msg.includes('403') || msg.toLowerCase().includes('unauthorized')
           ? 'Invalid credentials — double-check your Application ID and Secret.'
           : msg.includes('NetworkError') || msg.includes('Failed to fetch')
           ? 'Network error — check your internet connection.'
-          : `Connection failed: ${msg}`
+          : `Error: ${msg}`
       );
-      if (isEdgeFnError) setShowSetup(true);
+      if (isFnMissing) setShowSetup(true);
     } finally {
       setConnecting(false);
     }

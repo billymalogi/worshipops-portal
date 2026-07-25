@@ -9,8 +9,8 @@
  * - Creates a user_profile entry
  * - Marks the invite token as used
  *
- * Deploy:
- *   supabase functions deploy process-beta-invite
+ * Deploy via Supabase Dashboard:
+ *   Edge Functions → Create new function → name: "process-beta-invite" → paste this file
  *
  * Required env vars (auto-set by Supabase):
  *   SUPABASE_URL
@@ -27,10 +27,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const ok  = (body: unknown) => new Response(JSON.stringify(body), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+const err = (msg: string, status = 400) => new Response(JSON.stringify({ error: msg }), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+
 serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
     const supabase = createClient(
@@ -42,7 +43,7 @@ serve(async (req: Request) => {
     const { token, email, password, firstName, lastName } = body
 
     if (!token || !email || !password || !firstName || !lastName) {
-      throw new Error('Missing required fields: token, email, password, firstName, lastName')
+      return err('Missing required fields: token, email, password, firstName, lastName')
     }
 
     // ── 1. Verify invite token ──────────────────────────────
@@ -54,17 +55,10 @@ serve(async (req: Request) => {
       .is('used_at', null)
       .maybeSingle()
 
-    if (inviteErr) throw new Error('Failed to verify invite token')
-    if (!invite)   throw new Error('Invite link is invalid or has already been used.')
+    if (inviteErr) return err('Failed to verify invite token')
+    if (!invite)   return err('Invite link is invalid or has already been used.')
 
-    // ── 2. Check email not already registered ───────────────
-    const { data: existingUsers } = await supabase.auth.admin.listUsers()
-    const emailTaken = existingUsers?.users?.some(
-      (u: any) => u.email?.toLowerCase() === email.toLowerCase()
-    )
-    if (emailTaken) throw new Error('An account with this email already exists.')
-
-    // ── 3. Create the auth user ─────────────────────────────
+    // ── 2. Create the auth user (Supabase will reject duplicate emails) ──
     const { data: newUser, error: createErr } = await supabase.auth.admin.createUser({
       email,
       password,
@@ -72,13 +66,15 @@ serve(async (req: Request) => {
       user_metadata: { first_name: firstName, last_name: lastName },
     })
 
-    if (createErr || !newUser?.user) {
-      throw new Error(createErr?.message || 'Failed to create user account')
+    if (createErr) {
+      // Surface the real Supabase auth error (e.g. "User already registered")
+      return err(createErr.message || 'Failed to create user account')
     }
+    if (!newUser?.user) return err('Failed to create user account')
 
     const userId = newUser.user.id
 
-    // ── 4. Find or create "Beta Tester Admin" org ───────────
+    // ── 3. Find or create "Beta Tester Admin" org ───────────
     let betaOrgId: string
 
     const { data: existingOrg } = await supabase
@@ -96,11 +92,11 @@ serve(async (req: Request) => {
         .select('id')
         .single()
 
-      if (orgErr || !newOrg) throw new Error('Failed to create Beta Tester Admin organization')
+      if (orgErr || !newOrg) return err('Failed to create Beta Tester Admin organization')
       betaOrgId = newOrg.id
     }
 
-    // ── 5. Add user to org as admin ─────────────────────────
+    // ── 4. Add user to org as admin ─────────────────────────
     const { error: memberErr } = await supabase
       .from('organization_members')
       .insert([{
@@ -109,9 +105,9 @@ serve(async (req: Request) => {
         role: 'admin',
       }])
 
-    if (memberErr) throw new Error('Failed to add user to organization')
+    if (memberErr) return err('Failed to add user to organization')
 
-    // ── 6. Create user_profile entry ────────────────────────
+    // ── 5. Create user_profile entry ────────────────────────
     await supabase.from('user_profiles').upsert([{
       id: userId,
       first_name: firstName,
@@ -119,21 +115,15 @@ serve(async (req: Request) => {
       email,
     }], { onConflict: 'id' })
 
-    // ── 7. Mark invite as used ──────────────────────────────
+    // ── 6. Mark invite as used ──────────────────────────────
     await supabase
       .from('beta_invitations')
       .update({ used_at: new Date().toISOString(), used_by: userId })
       .eq('id', invite.id)
 
-    return new Response(
-      JSON.stringify({ success: true, message: 'Account created! You can now log in.' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    return ok({ success: true, message: 'Account created! You can now log in.' })
 
-  } catch (err: any) {
-    return new Response(
-      JSON.stringify({ error: err.message }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+  } catch (e: any) {
+    return err(e?.message ?? 'Unexpected server error', 500)
   }
 })
