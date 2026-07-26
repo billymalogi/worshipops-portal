@@ -13,10 +13,21 @@ import { supabase } from './supabaseClient';
 function RootPage() {
   const [session, setSession] = useState(undefined);
 
-  useEffect(() => {
+  const checkSession = () => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session || null);
     });
+  };
+
+  useEffect(() => {
+    checkSession();
+
+    // The browser can restore this page from the back/forward cache (e.g. after
+    // pressing Back) with whatever auth state was frozen at the time it was
+    // cached — re-verify instead of showing a stale logged-out/logged-in view.
+    const handlePageShow = (e) => { if (e.persisted) checkSession(); };
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
   }, []);
 
   // Still checking auth — render nothing to avoid flash

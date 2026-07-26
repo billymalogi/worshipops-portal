@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from './supabaseClient';
 import { LayoutGrid, Loader, Lock, Mail, User, Building2, AlertCircle, CheckCircle2 } from 'lucide-react';
 
@@ -137,12 +138,14 @@ function showBetaWelcome(firstName, onDismiss) {
 // -----------------------------------------------------------------------------
 
 export default function Login() {
+  const navigate = useNavigate();
+
   // If already authenticated, go straight to the app (removes /login from history)
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) window.location.replace('/');
+      if (session) navigate('/', { replace: true });
     });
-  }, []);
+  }, [navigate]);
 
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading]   = useState(false);
@@ -198,7 +201,7 @@ export default function Login() {
             }
 
             setSuccessMessage("Workspace created successfully! Redirecting...");
-            setTimeout(() => { window.location.replace('/'); }, 1500);
+            setTimeout(() => { navigate('/', { replace: true }); }, 1500);
           }, 500);
         }
 
@@ -257,16 +260,16 @@ export default function Login() {
             setTimeout(() => {
               showBetaWelcome(firstName, async () => {
                 await supabase.auth.updateUser({ data: { beta_welcomed: true } });
-                window.location.replace('/');
+                navigate('/', { replace: true });
               });
             }, 1000);
           } else {
             setSuccessMessage("Welcome back! Redirecting...");
-            setTimeout(() => { window.location.replace('/'); }, 1000);
+            setTimeout(() => { navigate('/', { replace: true }); }, 1000);
           }
         } else {
           setSuccessMessage("Login successful! Redirecting...");
-          setTimeout(() => { window.location.replace('/'); }, 1000);
+          setTimeout(() => { navigate('/', { replace: true }); }, 1000);
         }
       }
     } catch (err) {

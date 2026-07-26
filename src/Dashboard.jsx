@@ -565,16 +565,25 @@ export default function Dashboard() {
   // --- 1. ROCK SOLID AUTH (The Fix) ---
   useEffect(() => {
     // A. Check current session immediately
-    supabase.auth.getSession().then(({ data: { session } }) => {
-        if (!session) {
-            console.log("No session found. Redirecting to login.");
-            router('/login', { replace: true });
-        } else {
-            console.log("Session found:", session.user.email);
-            setSession(session);
-            fetchOrgData(session.user.id);
-        }
-    });
+    const checkSession = () => {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (!session) {
+                console.log("No session found. Redirecting to login.");
+                router('/login', { replace: true });
+            } else {
+                console.log("Session found:", session.user.email);
+                setSession(session);
+                fetchOrgData(session.user.id);
+            }
+        });
+    };
+    checkSession();
+
+    // If this page is restored from the back/forward cache (e.g. after pressing
+    // Back), re-verify session + org/role instead of showing whatever tab/role
+    // was frozen in the cached snapshot.
+    const handlePageShow = (e) => { if (e.persisted) checkSession(); };
+    window.addEventListener('pageshow', handlePageShow);
 
     // B. Listen for auth events — only redirect on explicit sign-out, not on token refresh
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -588,7 +597,10 @@ export default function Dashboard() {
         }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+        window.removeEventListener('pageshow', handlePageShow);
+        subscription.unsubscribe();
+    };
   }, [router]);
 
   // --- ALERT OVERLAY: listen for cross-screen alert events from ChatPanel ---
