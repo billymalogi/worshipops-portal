@@ -29,11 +29,9 @@ export default function InvitePage() {
     if (!token) { setStatus('invalid'); return; }
 
     (async () => {
-      // ── 1. Try beta_invitations first (no joins, simpler RLS) ──
+      // ── 1. Try beta_invitations first (via RPC — table itself has no public SELECT) ──
       const { data: beta } = await supabase
-        .from('beta_invitations')
-        .select('id, invited_email, used_at, is_active')
-        .eq('token', token)
+        .rpc('get_beta_invitation_by_token', { p_token: token })
         .maybeSingle();
 
       if (beta) {
