@@ -193,7 +193,7 @@ export default function PersistentCalendar({ isDarkMode, onDateSelect, services 
                   background: isTodayDay
                     ? colors.accent
                     : hasServices
-                      ? isDarkMode ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.1)'
+                      ? `${colors.accent}${isDarkMode ? '26' : '1a'}`
                       : 'transparent',
                   color: isTodayDay
                     ? 'white'
@@ -213,7 +213,7 @@ export default function PersistentCalendar({ isDarkMode, onDateSelect, services 
                 onMouseLeave={(e) => {
                   if (day && !isTodayDay) {
                     e.currentTarget.style.backgroundColor = hasServices
-                      ? (isDarkMode ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.1)')
+                      ? `${colors.accent}${isDarkMode ? '26' : '1a'}`
                       : 'transparent';
                   }
                 }}

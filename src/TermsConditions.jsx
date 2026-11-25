@@ -4,7 +4,7 @@ export default function TermsConditions() {
   const navigate = useNavigate();
 
   return (
-    <div style={{ minHeight: '100vh', background: '#050810', color: '#e2e8f0', fontFamily: '"Inter", system-ui, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: '#050810', color: '#e2e8f0' }}>
 
       {/* Top nav */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 32px', borderBottom: '1px solid #0f172a' }}>

@@ -882,9 +882,9 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
 
                 {/* 3 pickers */}
                 {[
-                  { label: 'Nav Bar',       desc: 'Logo + category tabs (My Schedule / Planner / Production / Admin)', picked: pickedColor,        set: setPickedColor,        pickedText: pickedNavTextColor,    setText: setPickedNavTextColor },
-                  { label: 'Scripture Bar', desc: 'Thin top strip showing the daily verse',                            picked: pickedHeaderColor, set: setPickedHeaderColor,  pickedText: pickedHeaderTextColor, setText: setPickedHeaderTextColor },
-                  { label: 'Sidebar',       desc: 'Left sidebar — calendar, folders, teams',                           picked: pickedSidebarColor,set: setPickedSidebarColor, pickedText: pickedSidebarTextColor, setText: setPickedSidebarTextColor },
+                  { label: 'Nav Bar',       desc: 'Accent line under the header + the active tab underline (no longer fills the whole bar)', picked: pickedColor,        set: setPickedColor,        pickedText: pickedNavTextColor,    setText: setPickedNavTextColor },
+                  { label: 'Scripture Bar', desc: 'Currently not applied — the verse strip stays neutral in this version',                     picked: pickedHeaderColor, set: setPickedHeaderColor,  pickedText: pickedHeaderTextColor, setText: setPickedHeaderTextColor },
+                  { label: 'Sidebar',       desc: 'Currently not applied — the sidebar stays neutral in this version',                          picked: pickedSidebarColor,set: setPickedSidebarColor, pickedText: pickedSidebarTextColor, setText: setPickedSidebarTextColor },
                 ].map(({ label, desc, picked, set, pickedText, setText }) => {
                   const autoText   = getAutoTextColor(picked);
                   const effectText = pickedText || autoText;

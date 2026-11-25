@@ -21,6 +21,11 @@ import InviteManager from './components/InviteManager';
 import OrgInviteManager from './components/OrgInviteManager';
 import FeatureRequestPage from './components/FeatureRequestPage';
 import PlanningCenterImport from './components/PlanningCenterImport';
+import HubIcon from './components/HubIcon';
+import { contrast } from './theme';
+
+// Contrast-aware text color for the logo mark / any solid brand-color fill.
+const onAccentFor = (hex) => (contrast(hex, '#ffffff') >= contrast(hex, '#171717') ? '#ffffff' : '#171717');
 
 // --- ICONS ---
 import {
@@ -192,6 +197,7 @@ const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, se
       height: headerH,
       borderBottom: `1px solid ${colors.navBorder}`,
       background: colors.headerBg,
+      boxShadow: `inset 0 2px 0 ${colors.primary}`,
       position: 'sticky',
       top: 0,
       zIndex: 200,
@@ -200,10 +206,14 @@ const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, se
       {/* LEFT: Logo */}
       <div onClick={() => { setSelectedService(null); setActiveTab('dashboard'); refreshData(); }}
         style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px', cursor: 'pointer', justifySelf: 'start' }}>
-        <img src="/favicon.ico" alt="Logo" onError={(e) => { e.target.style.display = 'none'; }}
-          style={{ height: isMobile ? '32px' : '40px', width: isMobile ? '32px' : '40px', borderRadius: '8px', objectFit: 'contain' }} />
+        <div style={{
+          height: isMobile ? '28px' : '32px', width: isMobile ? '28px' : '32px', borderRadius: '8px',
+          background: colors.primary, display: 'grid', placeItems: 'center', flexShrink: 0,
+        }}>
+          <HubIcon size={isMobile ? 16 : 18} color={onAccentFor(colors.primary)} />
+        </div>
         {!isMobile && (
-          <span style={{ fontWeight: '800', fontSize: isTablet ? '15px' : '18px', color: colors.navText, letterSpacing: '-0.5px' }}>Worship Ops</span>
+          <span style={{ fontWeight: '600', fontSize: isTablet ? '15px' : '17px', color: colors.navText, letterSpacing: '-0.3px' }}>WorshipOps</span>
         )}
       </div>
 
@@ -219,7 +229,7 @@ const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, se
                 style={{
                   background: isActive ? colors.navTabActiveBg : 'transparent',
                   border: 'none',
-                  borderBottom: `2px solid ${isActive ? colors.navText : 'transparent'}`,
+                  borderBottom: `2px solid ${isActive ? colors.primary : 'transparent'}`,
                   cursor: 'pointer',
                   padding: isTablet ? '0 14px' : '0 24px',
                   fontSize: isTablet ? '12px' : '14px',
@@ -245,8 +255,8 @@ const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, se
 
       {/* Mobile: app name centered */}
       {isMobile && (
-        <span style={{ textAlign: 'center', fontWeight: '800', fontSize: '15px', color: colors.navText, letterSpacing: '-0.3px' }}>
-          Worship Ops
+        <span style={{ textAlign: 'center', fontWeight: '600', fontSize: '15px', color: colors.navText, letterSpacing: '-0.3px' }}>
+          WorshipOps
         </span>
       )}
 
@@ -380,19 +390,6 @@ const MobileBottomNav = ({ colors, isDarkMode, activeCategory, visibleCats, onCa
 );
 
 
-// --- AUTO TEXT COLOR (luminance-based) ---
-// Returns '#ffffff' for dark backgrounds, '#09090B' for light backgrounds
-const getAutoTextColor = (hex) => {
-  if (!hex) return '#ffffff';
-  const clean = hex.replace('#', '');
-  if (clean.length !== 6) return '#ffffff';
-  const r = parseInt(clean.slice(0, 2), 16);
-  const g = parseInt(clean.slice(2, 4), 16);
-  const b = parseInt(clean.slice(4, 6), 16);
-  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return lum > 0.6 ? '#09090B' : '#ffffff';
-};
-
 // --- ORG SWITCHER ---
 function OrgSwitcher({ orgName, allOrgs, currentOrgId, onSwitch, isDarkMode }) {
   const [open, setOpen] = React.useState(false);
@@ -400,7 +397,7 @@ function OrgSwitcher({ orgName, allOrgs, currentOrgId, onSwitch, isDarkMode }) {
 
   const currentOrg  = allOrgs.find(o => o.organization_id === currentOrgId);
   const activeColor = currentOrg?.brand_color || '#6366f1';
-  const pillText    = currentOrg?.brand_nav_text_color || getAutoTextColor(activeColor);
+  const textCol     = isDarkMode ? '#EDEDED' : '#09090B';
 
   React.useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
@@ -408,16 +405,17 @@ function OrgSwitcher({ orgName, allOrgs, currentOrgId, onSwitch, isDarkMode }) {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  // Quiet pattern: a small accent dot + plain text, not a filled/glowing pill —
+  // the org's brand color is still unmistakably there, just not shouting.
   const pill = (children, onClick, extra = {}) => (
     <span
       onClick={onClick}
       style={{
         display: 'inline-flex', alignItems: 'center', gap: '7px',
-        fontSize: '11px', fontWeight: '700', color: pillText,
-        background: activeColor, padding: '3px 12px', borderRadius: '20px',
+        fontSize: '12px', fontWeight: '500', color: textCol,
+        padding: '4px 8px', borderRadius: '8px',
         whiteSpace: 'nowrap', flexShrink: 0,
         cursor: onClick ? 'pointer' : 'default',
-        boxShadow: `0 0 0 3px ${activeColor}33`,
         ...extra,
       }}
     >
@@ -427,7 +425,7 @@ function OrgSwitcher({ orgName, allOrgs, currentOrgId, onSwitch, isDarkMode }) {
 
   if (allOrgs.length <= 1) {
     return pill(
-      <><span style={{ width: 7, height: 7, borderRadius: '50%', background: pillText === '#ffffff' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.35)', display: 'inline-block' }} />{orgName}</>
+      <><span style={{ width: 7, height: 7, borderRadius: '50%', background: activeColor, display: 'inline-block' }} />{orgName}</>
     );
   }
 
@@ -435,12 +433,11 @@ function OrgSwitcher({ orgName, allOrgs, currentOrgId, onSwitch, isDarkMode }) {
     <div ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
       {pill(
         <>
-          <span style={{ width: 7, height: 7, borderRadius: '50%', background: pillText === '#ffffff' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.35)', display: 'inline-block' }} />
+          <span style={{ width: 7, height: 7, borderRadius: '50%', background: activeColor, display: 'inline-block' }} />
           {orgName}
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5L5 6.5L8 3.5" stroke={pillText === '#ffffff' ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.5)'} strokeWidth="1.5" strokeLinecap="round"/></svg>
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5L5 6.5L8 3.5" stroke={textCol} strokeOpacity="0.5" strokeWidth="1.5" strokeLinecap="round"/></svg>
         </>,
-        () => setOpen(v => !v),
-        { border: 'none' }
+        () => setOpen(v => !v)
       )}
       {open && (
         <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, minWidth: '240px', background: isDarkMode ? '#1f1f22' : '#ffffff', border: `1px solid ${isDarkMode ? '#27272a' : '#e5e7eb'}`, borderRadius: '12px', boxShadow: '0 8px 32px rgba(0,0,0,0.25)', zIndex: 9999, overflow: 'hidden' }}>
@@ -512,21 +509,13 @@ export default function Dashboard() {
   const [verseOfDay, setVerseOfDay] = useState(() => pickVerse(DEFAULT_VERSES));
   const [alertOverlay, setAlertOverlay] = useState(null); // { message, sender_name, serviceName, thread }
 
-  // --- COMPUTED NAV TEXT COLOR ---
-  // User override → auto-detect from nav bg → dark/light mode fallback
-  const _autoNavText    = brandColor ? getAutoTextColor(brandColor) : null;
-  const _effectiveNavText = brandNavTextColor || _autoNavText || (isDarkMode ? '#EDEDED' : '#09090B');
-  const _navBgIsDark    = brandColor ? (_effectiveNavText !== '#09090B') : isDarkMode;
-
-  // --- COMPUTED VERSE BAR TEXT COLOR ---
-  const _verseBg        = brandHeaderColor || (isDarkMode ? '#92400e' : '#f97316');
-  const _autoHeaderText = getAutoTextColor(_verseBg);
-  const _effectiveHeaderText = brandHeaderTextColor || _autoHeaderText;
-
-  // --- COMPUTED SIDEBAR TEXT COLOR ---
-  const _sidebarBg       = brandSidebarColor || (isDarkMode ? '#0a0a0a' : '#f8f9fa');
-  const _autoSidebarText = getAutoTextColor(_sidebarBg);
-  const _effectiveSidebarText = brandSidebarTextColor || _autoSidebarText;
+  // --- Accent-only brand color ---
+  // The church's brand color is the accent: primary buttons, the active-tab
+  // underline, a 2px rule under the header. It no longer fills the nav bar,
+  // verse bar, or sidebar — those stay neutral regardless of brandColor /
+  // brandHeaderColor / brandSidebarColor, so the brand color reads as a
+  // deliberate highlight instead of a wall of color. Manual text-color
+  // overrides (brandNavTextColor etc.) still apply if an admin has set one.
 
   const colors = {
     bg:      isDarkMode ? '#000000' : '#F7F8FA',
@@ -539,17 +528,19 @@ export default function Dashboard() {
     primary:    brandColor || '#0070F3',
     accent:     brandColor || '#10B981',
     danger:     '#EF4444',
-    // Nav bar bg + adaptive text
-    headerBg:       brandColor || (isDarkMode ? '#111111' : '#ffffff'),
-    navText:        brandColor ? _effectiveNavText : (isDarkMode ? '#EDEDED' : '#09090B'),
-    navSubText:     brandColor ? (_navBgIsDark ? 'rgba(255,255,255,0.65)' : 'rgba(0,0,0,0.5)') : (isDarkMode ? '#A1A1AA' : '#52525B'),
-    navBorder:      brandColor ? (_navBgIsDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.1)')  : (isDarkMode ? '#27272A' : '#E4E4E7'),
-    navTabActiveBg: brandColor ? (_navBgIsDark ? 'rgba(255,255,255,0.13)' : 'rgba(0,0,0,0.07)') : (isDarkMode ? '#1F1F22' : '#E4E4E7'),
-    // Verse bar bg + adaptive text
-    sidebarBg:   _sidebarBg,
-    sidebarText: _effectiveSidebarText,
-    verseBg:     _verseBg,
-    verseText:   _effectiveHeaderText,
+    // Nav bar — neutral background; brand color shows as the header's 2px
+    // accent rule and the active category tab's underline instead.
+    headerBg:       isDarkMode ? '#111111' : '#ffffff',
+    navText:        brandNavTextColor || (isDarkMode ? '#EDEDED' : '#09090B'),
+    navSubText:     isDarkMode ? '#A1A1AA' : '#52525B',
+    navBorder:      isDarkMode ? '#27272A' : '#E4E4E7',
+    navTabActiveBg: isDarkMode ? '#1F1F22' : '#F4F4F5',
+    // Sidebar — neutral, matches every other panel in the app.
+    sidebarBg:   isDarkMode ? '#0a0a0a' : '#f8f9fa',
+    sidebarText: brandSidebarTextColor || (isDarkMode ? '#EDEDED' : '#09090B'),
+    // Verse bar — a quiet neutral strip, not a solid color fill.
+    verseBg:     isDarkMode ? '#0A0A0A' : '#F4F4F5',
+    verseText:   brandHeaderTextColor || (isDarkMode ? '#A1A1AA' : '#52525B'),
   };
 
   // Helper function to format TIME values (e.g., "09:00:00" -> "9:00 AM")
@@ -838,6 +829,7 @@ export default function Dashboard() {
       {/* VERSE STATUS BAR — hidden on mobile */}
       <div style={{
         background: colors.verseBg,
+        borderBottom: `1px solid ${colors.navBorder}`,
         padding: '4px 20px',
         display: isMobile ? 'none' : 'flex',
         alignItems: 'center',
@@ -846,15 +838,14 @@ export default function Dashboard() {
         minHeight: '28px',
       }}>
         <span style={{
-          fontSize: '11px',
-          fontStyle: 'italic',
+          fontSize: '13px',
           color: colors.verseText,
           flex: 1,
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
         }}>
-          {verseOfDay ? `"${verseOfDay.text}" — ${verseOfDay.ref}` : ''}
+          {verseOfDay ? <>&ldquo;{verseOfDay.text}&rdquo; <cite style={{ fontStyle: 'normal', color: colors.navSubText }}>— {verseOfDay.ref}</cite></> : ''}
         </span>
         {orgName && (
           <OrgSwitcher
@@ -1028,11 +1019,8 @@ export default function Dashboard() {
                 <h3 style={{
                   margin: 0,
                   fontSize: '13px',
-                  fontWeight: '700',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
+                  fontWeight: '500',
                   color: colors.text,
-                  opacity: 0.7
                 }}>
                   Series
                 </h3>
@@ -1065,12 +1053,9 @@ export default function Dashboard() {
             <div style={{ flex: 1, padding: '8px' }}>
               {/* All Series (Default View) */}
               <div style={{
-                fontSize: '11px',
-                textTransform: 'uppercase',
-                fontWeight: '700',
-                letterSpacing: '0.5px',
-                color: colors.text,
-                opacity: 0.5,
+                fontSize: '12px',
+                fontWeight: '500',
+                color: colors.navSubText,
                 marginBottom: '8px',
                 padding: '0 10px'
               }}>
@@ -1327,45 +1312,34 @@ export default function Dashboard() {
                         onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                       >
                         <div style={{
-                          width: '56px',
+                          width: '48px',
                           textAlign: 'center',
-                          marginRight: '14px',
-                          background: isDarkMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.08)',
-                          padding: '8px 6px',
-                          borderRadius: '6px',
-                          border: `1px solid ${isDarkMode ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.15)'}`
+                          marginRight: '16px',
+                          flexShrink: 0,
                         }}>
                           <div style={{
-                            fontSize: '9px',
-                            textTransform: 'uppercase',
-                            fontWeight: '700',
-                            letterSpacing: '0.5px',
-                            color: colors.primary,
-                            marginBottom: '1px'
+                            fontSize: '11px',
+                            color: colors.navSubText,
+                            marginBottom: '2px',
+                            fontFamily: 'var(--font-mono)',
                           }}>
                             {localDate.toLocaleDateString('en-US', { month: 'short' })}
                           </div>
                           <div style={{
-                            fontSize: '20px',
-                            fontWeight: '700',
+                            fontSize: '18px',
+                            fontWeight: '500',
                             color: colors.heading,
-                            lineHeight: '1'
+                            lineHeight: '1',
+                            fontFamily: 'var(--font-mono)',
+                            fontVariantNumeric: 'tabular-nums',
                           }}>
                             {localDate.getDate()}
-                          </div>
-                          <div style={{
-                            fontSize: '9px',
-                            color: colors.text,
-                            opacity: 0.6,
-                            marginTop: '1px'
-                          }}>
-                            {localDate.toLocaleDateString('en-US', { year: 'numeric' })}
                           </div>
                         </div>
                         <div style={{ flex: 1 }}>
                           <div style={{
                             fontSize: '15px',
-                            fontWeight: '600',
+                            fontWeight: '500',
                             color: colors.heading,
                             marginBottom: '3px'
                           }}>
@@ -1373,10 +1347,9 @@ export default function Dashboard() {
                           </div>
                           <div style={{
                             fontSize: '12px',
-                            color: colors.text,
-                            opacity: 0.7
+                            color: colors.navSubText,
                           }}>
-                            {localDate.toLocaleDateString('en-US', { weekday: 'long' })} · {service.start_time ? formatTime(service.start_time) : '9:00 AM'}
+                            {localDate.toLocaleDateString('en-US', { weekday: 'long' })} · {service.start_time ? formatTime(service.start_time) : '9:00 AM'} · {localDate.toLocaleDateString('en-US', { year: 'numeric' })}
                           </div>
                         </div>
                         {!isMobile && (

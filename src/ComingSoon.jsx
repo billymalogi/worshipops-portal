@@ -1,14 +1,18 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from './supabaseClient';
 import { ArrowRight, CheckCircle2, Loader, X } from 'lucide-react';
+import HubIcon from './components/HubIcon';
+import { applyTheme } from './theme';
 
 // ─── Logo mark ───────────────────────────────────────────────────────────────
 function LogoMark() {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-      <img src="/favicon.ico" alt="WorshipOps" style={{ width: '60px', height: '60px', objectFit: 'contain', flexShrink: 0 }} />
-      <span style={{ fontWeight: '800', fontSize: '17px', color: '#f1f5f9', letterSpacing: '-0.4px', marginLeft: '-5px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'var(--accent)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+        <HubIcon size={16} color="var(--on-accent)" />
+      </div>
+      <span style={{ fontWeight: '600', fontSize: '16px', color: '#f1f5f9', letterSpacing: '-0.3px' }}>
         WorshipOps
       </span>
     </div>
@@ -40,6 +44,10 @@ function Field({ label, type = 'text', value, onChange, placeholder, required = 
 export default function ComingSoon() {
   const navigate = useNavigate();
 
+  // This page always renders dark regardless of any user's saved light/dark
+  // preference, so compute the accent tokens for a dark surface specifically.
+  useEffect(() => { applyTheme('dark', '#3b82f6'); }, []);
+
   // ── 7-click easter egg ──────────────────────────────────────────────────────
   const clickCountRef  = useRef(0);
   const lastClickRef   = useRef(0);
@@ -70,6 +78,7 @@ export default function ComingSoon() {
   const [firstName,    setFirstName]    = useState('');
   const [lastName,     setLastName]     = useState('');
   const [email,        setEmail]        = useState('');
+  const [phone,        setPhone]        = useState('');
   const [church,       setChurch]       = useState('');
   const [submitting,   setSubmitting]   = useState(false);
   const [submitted,    setSubmitted]    = useState(false);
@@ -90,6 +99,7 @@ export default function ComingSoon() {
       first_name:  firstName.trim(),
       last_name:   lastName.trim(),
       email:       email.trim().toLowerCase(),
+      phone:       phone.trim(),
       church_name: church.trim(),
     }]);
 
@@ -97,7 +107,7 @@ export default function ComingSoon() {
       setSignupError('Something went wrong. Please try again or email us directly at billy@worshipops.com');
     } else {
       setSubmitted(true);
-      setFirstName(''); setLastName(''); setEmail(''); setChurch('');
+      setFirstName(''); setLastName(''); setEmail(''); setPhone(''); setChurch('');
     }
     setSubmitting(false);
   };
@@ -110,12 +120,11 @@ export default function ComingSoon() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#050810', color: '#fff', fontFamily: '"Inter", system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ minHeight: '100vh', background: '#050810', color: '#fff', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
 
-      {/* ── Background gradients ── */}
+      {/* ── Background texture — a single quiet glow, not a stack of gradients ── */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
-        <div style={{ position: 'absolute', top: '-20%', left: '-10%', width: '60%', height: '60%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.07) 0%, transparent 70%)' }} />
-        <div style={{ position: 'absolute', bottom: '-10%', right: '-5%', width: '50%', height: '50%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%)' }} />
+        <div style={{ position: 'absolute', top: '-25%', left: '50%', transform: 'translateX(-50%)', width: '70%', height: '60%', borderRadius: '50%', background: 'radial-gradient(circle, var(--accent-soft) 0%, transparent 70%)', opacity: 0.6 }} />
         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(rgba(255,255,255,0.015) 1px, transparent 1px)', backgroundSize: '48px 48px' }} />
       </div>
 
@@ -140,11 +149,11 @@ export default function ComingSoon() {
       {/* ── Main content ── */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '100px 24px 80px', textAlign: 'center', position: 'relative', zIndex: 1 }}>
 
-        {/* "COMING SOON" pill badge */}
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '7px 20px', borderRadius: '99px', border: '1px solid rgba(59,130,246,0.35)', background: 'rgba(59,130,246,0.07)', marginBottom: '32px', backdropFilter: 'blur(8px)' }}>
-          <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#3b82f6', display: 'block', animation: 'wo-pulse 2s ease-in-out infinite' }} />
-          <span style={{ fontSize: '11px', fontWeight: '700', color: '#60a5fa', textTransform: 'uppercase', letterSpacing: '2.5px' }}>
-            Coming Soon
+        {/* "Coming soon" eyebrow */}
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '7px 18px', borderRadius: '99px', border: '1px solid var(--accent-line)', background: 'var(--accent-soft)', marginBottom: '32px', backdropFilter: 'blur(8px)' }}>
+          <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'var(--accent)', display: 'block', animation: 'wo-pulse 2s ease-in-out infinite' }} />
+          <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--accent)', letterSpacing: '0.4px' }}>
+            Coming soon
           </span>
         </div>
 
@@ -178,22 +187,15 @@ export default function ComingSoon() {
           onClick={openSignup}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: '10px',
-            padding: '16px 38px', borderRadius: '13px',
-            background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)',
-            color: '#fff', fontWeight: '700', fontSize: '15px',
+            padding: '14px 34px', borderRadius: 'var(--r-control)',
+            background: 'var(--accent)',
+            color: 'var(--on-accent)', fontWeight: '500', fontSize: '15px',
             border: 'none', cursor: 'pointer',
-            boxShadow: '0 0 0 1px rgba(99,102,241,0.3), 0 8px 32px rgba(59,130,246,0.35)',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
             transition: 'transform 0.15s, box-shadow 0.15s',
-            letterSpacing: '-0.2px',
           }}
-          onMouseEnter={e => {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 0 0 1px rgba(99,102,241,0.4), 0 12px 48px rgba(59,130,246,0.5)';
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 0 0 1px rgba(99,102,241,0.3), 0 8px 32px rgba(59,130,246,0.35)';
-          }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}
         >
           Request Early Access <ArrowRight size={17} />
         </button>
@@ -251,9 +253,8 @@ export default function ComingSoon() {
             background: '#080e1a',
             borderRadius: '20px',
             border: '1px solid rgba(255,255,255,0.08)',
-            boxShadow: '0 0 0 1px rgba(59,130,246,0.1), 0 32px 80px rgba(0,0,0,0.7)',
+            boxShadow: '0 0 0 1px var(--accent-line), 0 32px 80px rgba(0,0,0,0.7)',
             overflow: 'hidden',
-            fontFamily: '"Inter", system-ui, sans-serif',
           }}>
             {/* Header */}
             <div style={{ padding: '28px 28px 0', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
@@ -305,6 +306,8 @@ export default function ComingSoon() {
 
                   <Field label="Email Address" type="email" value={email} onChange={setEmail} placeholder="john@gracechurch.com" />
 
+                  <Field label="Phone Number" type="tel" value={phone} onChange={setPhone} placeholder="(555) 123-4567" />
+
                   <Field label="Church / Organization" value={church} onChange={setChurch} placeholder="Grace Community Church" />
 
                   {signupError && (
@@ -317,14 +320,13 @@ export default function ComingSoon() {
                     type="submit"
                     disabled={submitting}
                     style={{
-                      padding: '14px', borderRadius: '11px',
-                      background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)',
-                      color: '#fff', fontWeight: '700', fontSize: '15px',
+                      padding: '13px', borderRadius: 'var(--r-control)',
+                      background: 'var(--accent)',
+                      color: 'var(--on-accent)', fontWeight: '500', fontSize: '15px',
                       border: 'none', cursor: submitting ? 'not-allowed' : 'pointer',
                       opacity: submitting ? 0.7 : 1,
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                      marginTop: '4px', fontFamily: 'inherit', letterSpacing: '-0.2px',
-                      boxShadow: '0 4px 20px rgba(59,130,246,0.3)',
+                      marginTop: '4px', fontFamily: 'inherit',
                     }}
                   >
                     {submitting && <Loader size={16} style={{ animation: 'wo-spin 1s linear infinite' }} />}

@@ -286,14 +286,6 @@ export default function ScheduleTable({
   );
   const isToday = planDate === new Date().toISOString().split('T')[0];
 
-  // Section color each item inherits from nearest preceding header
-  const sectionColors = items.map((_, i) => {
-    for (let j = i - 1; j >= 0; j--) {
-      if (items[j].type === 'header') return items[j].color || colors.accent;
-    }
-    return colors.accent;
-  });
-
   const filteredSongs  = availableSongs.filter(s => s.title.toLowerCase().includes(songSearch.toLowerCase()));
   const filteredPeople = teamMembers.filter(p => {
     const match = p.name.toLowerCase().includes(peopleSearch.toLowerCase());
@@ -386,7 +378,7 @@ export default function ScheduleTable({
                 <div style={{ flex: 1, minWidth: 0, textAlign: (isMobile || isTablet) ? 'center' : 'left' }}>
                   {canEdit
                     ? <EditableTitle initialTitle={planName} onSave={setPlanName} isDarkMode={isDarkMode} />
-                    : <div style={{ fontSize: '26px', fontWeight: '900', color: colors.heading, letterSpacing: '-0.5px' }}>{planName}</div>
+                    : <div style={{ fontSize: '24px', fontWeight: '600', color: colors.heading, letterSpacing: '-0.3px' }}>{planName}</div>
                   }
                   <div style={{ fontSize: '13px', color: colors.subText, marginTop: '5px', display: 'flex', alignItems: 'center', justifyContent: (isMobile || isTablet) ? 'center' : 'flex-start', gap: '6px' }}>
                     <CalendarIcon date={planDate} />
@@ -396,10 +388,12 @@ export default function ScheduleTable({
                   </div>
                 </div>
                 {isToday && !isTemplate && (
-                  <span style={{ background: '#10b981', color: 'white', fontSize: '11px', fontWeight: '800', padding: '4px 10px', borderRadius: '6px', letterSpacing: '1.5px', flexShrink: 0, marginTop: '4px' }}>LIVE</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '500', color: colors.success, flexShrink: 0, marginTop: '4px' }}>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'currentColor' }} />Live
+                  </span>
                 )}
                 {isTemplate && (
-                  <span style={{ background: colors.accent, color: 'white', fontSize: '11px', fontWeight: '800', padding: '4px 10px', borderRadius: '6px', letterSpacing: '1px', flexShrink: 0, marginTop: '4px' }}>TEMPLATE</span>
+                  <span style={{ fontSize: '12px', fontWeight: '500', color: colors.subText, border: `1px solid ${colors.border}`, padding: '3px 10px', borderRadius: '6px', flexShrink: 0, marginTop: '4px' }}>Template</span>
                 )}
               </div>
             </div>
@@ -407,14 +401,14 @@ export default function ScheduleTable({
             {/* STATS ROW */}
             <div style={{ display: 'flex', gap: '12px', justifyContent: (isMobile || isTablet) ? 'center' : 'flex-start' }}>
               <div style={{ flex: (isMobile || isTablet) ? 'unset' : 1, background: colors.card, borderRadius: '12px', border: `1px solid ${colors.border}`, padding: '14px 18px', textAlign: (isMobile || isTablet) ? 'center' : 'left' }}>
-                <div style={{ fontSize: '10px', fontWeight: '700', color: colors.subText, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Total Time</div>
-                <div style={{ fontSize: '22px', fontWeight: '800', color: (isMobile || isTablet) ? colors.subText : colors.heading, letterSpacing: '-0.5px' }}>
+                <div style={{ fontSize: '12px', fontWeight: '500', color: colors.subText, marginBottom: '6px' }}>Total time</div>
+                <div style={{ fontSize: '20px', fontWeight: '500', color: (isMobile || isTablet) ? colors.subText : colors.heading, letterSpacing: '-0.3px', fontFamily: 'var(--font-mono)' }}>
                   {totalMinutes > 0 ? `${totalMinutes} Min` : '—'}
                 </div>
               </div>
               {!isTemplate && !isMobile && !isTablet && (
                 <div style={{ flex: 1, background: colors.card, borderRadius: '12px', border: `1px solid ${colors.border}`, padding: '14px 18px' }}>
-                  <div style={{ fontSize: '10px', fontWeight: '700', color: colors.subText, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' }}>Team Status</div>
+                  <div style={{ fontSize: '12px', fontWeight: '500', color: colors.subText, marginBottom: '10px' }}>Team status</div>
 
                   {/* Ministry toggle pills */}
                   {ministries.length > 0 && (
@@ -486,8 +480,8 @@ export default function ScheduleTable({
 
           {/* SERVICE PLAN label + Add Item */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <span style={{ fontSize: '12px', fontWeight: '800', color: colors.subText, textTransform: 'uppercase', letterSpacing: '1.5px' }}>
-              Service Plan
+            <span style={{ fontSize: '13px', fontWeight: '500', color: colors.subText }}>
+              Service plan
             </span>
             {canEdit && (
               <div style={{ position: 'relative' }}>
@@ -537,8 +531,6 @@ export default function ScheduleTable({
             )}
 
             {items.map((item, i) => {
-              const sectionColor = sectionColors[i];
-
               // ── SECTION HEADER (divider) ──────────────────────────────────
               if (item.type === 'header') {
                 return (
@@ -561,14 +553,14 @@ export default function ScheduleTable({
 
                     {/* Self-sizing title — width matches content so rules adjust naturally */}
                     <div style={{ position: 'relative', display: 'inline-block', flexShrink: 0 }}>
-                      <span style={{ visibility: 'hidden', whiteSpace: 'pre', fontSize: '15px', fontWeight: '800', letterSpacing: '2px', textTransform: 'uppercase', display: 'inline-block', minWidth: '60px', padding: '0 4px' }}>
+                      <span style={{ visibility: 'hidden', whiteSpace: 'pre', fontSize: '14px', fontWeight: '500', display: 'inline-block', minWidth: '60px', padding: '0 4px' }}>
                         {item.title || 'New Section'}
                       </span>
                       <input
                         readOnly={!canEdit}
                         value={item.title || ''}
                         onChange={e => updateItem(i, 'title', e.target.value)}
-                        style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '100%', background: 'transparent', border: 'none', outline: 'none', fontSize: '15px', fontWeight: '800', color: item.color || colors.subText, textTransform: 'uppercase', letterSpacing: '2px', textAlign: 'center', pointerEvents: isDraggingAny ? 'none' : 'auto', fontFamily: 'inherit', boxSizing: 'border-box', padding: '0 4px' }}
+                        style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '100%', background: 'transparent', border: 'none', outline: 'none', fontSize: '14px', fontWeight: '500', color: item.color || colors.subText, textAlign: 'center', pointerEvents: isDraggingAny ? 'none' : 'auto', fontFamily: 'inherit', boxSizing: 'border-box', padding: '0 4px' }}
                       />
                     </div>
 
@@ -630,8 +622,7 @@ export default function ScheduleTable({
                   style={{
                     background: colors.card,
                     borderRadius: '12px',
-                    border: `1px solid ${sectionColor}28`,
-                    borderLeft: `4px solid ${sectionColor}`,
+                    border: `1px solid ${colors.border}`,
                     marginBottom: '8px',
                     padding: '12px 14px 12px 12px',
                     opacity: draggedItemIndex === i ? 0.4 : 1,
@@ -663,7 +654,7 @@ export default function ScheduleTable({
                         onChange={(e) => updateItem(i, 'key', e.target.value)}
                         disabled={!canEdit}
                         title="Song Key"
-                        style={{ fontSize: '10px', fontWeight: '700', background: item.key ? `${sectionColor}20` : 'transparent', color: item.key ? sectionColor : colors.subText, border: item.key ? `1px solid ${sectionColor}55` : `1px dashed ${colors.border}`, padding: '2px 6px', borderRadius: '5px', cursor: canEdit ? 'pointer' : 'default', outline: 'none', appearance: 'none', WebkitAppearance: 'none', fontFamily: 'inherit', letterSpacing: '0.3px' }}
+                        style={{ fontSize: '10px', fontWeight: '500', background: item.key ? colors.hover : 'transparent', color: colors.subText, border: item.key ? `1px solid ${colors.border}` : `1px dashed ${colors.border}`, padding: '2px 6px', borderRadius: '5px', cursor: canEdit ? 'pointer' : 'default', outline: 'none', appearance: 'none', WebkitAppearance: 'none', fontFamily: 'var(--font-mono)' }}
                       >
                         <option value="">KEY</option>
                         {MUSIC_KEYS.map(k => <option key={k} value={k}>KEY: {k}</option>)}
@@ -742,7 +733,7 @@ export default function ScheduleTable({
           {/* Same-day services */}
           {!isTemplate && sameDayServices.length > 0 && (
             <div style={{ marginTop: '20px', padding: '16px', background: colors.card, borderRadius: '12px', border: `1px solid ${colors.border}` }}>
-              <div style={{ fontSize: '11px', fontWeight: '700', marginBottom: '10px', color: colors.subText, textTransform: 'uppercase', letterSpacing: '1px' }}>Other Services Today</div>
+              <div style={{ fontSize: '13px', fontWeight: '500', marginBottom: '10px', color: colors.subText }}>Other services today</div>
               {sameDayServices.map(svc => (
                 <div key={svc.id} onClick={() => onServiceClick && onServiceClick(svc.id)} style={{ padding: '10px 12px', borderRadius: '8px', border: `1px solid ${colors.border}`, marginBottom: '6px', cursor: 'pointer', transition: 'all 0.15s' }} onMouseEnter={(e) => { e.currentTarget.style.background = colors.hover; e.currentTarget.style.borderColor = colors.accent; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = colors.border; }}>
                   <div style={{ fontWeight: '600', marginBottom: '2px', color: colors.text, fontSize: '13px' }}>{svc.name}</div>
@@ -763,11 +754,11 @@ export default function ScheduleTable({
               {/* CALENDAR PANEL */}
               {activeRightPanel === 'calendar' && (
                 <div>
-                  <div style={{ fontSize: '11px', fontWeight: '700', color: colors.subText, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' }}>Calendar</div>
+                  <div style={{ fontSize: '13px', fontWeight: '500', color: colors.subText, marginBottom: '10px' }}>Calendar</div>
                   <CalendarWidget isDarkMode={isDarkMode} onDateSelect={onCreateService} />
                   {!isTemplate && sameDayServices.length > 0 && (
                     <div style={{ marginTop: '12px' }}>
-                      <div style={{ fontSize: '11px', fontWeight: '700', color: colors.subText, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Other Services Today</div>
+                      <div style={{ fontSize: '13px', fontWeight: '500', color: colors.subText, marginBottom: '8px' }}>Other services today</div>
                       {sameDayServices.map(svc => (
                         <div key={svc.id} onClick={() => onServiceClick && onServiceClick(svc.id)} style={{ padding: '10px 12px', borderRadius: '8px', border: `1px solid ${colors.border}`, marginBottom: '6px', cursor: 'pointer' }} onMouseEnter={e => { e.currentTarget.style.background = colors.hover; e.currentTarget.style.borderColor = colors.accent; }} onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = colors.border; }}>
                           <div style={{ fontWeight: '600', fontSize: '13px', color: colors.text }}>{svc.name}</div>
@@ -782,7 +773,7 @@ export default function ScheduleTable({
               {/* TEAMS PANEL */}
               {activeRightPanel === 'teams' && (
                 <div>
-                  <div style={{ fontSize: '11px', fontWeight: '700', color: colors.subText, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' }}>Teams</div>
+                  <div style={{ fontSize: '13px', fontWeight: '500', color: colors.subText, marginBottom: '10px' }}>Teams</div>
                   {ministries.map(m => {
                     const isExp = expandedMinistries[m.id];
                     const mPos  = positions.filter(p => p.ministry_id === m.id);
@@ -839,7 +830,7 @@ export default function ScheduleTable({
               {/* SONGS PANEL */}
               {activeRightPanel === 'songs' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: '700', color: colors.subText, textTransform: 'uppercase', letterSpacing: '1px' }}>Songs</div>
+                  <div style={{ fontSize: '13px', fontWeight: '500', color: colors.subText }}>Songs</div>
                   <div style={{ position: 'relative' }}>
                     <Search size={14} color={colors.subText} style={{ position: 'absolute', left: '10px', top: '9px' }}/>
                     <input placeholder="Search songs..." value={songSearch} onChange={e => setSongSearch(e.target.value)} style={{ width: '100%', padding: '8px 8px 8px 30px', borderRadius: '6px', border: `1px solid ${colors.border}`, background: colors.inputBg, color: colors.text, boxSizing: 'border-box', fontSize: '13px' }} />
@@ -847,7 +838,7 @@ export default function ScheduleTable({
                   {/* Playlists */}
                   <div>
                     <div onClick={() => setExpandedSections({...expandedSections, playlists: !expandedSections.playlists})} style={{ padding: '8px 10px', background: colors.hover, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '6px', marginBottom: '4px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><LayoutTemplate size={14} color={colors.subText}/><span style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: colors.subText }}>Playlists</span></div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><LayoutTemplate size={14} color={colors.subText}/><span style={{ fontSize: '13px', fontWeight: '500', color: colors.subText }}>Playlists</span></div>
                       {expandedSections.playlists ? <ChevronDown size={13} color={colors.subText}/> : <ChevronRight size={13} color={colors.subText}/>}
                     </div>
                     {expandedSections.playlists && (
@@ -880,7 +871,7 @@ export default function ScheduleTable({
               {/* TIMES PANEL */}
               {activeRightPanel === 'times' && (
                 <div>
-                  <div style={{ fontSize: '11px', fontWeight: '700', color: colors.subText, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' }}>Run Order</div>
+                  <div style={{ fontSize: '13px', fontWeight: '500', color: colors.subText, marginBottom: '10px' }}>Run order</div>
                   <div style={{ fontSize: '12px', color: colors.subText, marginBottom: '14px' }}>
                     {serviceData?.date && new Date(serviceData.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
                     {serviceData?.start_time && <span style={{ marginLeft: '8px', color: colors.accent, fontWeight: '600' }}>{formatTime(serviceData.start_time)}</span>}
@@ -934,7 +925,7 @@ export default function ScheduleTable({
                 >
                   <div style={{ transform: 'rotate(-90deg)', display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap' }}>
                     <Icon size={11} />
-                    <span style={{ fontSize: '9px', fontWeight: isActive ? '800' : '500', letterSpacing: '0.8px', textTransform: 'uppercase' }}>{label}</span>
+                    <span style={{ fontSize: '10px', fontWeight: '500' }}>{label}</span>
                   </div>
                 </button>
               );
@@ -952,8 +943,8 @@ export default function ScheduleTable({
           <div style={{ padding: '16px', borderBottom: `1px solid ${colors.border}`, display: 'flex', gap: '10px', alignItems: 'center' }}>
             <button onClick={() => setSidebarView('main')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.text }}><ArrowLeft size={18}/></button>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '11px', textTransform: 'uppercase', color: colors.subText, fontWeight: 'bold' }}>Assigning To</div>
-              <div style={{ fontSize: '15px', fontWeight: '700', color: colors.accent }}>{assigningRole?.role_name}</div>
+              <div style={{ fontSize: '12px', color: colors.subText, fontWeight: '500' }}>Assigning to</div>
+              <div style={{ fontSize: '15px', fontWeight: '600', color: colors.heading }}>{assigningRole?.role_name}</div>
             </div>
             <button onClick={() => setSidebarView('main')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.subText }}><X size={18}/></button>
           </div>

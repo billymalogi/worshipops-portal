@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from './supabaseClient';
-import { LayoutGrid, Loader, Lock, Mail, User, Building2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Loader, Lock, Mail, User, Building2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import HubIcon from './components/HubIcon';
 
 // --- Self-contained confetti (no external package) ----------------------------
 function fireConfetti() {
@@ -158,16 +159,20 @@ export default function Login() {
   const [churchName,  setChurchName]  = useState('');
   const [fullName,    setFullName]    = useState('');
 
-  // Theme colors matching App.css
+  // Theme colors — pulled from the shared CSS variables in theme.js, not
+  // hardcoded hex, so this page follows the same accent as the rest of the app.
   const colors = {
-    bgDark:    '#111111',
-    bgPanel:   '#1f1f22',
-    textMain:  '#f3f4f6',
-    textMuted: '#9ca3af',
-    accent:    '#3b82f6',
-    border:    '#27272a',
-    success:   '#10b981',
-    danger:    '#ef4444',
+    bgDark:    'var(--page)',
+    bgPanel:   'var(--card)',
+    textMain:  'var(--text-1)',
+    textMuted: 'var(--text-2)',
+    textFaint: 'var(--text-3)',
+    accent:    'var(--accent)',
+    onAccent:  'var(--on-accent)',
+    accentSoft:'var(--accent-soft)',
+    border:    'var(--line-2)',
+    success:   'var(--positive)',
+    danger:    'var(--negative)',
   };
 
   const handleAuth = async (e) => {
@@ -287,29 +292,27 @@ export default function Login() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      fontFamily: 'Inter, sans-serif',
       padding: '20px'
     }}>
       <div style={{
         background: colors.bgPanel,
-        padding: '48px',
-        borderRadius: '16px',
-        border: `1px solid ${colors.border}`,
+        padding: '40px',
+        borderRadius: 'var(--r-panel)',
         width: '100%',
-        maxWidth: '440px',
-        boxShadow: '0 20px 40px rgba(0,0,0,0.4)'
+        maxWidth: '400px',
+        boxShadow: `0 0 0 1px ${colors.border}, var(--shadow-lg)`
       }}>
 
         {/* Logo & Title */}
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{ display: 'inline-flex', padding: '14px', background: 'rgba(59, 130, 246, 0.15)', borderRadius: '14px', marginBottom: '16px' }}>
-            <LayoutGrid size={36} color={colors.accent} />
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ width: '34px', height: '34px', display: 'grid', placeItems: 'center', background: colors.accent, color: colors.onAccent, borderRadius: '9px', marginBottom: '16px' }}>
+            <HubIcon size={18} color={colors.onAccent} />
           </div>
-          <h1 style={{ margin: 0, color: colors.textMain, fontSize: '28px', fontWeight: '800', letterSpacing: '-0.5px' }}>
-            Worship Ops
+          <h1 style={{ margin: 0, color: colors.textMain, fontSize: '21px', fontWeight: '600', letterSpacing: '-0.2px' }}>
+            {isSignUp ? 'Create your WorshipOps workspace' : 'Sign in to WorshipOps'}
           </h1>
-          <p style={{ color: colors.textMuted, marginTop: '8px', fontSize: '15px', fontWeight: '500' }}>
-            {isSignUp ? 'Create Your Church Workspace' : 'Sign in to your account'}
+          <p style={{ color: colors.textMuted, marginTop: '4px', fontSize: '13px' }}>
+            {isSignUp ? 'Set up your church’s workspace in a minute.' : 'Enter your email and password to continue.'}
           </p>
         </div>
 
@@ -336,26 +339,26 @@ export default function Login() {
           {isSignUp && (
             <>
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', color: colors.textMain, fontSize: '14px', fontWeight: '600' }}>Church Name</label>
+                <label style={{ display: 'block', marginBottom: '6px', color: colors.textMuted, fontSize: '12px', fontWeight: '500' }}>Church Name</label>
                 <div style={{ position: 'relative' }}>
-                  <Building2 size={18} style={{ position: 'absolute', top: '14px', left: '14px', color: colors.textMuted }} />
+                  <Building2 size={18} style={{ position: 'absolute', top: '50%', left: '12px', transform: 'translateY(-50%)', color: colors.textFaint }} />
                   <input
                     required placeholder="Grace Community Church" value={churchName}
                     onChange={e => setChurchName(e.target.value)}
-                    style={{ width: '100%', padding: '13px 14px 13px 44px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: colors.bgDark, color: colors.textMain, fontSize: '15px', boxSizing: 'border-box', outline: 'none', transition: 'border-color 0.2s' }}
+                    style={{ width: '100%', padding: '11px 12px 11px 38px', borderRadius: 'var(--r-control)', border: `1px solid ${colors.border}`, background: colors.bgDark, color: colors.textMain, fontSize: '14px', boxSizing: 'border-box', outline: 'none', transition: 'border-color 0.2s' }}
                     onFocus={e => e.target.style.borderColor = colors.accent}
                     onBlur={e => e.target.style.borderColor = colors.border}
                   />
                 </div>
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', color: colors.textMain, fontSize: '14px', fontWeight: '600' }}>Your Full Name</label>
+                <label style={{ display: 'block', marginBottom: '6px', color: colors.textMuted, fontSize: '12px', fontWeight: '500' }}>Your Full Name</label>
                 <div style={{ position: 'relative' }}>
-                  <User size={18} style={{ position: 'absolute', top: '14px', left: '14px', color: colors.textMuted }} />
+                  <User size={18} style={{ position: 'absolute', top: '50%', left: '12px', transform: 'translateY(-50%)', color: colors.textFaint }} />
                   <input
                     required placeholder="John Smith" value={fullName}
                     onChange={e => setFullName(e.target.value)}
-                    style={{ width: '100%', padding: '13px 14px 13px 44px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: colors.bgDark, color: colors.textMain, fontSize: '15px', boxSizing: 'border-box', outline: 'none', transition: 'border-color 0.2s' }}
+                    style={{ width: '100%', padding: '11px 12px 11px 38px', borderRadius: 'var(--r-control)', border: `1px solid ${colors.border}`, background: colors.bgDark, color: colors.textMain, fontSize: '14px', boxSizing: 'border-box', outline: 'none', transition: 'border-color 0.2s' }}
                     onFocus={e => e.target.style.borderColor = colors.accent}
                     onBlur={e => e.target.style.borderColor = colors.border}
                   />
@@ -366,13 +369,13 @@ export default function Login() {
 
           {/* Email Field */}
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', color: colors.textMain, fontSize: '14px', fontWeight: '600' }}>Email Address</label>
+            <label style={{ display: 'block', marginBottom: '6px', color: colors.textMuted, fontSize: '12px', fontWeight: '500' }}>Email Address</label>
             <div style={{ position: 'relative' }}>
-              <Mail size={18} style={{ position: 'absolute', top: '14px', left: '14px', color: colors.textMuted }} />
+              <Mail size={18} style={{ position: 'absolute', top: '50%', left: '12px', transform: 'translateY(-50%)', color: colors.textFaint }} />
               <input
                 required type="email" placeholder="you@church.com" value={email}
                 onChange={e => setEmail(e.target.value)}
-                style={{ width: '100%', padding: '13px 14px 13px 44px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: colors.bgDark, color: colors.textMain, fontSize: '15px', boxSizing: 'border-box', outline: 'none', transition: 'border-color 0.2s' }}
+                style={{ width: '100%', padding: '11px 12px 11px 38px', borderRadius: 'var(--r-control)', border: `1px solid ${colors.border}`, background: colors.bgDark, color: colors.textMain, fontSize: '14px', boxSizing: 'border-box', outline: 'none', transition: 'border-color 0.2s' }}
                 onFocus={e => e.target.style.borderColor = colors.accent}
                 onBlur={e => e.target.style.borderColor = colors.border}
               />
@@ -381,14 +384,14 @@ export default function Login() {
 
           {/* Password Field */}
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', color: colors.textMain, fontSize: '14px', fontWeight: '600' }}>Password</label>
+            <label style={{ display: 'block', marginBottom: '6px', color: colors.textMuted, fontSize: '12px', fontWeight: '500' }}>Password</label>
             <div style={{ position: 'relative' }}>
-              <Lock size={18} style={{ position: 'absolute', top: '14px', left: '14px', color: colors.textMuted }} />
+              <Lock size={18} style={{ position: 'absolute', top: '50%', left: '12px', transform: 'translateY(-50%)', color: colors.textFaint }} />
               <input
                 required type="password"
                 placeholder={isSignUp ? "Create a strong password" : "Enter your password"}
                 value={password} onChange={e => setPassword(e.target.value)}
-                style={{ width: '100%', padding: '13px 14px 13px 44px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: colors.bgDark, color: colors.textMain, fontSize: '15px', boxSizing: 'border-box', outline: 'none', transition: 'border-color 0.2s' }}
+                style={{ width: '100%', padding: '11px 12px 11px 38px', borderRadius: 'var(--r-control)', border: `1px solid ${colors.border}`, background: colors.bgDark, color: colors.textMain, fontSize: '14px', boxSizing: 'border-box', outline: 'none', transition: 'border-color 0.2s' }}
                 onFocus={e => e.target.style.borderColor = colors.accent}
                 onBlur={e => e.target.style.borderColor = colors.border}
               />
@@ -398,7 +401,7 @@ export default function Login() {
           {/* Submit Button */}
           <button
             type="submit" disabled={loading}
-            style={{ background: colors.accent, color: 'white', border: 'none', padding: '15px', borderRadius: '10px', fontWeight: '700', fontSize: '15px', cursor: loading ? 'not-allowed' : 'pointer', marginTop: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', opacity: loading ? 0.7 : 1, transition: 'all 0.2s' }}
+            style={{ background: colors.accent, color: colors.onAccent, border: 'none', padding: '12px', borderRadius: 'var(--r-control)', fontWeight: '500', fontSize: '14px', cursor: loading ? 'not-allowed' : 'pointer', marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', opacity: loading ? 0.7 : 1, transition: 'all 0.2s' }}
             onMouseEnter={e => { if (!loading) e.target.style.opacity = '0.9'; }}
             onMouseLeave={e => { if (!loading) e.target.style.opacity = '1'; }}
           >
@@ -408,23 +411,23 @@ export default function Login() {
         </form>
 
         {/* Toggle Sign Up / Sign In */}
-        <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px' }}>
+        <div style={{ textAlign: 'center', marginTop: '18px', fontSize: '13px' }}>
           <span style={{ color: colors.textMuted }}>
             {isSignUp ? 'Already have an account?' : "Need to create a workspace?"}
           </span>
           {' '}
           <button
             onClick={() => { setIsSignUp(!isSignUp); setError(null); setSuccessMessage(null); }}
-            style={{ background: 'none', border: 'none', color: colors.accent, cursor: 'pointer', fontWeight: '700', fontSize: '14px', textDecoration: 'underline' }}
+            style={{ background: 'none', border: 'none', color: 'var(--accent-ink)', cursor: 'pointer', fontWeight: '600', fontSize: '13px' }}
           >
-            {isSignUp ? 'Sign In' : 'Create Workspace'}
+            {isSignUp ? 'Sign in' : 'Create workspace'}
           </button>
         </div>
 
         {/* Admin Note for Sign-Up */}
         {isSignUp && (
-          <div style={{ marginTop: '24px', padding: '12px', background: 'rgba(59, 130, 246, 0.1)', border: `1px solid rgba(59, 130, 246, 0.2)`, borderRadius: '8px', fontSize: '13px', color: colors.textMuted, lineHeight: '1.6' }}>
-            <strong style={{ color: colors.accent, display: 'block', marginBottom: '4px' }}>Admin Account</strong>
+          <div style={{ marginTop: '20px', padding: '12px', background: colors.accentSoft, borderRadius: 'var(--r-control)', fontSize: '12px', color: colors.textMuted, lineHeight: '1.6' }}>
+            <strong style={{ color: 'var(--accent-ink)', display: 'block', marginBottom: '4px', fontWeight: '600' }}>Admin account</strong>
             Creating a workspace will give you admin access. You can invite team members and volunteers from your dashboard.
           </div>
         )}
