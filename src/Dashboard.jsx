@@ -161,8 +161,6 @@ const getAllowedTabs = (role, email, guestPermissions = {}) => {
   return tabs;
 };
 
-// Active tab highlight: one surface step up from the bar it sits on
-const tabActiveBg  = () => 'var(--raised)';
 const subNavBg     = () => 'var(--page)';
 
 // --- HEADER COMPONENT ---
@@ -225,22 +223,25 @@ const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, se
                 key={cat}
                 onClick={() => handleCategoryClick(cat)}
                 style={{
-                  background: isActive ? colors.navTabActiveBg : 'transparent',
+                  background: 'transparent',
                   border: 'none',
+                  // Equal top and bottom borders keep the label optically centred;
+                  // the selected page is marked only by the underline and full-strength text.
+                  borderTop: '2px solid transparent',
                   borderBottom: `2px solid ${isActive ? colors.primary : 'transparent'}`,
                   cursor: 'pointer',
                   padding: isTablet ? '0 16px' : '0 20px',
                   fontSize: isTablet ? '13px' : '14px',
                   fontWeight: 500,
                   color: isActive ? colors.navText : colors.navSubText,
-                  transition: 'background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease)',
+                  transition: 'color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease)',
                   whiteSpace: 'nowrap',
                 }}
                 onMouseEnter={e => {
-                  if (!isActive) { e.currentTarget.style.background = colors.navTabActiveBg; e.currentTarget.style.color = colors.navText; }
+                  if (!isActive) e.currentTarget.style.color = colors.navText;
                 }}
                 onMouseLeave={e => {
-                  if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = colors.navSubText; }
+                  if (!isActive) e.currentTarget.style.color = colors.navSubText;
                 }}
               >
                 {isTablet ? CAT_SHORT[cat] : CAT_DISPLAY[cat]}
@@ -289,7 +290,7 @@ const SubNav = ({ colors, activeTab, setActiveTab, setSelectedService, isDarkMod
   return (
     <div style={{
       display: 'flex',
-      alignItems: 'center',
+      alignItems: 'stretch',
       justifyContent: isMobile ? 'flex-start' : 'center',
       gap: '4px',
       padding: isMobile ? '0 8px' : '0 24px',
@@ -316,28 +317,30 @@ const SubNav = ({ colors, activeTab, setActiveTab, setSelectedService, isDarkMod
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              height: '32px',
               padding: '0 12px',
-              borderRadius: 'var(--r-control)',
               border: 'none',
-              background: isActive ? tabActiveBg(isDarkMode) : 'transparent',
-              boxShadow: isActive ? 'inset 0 0 0 1px var(--line)' : 'none',
+              // Same pattern as the header, one level quieter: no fill, a neutral
+              // underline (the header's is the brand color) and full-strength text.
+              borderTop: '2px solid transparent',
+              borderBottom: `2px solid ${isActive ? 'var(--text-1)' : 'transparent'}`,
+              background: 'transparent',
               color: isActive ? colors.heading : colors.text,
               fontWeight: 500,
               fontSize: '13px',
               cursor: 'pointer',
-              transition: 'background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease)',
+              transition: 'color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease)',
               whiteSpace: 'nowrap',
               flexShrink: 0,
+              fontFamily: 'inherit',
             }}
             onMouseEnter={(e) => {
-              if (!isActive) { e.currentTarget.style.background = tabActiveBg(isDarkMode); e.currentTarget.style.color = colors.heading; }
+              if (!isActive) e.currentTarget.style.color = colors.heading;
             }}
             onMouseLeave={(e) => {
-              if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = colors.text; }
+              if (!isActive) e.currentTarget.style.color = colors.text;
             }}
           >
-            <Icon size={16} strokeWidth={1.5} style={{ color: isActive ? 'var(--text-1)' : 'var(--text-3)' }} />
+            <Icon size={16} strokeWidth={1.5} style={{ color: 'currentColor', opacity: isActive ? 1 : 0.7 }} />
             {label}
           </button>
         );

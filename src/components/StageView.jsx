@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
 import {
-  Monitor, Tv, Music, ChevronLeft, ChevronRight,
-  ExternalLink, Wifi, WifiOff, X, Check, Image, Video,
+  Monitor, Tv, Music, ChevronLeft, ChevronRight, ChevronDown,
+  ExternalLink, Wifi, WifiOff, X, Check, Image, Video, ImageOff, MonitorOff,
   Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  Plus, Minus, Eye, EyeOff, Edit2, Type,
+  Plus, Minus, Eye, EyeOff, Edit2, Type, Search, SlidersHorizontal,
   Layers, ArrowUp, ArrowDown, Copy, Trash2,
 } from 'lucide-react';
 
@@ -135,17 +135,22 @@ export default function StageView({ isDarkMode, songs = [], onRefresh }) {
 
   // ── Colors ────────────────────────────────────────────────────────────────
   const c = {
-    bg:      isDarkMode ? '#0d0d0f' : '#f9fafb',
-    card:    isDarkMode ? '#18181b' : '#ffffff',
-    panel:   isDarkMode ? '#111113' : '#f3f4f6',
-    text:    isDarkMode ? '#d1d5db' : '#27272a',
-    heading: isDarkMode ? '#f9fafb' : '#111111',
-    border:  isDarkMode ? '#27272a' : '#e5e7eb',
-    muted:   isDarkMode ? '#52525b' : '#9ca3af',
-    hover:   isDarkMode ? '#27272a' : '#f3f4f6',
-    primary: '#3b82f6',
-    success: '#10b981',
-    danger:  '#ef4444',
+    bg:       'var(--page)',
+    card:     'var(--card)',
+    panel:    'var(--deep)',
+    deep:     'var(--deep)',
+    text:     'var(--text-2)',
+    heading:  'var(--text-1)',
+    border:   'var(--line)',
+    border2:  'var(--line-2)',
+    muted:    'var(--text-3)',
+    hover:    'var(--raised)',
+    primary:  'var(--accent)',
+    ink:      'var(--accent-ink)',
+    soft:     'var(--accent-soft)',
+    onAccent: 'var(--on-accent)',
+    success:  'var(--positive)',
+    danger:   'var(--negative)',
   };
 
   // ── Broadcast ─────────────────────────────────────────────────────────────
@@ -277,92 +282,123 @@ export default function StageView({ isDarkMode, songs = [], onRefresh }) {
     setEditingSong(null);
   };
 
-  // ── Open windows ──────────────────────────────────────────────────────────
-  const openDisplay = () =>
-    window.open('/display', 'worshipops_display', 'width=1920,height=1080,menubar=no,toolbar=no,status=no');
-  const openStage = () =>
-    window.open('/stage',   'worshipops_stage',   'width=1280,height=720,menubar=no,toolbar=no,status=no');
+  // ── Output windows: open + track whether they're still open ───────────────
+  const displayWinRef = useRef(null);
+  const stageWinRef   = useRef(null);
+  const [outputs, setOutputs] = useState({ display: false, stage: false });
+  const syncOutputs = useCallback(() => {
+    const d = !!displayWinRef.current && !displayWinRef.current.closed;
+    const s = !!stageWinRef.current && !stageWinRef.current.closed;
+    setOutputs(o => (o.display === d && o.stage === s) ? o : { display: d, stage: s });
+  }, []);
+  useEffect(() => {
+    const id = setInterval(syncOutputs, 1000);
+    return () => clearInterval(id);
+  }, [syncOutputs]);
+
+  const openDisplay = () => {
+    displayWinRef.current = window.open('/display', 'worshipops_display', 'width=1920,height=1080,menubar=no,toolbar=no,status=no');
+    syncOutputs();
+  };
+  const openStage = () => {
+    stageWinRef.current = window.open('/stage', 'worshipops_stage', 'width=1280,height=720,menubar=no,toolbar=no,status=no');
+    syncOutputs();
+  };
+
+  // ── Operator panels ───────────────────────────────────────────────────────
+  const [libSearch, setLibSearch] = useState('');
+  const [showLook,  setShowLook]  = useState(false);
+
+  // ── Keyboard: ← → move, B blacks out ──────────────────────────────────────
+  useEffect(() => {
+    const onKey = (e) => {
+      const t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (ppMode || showReflow || editingSong) return;
+      const n   = slidesRef.current.length;
+      const cur = currentSlideRef.current;
+      if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) {
+        if (!n) return;
+        e.preventDefault();
+        goSlide(Math.min(n - 1, cur + 1));
+      } else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) {
+        e.preventDefault();
+        goSlide(Math.max(-1, cur - 1));
+      } else if (e.key === 'b' || e.key === 'B') {
+        e.preventDefault();
+        toggleBlack();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
 
   // ── Shared styles ─────────────────────────────────────────────────────────
   const btnBase = {
-    border: 'none', borderRadius: '7px', fontWeight: '600', fontSize: '12px',
-    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 11px',
+    height: '32px', padding: '0 12px', borderRadius: 'var(--r-control)', fontWeight: 500, fontSize: '13px',
+    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'inherit', whiteSpace: 'nowrap',
+    transition: 'background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease)',
   };
+  const btnSecondary = { ...btnBase, border: `1px solid ${c.border2}`, background: c.card, color: c.heading };
+  const btnGhost     = { ...btnBase, border: '1px solid transparent', background: 'transparent', color: c.text };
+  const btnPrimary   = { ...btnBase, border: 'none', background: c.primary, color: c.onAccent, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12)' };
   const inputStyle = {
-    padding: '5px 9px', borderRadius: '6px', border: `1px solid ${c.border}`,
-    background: isDarkMode ? '#0d0d0f' : '#f9fafb', color: c.text,
-    fontSize: '12px', outline: 'none',
+    height: '32px', padding: '0 10px', borderRadius: 'var(--r-control)', border: `1px solid ${c.border2}`,
+    background: c.bg, color: c.heading, fontSize: '13px', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
   };
+  const sectionLabel = { fontSize: '13px', fontWeight: 500, color: c.heading };
+  const kbd = { fontFamily: 'var(--font-mono)', fontSize: '11px', color: c.text, background: c.hover, border: `1px solid ${c.border2}`, borderBottomWidth: '2px', borderRadius: '4px', padding: '0 5px', lineHeight: '16px' };
   const ppURL = ppConnected && ppIP
     ? `http://${ppIP}:${ppPort}${ppView === 'stage' ? '/stage' : '/'}`
     : '';
 
-  // ── Active slide formatting (for toolbar) ─────────────────────────────────
+  // ── Active slide formatting (for the Look panel) ──────────────────────────
   const activeFmt = useMemo(() => (
     currentSlide >= 0 && slides[currentSlide]
       ? slides[currentSlide].formatting
       : DEFAULT_FMT
   ), [currentSlide, slides]);
 
-  // ── Formatting toolbar button ─────────────────────────────────────────────
-  const FmtBtn = ({ icon: Icon, active, title, onClick, disabled }) => (
-    <button
-      title={title}
-      onClick={onClick}
-      disabled={disabled}
-      style={{
-        width: '28px', height: '28px', borderRadius: '6px', border: 'none',
-        background: active ? c.primary : 'transparent',
-        color: active ? '#fff' : disabled ? c.muted : c.text,
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0,
-      }}
-    >
-      <Icon size={14} />
-    </button>
-  );
-
   // ─────────────────────────────────────────────────────────────────────────
-  // PROPRESENTER MODE (overlay panel)
+  // PROPRESENTER MODE (remote panel)
   if (ppMode) return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: c.bg }}>
-      {/* PP bar */}
-      <div style={{ padding: '10px 16px', background: c.card, borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-        <button onClick={() => setPpMode(false)} style={{ ...btnBase, background: 'transparent', border: `1px solid ${c.border}`, color: c.text }}>
-          <ChevronLeft size={14} /> Back to Slate
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: c.bg, fontFamily: 'var(--font-sans)' }}>
+      <div style={{ height: '56px', padding: '0 16px', background: c.card, borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', flexShrink: 0 }}>
+        <button onClick={() => setPpMode(false)} style={btnSecondary}>
+          <ChevronLeft size={16} strokeWidth={1.5} /> Back to Slate
         </button>
-        <span style={{ fontSize: '12px', fontWeight: '600', color: c.muted }}>ProPresenter IP:</span>
-        <input style={{ ...inputStyle, width: '130px' }} value={ppIP}
-          onChange={e => { setPpIP(e.target.value); setPpConnected(false); }} placeholder="192.168.1.x" />
-        <span style={{ fontSize: '12px', color: c.muted }}>Port:</span>
-        <input style={{ ...inputStyle, width: '55px' }} value={ppPort}
+        <span style={{ fontSize: '13px', color: c.muted, marginLeft: '8px' }}>ProPresenter address</span>
+        <input style={{ ...inputStyle, width: '140px', fontFamily: 'var(--font-mono)' }} value={ppIP}
+          onChange={e => { setPpIP(e.target.value); setPpConnected(false); }} placeholder="192.168.1.20" />
+        <span style={{ fontSize: '13px', color: c.muted }}>Port</span>
+        <input style={{ ...inputStyle, width: '64px', fontFamily: 'var(--font-mono)' }} value={ppPort}
           onChange={e => { setPpPort(e.target.value); setPpConnected(false); }} />
-        <button onClick={() => setPpConnected(p => !p)}
-          style={{ ...btnBase, background: ppConnected ? c.danger : c.primary, color: 'white' }}>
-          {ppConnected ? <><WifiOff size={13} /> Disconnect</> : <><Wifi size={13} /> Connect</>}
+        <button onClick={() => setPpConnected(p => !p)} style={ppConnected ? btnSecondary : btnPrimary}>
+          {ppConnected ? <><WifiOff size={16} strokeWidth={1.5} /> Disconnect</> : <><Wifi size={16} strokeWidth={1.5} /> Connect</>}
         </button>
-        {[{ id: 'remote', label: 'Remote' }, { id: 'stage', label: 'Stage' }].map(v => (
-          <button key={v.id} onClick={() => setPpView(v.id)}
-            style={{ ...btnBase, border: `1px solid ${ppView === v.id ? c.primary : c.border}`, background: ppView === v.id ? (isDarkMode ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.08)') : 'transparent', color: ppView === v.id ? c.primary : c.text }}>
-            {v.label}
-          </button>
-        ))}
+        <div style={{ display: 'flex', gap: '2px', padding: '2px', background: c.hover, border: `1px solid ${c.border}`, borderRadius: 'var(--r-control)' }}>
+          {[{ id: 'remote', label: 'Remote' }, { id: 'stage', label: 'Stage' }].map(v => (
+            <button key={v.id} onClick={() => setPpView(v.id)}
+              style={{ ...btnBase, height: '26px', padding: '0 10px', border: 'none', borderRadius: '6px', background: ppView === v.id ? c.card : 'transparent', boxShadow: ppView === v.id ? 'var(--shadow-sm)' : 'none', color: ppView === v.id ? c.heading : c.text }}>
+              {v.label}
+            </button>
+          ))}
+        </div>
         {ppConnected && ppURL && (
           <a href={ppURL} target="_blank" rel="noreferrer"
-            style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px', color: c.primary, fontSize: '12px', textDecoration: 'none', fontWeight: '500' }}>
-            <ExternalLink size={12} /> Open full tab
+            style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px', color: c.ink, fontSize: '13px', textDecoration: 'none', fontWeight: 500 }}>
+            <ExternalLink size={14} strokeWidth={1.5} /> Open in a tab
           </a>
         )}
       </div>
       {ppConnected && ppIP
-        ? <iframe src={ppURL} style={{ flex: 1, border: 'none', width: '100%' }} title="ProPresenter Remote" />
-        : <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '14px', opacity: 0.6 }}>
-            <Monitor size={64} style={{ opacity: 0.3, color: c.muted }} />
-            <div style={{ fontSize: '18px', fontWeight: '700', color: c.heading, opacity: 1 }}>Connect to ProPresenter 7</div>
-            <div style={{ fontSize: '13px', color: c.muted, textAlign: 'center', maxWidth: '400px', lineHeight: '1.7' }}>
-              Enter the IP of the Mac running ProPresenter 7 and click Connect.<br />
-              Enable Network in ProPresenter Preferences (default port 1025).
+        ? <iframe src={ppURL} style={{ flex: 1, border: 'none', width: '100%' }} title="ProPresenter remote" />
+        : <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <Monitor size={24} strokeWidth={1.5} color={c.muted} />
+            <div style={{ fontSize: '16px', fontWeight: 500, color: c.heading, marginTop: '4px' }}>Connect to ProPresenter 7</div>
+            <div style={{ fontSize: '13px', color: c.text, textAlign: 'center', maxWidth: '400px', lineHeight: '20px' }}>
+              Enter the address of the computer running ProPresenter 7. Turn on Network in its preferences; the default port is 1025.
             </div>
           </div>
       }
@@ -371,423 +407,391 @@ export default function StageView({ isDarkMode, songs = [], onRefresh }) {
 
   // ─────────────────────────────────────────────────────────────────────────
   // SLATE MODE
+  const liveSlide = currentSlide >= 0 ? slides[currentSlide] : null;
+  const nextIndex = currentSlide + 1 < slides.length ? currentSlide + 1 : -2;
+  const nextSlide = nextIndex >= 0 ? slides[nextIndex] : null;
+  const q = libSearch.trim().toLowerCase();
+  const libSongs = q
+    ? songs.filter(s => (s.title || '').toLowerCase().includes(q) || (s.artist || '').toLowerCase().includes(q))
+    : songs;
+
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: c.bg, overflow: 'hidden', fontFamily: 'sans-serif', position: 'relative' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: c.bg, overflow: 'hidden', fontFamily: 'var(--font-sans)', position: 'relative' }}>
 
       {/* ── TOP BAR ──────────────────────────────────────────────────────── */}
       <div style={{
-        padding: '8px 14px', background: c.card, borderBottom: `1px solid ${c.border}`,
-        display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, flexWrap: 'wrap'
+        minHeight: '56px', padding: '8px 16px', background: c.card, borderBottom: `1px solid ${c.border}`,
+        display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, flexWrap: 'wrap',
       }}>
-        {/* Slate brand + song title */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: '140px' }}>
-          <span style={{ fontSize: '13px', fontWeight: '800', color: c.primary, letterSpacing: '-0.3px' }}>SLATE</span>
-          {selectedSong && (
-            <>
-              <span style={{ color: c.border }}>|</span>
-              <span style={{ fontSize: '13px', fontWeight: '600', color: c.heading, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '200px' }}>
-                {selectedSong.title}
-              </span>
-            </>
-          )}
+        {/* Song in play */}
+        <div style={{ flex: 1, minWidth: '160px' }}>
+          <div style={{ fontSize: '15px', fontWeight: 500, color: selectedSong ? c.heading : c.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {selectedSong ? selectedSong.title : 'No song loaded'}
+          </div>
+          <div style={{ fontSize: '12px', color: c.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {selectedSong ? (selectedSong.artist || 'Slate') : 'Pick a song from the library'}
+          </div>
         </div>
 
-        {/* Actions */}
-        <button
-          onClick={toggleBlack}
-          style={{ ...btnBase, background: isBlack ? c.danger : (isDarkMode ? '#27272a' : '#e5e7eb'), color: isBlack ? 'white' : c.text, fontWeight: '700', padding: '6px 14px', fontSize: '12px' }}
-        >
-          {isBlack ? '■ Blanked' : '□ Blank Screen'}
-        </button>
+        {/* Clear controls */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <button onClick={() => goSlide(-1)} title="Take the lyrics off screen" style={btnGhost}>
+            <Type size={16} strokeWidth={1.5} /> Clear text
+          </button>
+          <button onClick={clearBg} disabled={!bgUrl} title="Remove the background" style={{ ...btnGhost, opacity: bgUrl ? 1 : 0.45, cursor: bgUrl ? 'pointer' : 'default' }}>
+            <ImageOff size={16} strokeWidth={1.5} /> Clear background
+          </button>
+          <button onClick={toggleBlack} title="Black out the audience screen (B)"
+            style={{ ...btnBase, border: `1px solid ${isBlack ? c.heading : c.border2}`, background: isBlack ? c.heading : c.card, color: isBlack ? c.card : c.heading }}>
+            <MonitorOff size={16} strokeWidth={1.5} /> {isBlack ? 'Blacked out' : 'Black'}
+          </button>
+        </div>
 
-        <button onClick={() => setShowBgBar(b => !b)}
-          style={{ ...btnBase, border: `1px solid ${showBgBar ? c.primary : c.border}`, background: showBgBar ? (isDarkMode ? 'rgba(59,130,246,0.12)' : 'rgba(59,130,246,0.07)') : 'transparent', color: showBgBar ? c.primary : c.text }}>
-          <Image size={13} /> Background
-        </button>
+        <div style={{ width: '1px', height: '24px', background: c.border, margin: '0 4px' }} />
 
-        <button onClick={openDisplay}
-          style={{ ...btnBase, border: `1px solid ${c.border}`, background: 'transparent', color: c.primary }}>
-          <Tv size={13} /> Audience Display
+        {/* Outputs + tools */}
+        <OutputBtn label="Audience" open={outputs.display} onClick={openDisplay} icon={Tv} style={btnSecondary} />
+        <OutputBtn label="Stage" open={outputs.stage} onClick={openStage} icon={Monitor} style={btnSecondary} />
+        <button onClick={() => setShowBgBar(b => !b)} style={{ ...btnGhost, background: showBgBar ? c.hover : 'transparent' }}>
+          <Image size={16} strokeWidth={1.5} /> Background
         </button>
-
-        <button onClick={openStage}
-          style={{ ...btnBase, border: `1px solid ${c.border}`, background: 'transparent', color: c.primary }}>
-          <Monitor size={13} /> Stage Monitor
+        <button onClick={() => setShowReflow(true)} style={btnGhost}>
+          <Layers size={16} strokeWidth={1.5} /> Reflow
         </button>
-
-        <button onClick={() => setShowReflow(true)}
-          style={{ ...btnBase, border: `1px solid ${c.primary}`, background: isDarkMode ? 'rgba(59,130,246,0.1)' : 'rgba(59,130,246,0.07)', color: c.primary }}>
-          <Layers size={13} /> Reflow
-        </button>
-
-        <button onClick={() => setPpMode(true)}
-          style={{ ...btnBase, border: `1px solid ${c.border}`, background: 'transparent', color: c.muted, fontSize: '11px' }}>
-          <ExternalLink size={11} /> ProPresenter
+        <button onClick={() => setPpMode(true)} title="Control ProPresenter 7 instead" style={{ ...btnGhost, color: c.muted }}>
+          <ExternalLink size={16} strokeWidth={1.5} /> ProPresenter
         </button>
       </div>
 
-      {/* ── BG BAR (collapsible) ─────────────────────────────────────────── */}
+      {/* ── BACKGROUND BAR (collapsible) ─────────────────────────────────── */}
       {showBgBar && (
-        <div style={{ padding: '8px 14px', background: isDarkMode ? '#0a0a0a' : '#f0f9ff', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, flexWrap: 'wrap' }}>
-          {[{ id: 'video', icon: <Video size={12} />, label: 'Video' }, { id: 'image', icon: <Image size={12} />, label: 'Image' }].map(t => (
-            <button key={t.id} onClick={() => setBgType(t.id)}
-              style={{ ...btnBase, padding: '4px 10px', background: bgType === t.id ? c.primary : 'transparent', color: bgType === t.id ? 'white' : c.text, border: `1px solid ${bgType === t.id ? c.primary : c.border}` }}>
-              {t.icon} {t.label}
-            </button>
-          ))}
-          <input style={{ ...inputStyle, flex: 1, minWidth: '200px' }} value={bgUrlInput}
+        <div style={{ padding: '8px 16px', background: c.deep, borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '2px', padding: '2px', background: c.hover, border: `1px solid ${c.border}`, borderRadius: 'var(--r-control)' }}>
+            {[{ id: 'video', icon: Video, label: 'Video' }, { id: 'image', icon: Image, label: 'Image' }].map(t => (
+              <button key={t.id} onClick={() => setBgType(t.id)}
+                style={{ ...btnBase, height: '26px', padding: '0 10px', border: 'none', borderRadius: '6px', background: bgType === t.id ? c.card : 'transparent', boxShadow: bgType === t.id ? 'var(--shadow-sm)' : 'none', color: bgType === t.id ? c.heading : c.text }}>
+                <t.icon size={14} strokeWidth={1.5} /> {t.label}
+              </button>
+            ))}
+          </div>
+          <input style={{ ...inputStyle, flex: 1, minWidth: '220px' }} value={bgUrlInput}
             onChange={e => setBgUrlInput(e.target.value)}
-            placeholder="Paste a URL to a video loop or image…"
+            placeholder="Link to a video loop or image"
             onKeyDown={e => { if (e.key === 'Enter') applyBg(); }} />
-          <button onClick={applyBg} disabled={!bgUrlInput.trim()}
-            style={{ ...btnBase, background: bgUrlInput.trim() ? c.primary : c.hover, color: bgUrlInput.trim() ? 'white' : c.muted }}>
-            <Check size={13} /> Set BG
+          <button onClick={applyBg} disabled={!bgUrlInput.trim()} style={{ ...btnPrimary, opacity: bgUrlInput.trim() ? 1 : 0.5 }}>
+            <Check size={16} strokeWidth={1.5} /> Set background
           </button>
           {bgUrl && (
-            <button onClick={clearBg}
-              style={{ ...btnBase, background: 'transparent', border: `1px solid ${c.border}`, color: c.danger }}>
-              <X size={13} /> Clear
-            </button>
+            <span style={{ fontSize: '13px', color: c.text, display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '4px' }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--positive)' }} /> Background on
+            </span>
           )}
-          {bgUrl && <span style={{ fontSize: '11px', color: c.success }}>✓ BG active</span>}
         </div>
       )}
 
       {/* ── MAIN BODY ────────────────────────────────────────────────────── */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
 
-        {/* ── LEFT: Song library ──────────────────────────────────────────── */}
-        <div style={{ width: '200px', minWidth: '200px', borderRight: `1px solid ${c.border}`, background: c.card, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ padding: '8px 12px', fontSize: '9px', fontWeight: '800', color: c.muted, textTransform: 'uppercase', letterSpacing: '1px', borderBottom: `1px solid ${c.border}`, flexShrink: 0 }}>
-            Song Library
+        {/* ── LEFT: Library ───────────────────────────────────────────────── */}
+        <div style={{ width: '240px', minWidth: '240px', borderRight: `1px solid ${c.border}`, background: c.card, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ padding: '12px', borderBottom: `1px solid ${c.border}`, flexShrink: 0 }}>
+            <div style={{ position: 'relative' }}>
+              <Search size={16} strokeWidth={1.5} color={c.muted} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
+              <input value={libSearch} onChange={e => setLibSearch(e.target.value)} placeholder="Search songs"
+                style={{ ...inputStyle, width: '100%', paddingLeft: '34px' }} />
+            </div>
           </div>
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            {songs.length === 0
-              ? <div style={{ padding: '14px', fontSize: '12px', color: c.muted }}>No songs yet.</div>
-              : songs.map(song => (
-                <div key={song.id} onClick={() => selectSong(song)}
-                  style={{
-                    padding: '9px 12px', cursor: 'pointer', borderBottom: `1px solid ${c.border}`,
-                    borderLeft: `3px solid ${selectedSong?.id === song.id ? c.primary : 'transparent'}`,
-                    background: selectedSong?.id === song.id ? (isDarkMode ? 'rgba(59,130,246,0.1)' : 'rgba(59,130,246,0.06)') : 'transparent',
-                    display: 'flex', alignItems: 'flex-start', gap: '6px',
-                  }}
-                >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '12px', fontWeight: '500', color: selectedSong?.id === song.id ? c.primary : c.heading, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {song.title}
+          <div style={{ padding: '12px 16px 4px', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexShrink: 0 }}>
+            <span style={{ fontSize: '12px', color: c.muted }}>Songs</span>
+            <span style={{ fontSize: '12px', color: c.muted, fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>{libSongs.length}</span>
+          </div>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px 8px' }}>
+            {libSongs.length === 0
+              ? <div style={{ padding: '8px', fontSize: '13px', color: c.muted }}>{songs.length === 0 ? 'No songs yet' : 'No matches'}</div>
+              : libSongs.map(song => {
+                const sel = selectedSong?.id === song.id;
+                return (
+                  <div key={song.id} onClick={() => selectSong(song)}
+                    style={{
+                      padding: '8px 4px 8px 10px', cursor: 'pointer', borderRadius: 'var(--r-control)', marginBottom: '2px',
+                      background: sel ? c.hover : 'transparent',
+                      boxShadow: sel ? `inset 2px 0 0 ${c.primary}` : 'none',
+                      display: 'flex', alignItems: 'center', gap: '8px',
+                      transition: 'background-color var(--t-fast) var(--ease)',
+                    }}
+                    onMouseEnter={e => { if (!sel) e.currentTarget.style.background = c.hover; }}
+                    onMouseLeave={e => { if (!sel) e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '13px', fontWeight: 500, color: song.lyrics ? c.heading : c.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {song.title}
+                      </div>
+                      <div style={{ fontSize: '12px', color: c.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {song.lyrics ? (song.artist || ' ') : 'No lyrics yet'}
+                      </div>
                     </div>
-                    {song.artist && <div style={{ fontSize: '10px', color: c.muted }}>{song.artist}</div>}
-                    {!song.lyrics && <div style={{ fontSize: '10px', color: c.danger, marginTop: '2px' }}>no lyrics</div>}
+                    <button onClick={(e) => openEdit(e, song)} title="Edit lyrics" className="wo-icon-btn"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.muted, width: '28px', height: '28px', borderRadius: 'var(--r-control)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Edit2 size={14} strokeWidth={1.5} />
+                    </button>
                   </div>
-                  <button onClick={(e) => openEdit(e, song)} title="Edit lyrics"
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.muted, padding: '2px', borderRadius: '4px', flexShrink: 0, display: 'flex', alignItems: 'center' }}
-                    onMouseEnter={e => e.currentTarget.style.color = c.primary}
-                    onMouseLeave={e => e.currentTarget.style.color = c.muted}>
-                    <Edit2 size={11} />
-                  </button>
-                </div>
-              ))
+                );
+              })
             }
           </div>
         </div>
 
-        {/* ── CENTER: Formatting toolbar + slide grid ──────────────────────── */}
+        {/* ── CENTER: Slide grid + transport ───────────────────────────────── */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px', alignContent: 'start' }}>
 
-          {/* Formatting toolbar */}
-          <div style={{
-            padding: '6px 12px', background: c.card, borderBottom: `1px solid ${c.border}`,
-            display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0, flexWrap: 'wrap',
-            minHeight: '44px'
-          }}>
-            {currentSlide < 0
-              ? <span style={{ fontSize: '11px', color: c.muted, fontStyle: 'italic' }}>Select a slide to edit its formatting</span>
-              : <>
-                  {/* Font family */}
-                  <select
-                    value={activeFmt.fontFamily}
-                    onChange={e => updateFormatting('fontFamily', e.target.value)}
-                    style={{ ...inputStyle, padding: '4px 6px', fontSize: '12px', maxWidth: '130px' }}
-                  >
-                    {FONT_FAMILIES.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
-                  </select>
-
-                  {/* Font size */}
-                  <div style={{ display: 'flex', alignItems: 'center', border: `1px solid ${c.border}`, borderRadius: '6px', overflow: 'hidden' }}>
-                    <button onClick={() => updateFormatting('fontSize', Math.max(12, activeFmt.fontSize - 2))}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.text, padding: '4px 7px', display: 'flex' }}>
-                      <Minus size={12} />
-                    </button>
-                    <input
-                      type="number" min="12" max="200"
-                      value={activeFmt.fontSize}
-                      onChange={e => updateFormatting('fontSize', parseInt(e.target.value) || 52)}
-                      style={{ width: '42px', textAlign: 'center', border: 'none', background: isDarkMode ? '#0d0d0f' : '#f9fafb', color: c.text, fontSize: '12px', outline: 'none', padding: '4px 0' }}
-                    />
-                    <button onClick={() => updateFormatting('fontSize', Math.min(200, activeFmt.fontSize + 2))}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.text, padding: '4px 7px', display: 'flex' }}>
-                      <Plus size={12} />
-                    </button>
-                  </div>
-
-                  {/* Separator */}
-                  <div style={{ width: '1px', height: '22px', background: c.border, margin: '0 2px' }} />
-
-                  {/* Bold */}
-                  <FmtBtn icon={Bold} title="Bold"
-                    active={activeFmt.fontWeight === '700' || activeFmt.fontWeight === 'bold'}
-                    onClick={() => updateFormatting('fontWeight', activeFmt.fontWeight === '700' ? '400' : '700')} />
-
-                  {/* Italic */}
-                  <FmtBtn icon={Italic} title="Italic"
-                    active={activeFmt.fontStyle === 'italic'}
-                    onClick={() => updateFormatting('fontStyle', activeFmt.fontStyle === 'italic' ? 'normal' : 'italic')} />
-
-                  {/* Underline */}
-                  <FmtBtn icon={Underline} title="Underline"
-                    active={activeFmt.textDecoration === 'underline'}
-                    onClick={() => updateFormatting('textDecoration', activeFmt.textDecoration === 'underline' ? 'none' : 'underline')} />
-
-                  {/* Separator */}
-                  <div style={{ width: '1px', height: '22px', background: c.border, margin: '0 2px' }} />
-
-                  {/* Alignment */}
-                  {[
-                    { icon: AlignLeft,    val: 'left',    title: 'Align Left' },
-                    { icon: AlignCenter,  val: 'center',  title: 'Align Center' },
-                    { icon: AlignRight,   val: 'right',   title: 'Align Right' },
-                    { icon: AlignJustify, val: 'justify', title: 'Justify' },
-                  ].map(({ icon, val, title }) => (
-                    <FmtBtn key={val} icon={icon} title={title}
-                      active={activeFmt.textAlign === val}
-                      onClick={() => updateFormatting('textAlign', val)} />
-                  ))}
-
-                  {/* Separator */}
-                  <div style={{ width: '1px', height: '22px', background: c.border, margin: '0 2px' }} />
-
-                  {/* Text color */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <span style={{ fontSize: '10px', color: c.muted, fontWeight: '600' }}>Text</span>
-                    <input type="color" value={activeFmt.color}
-                      onChange={e => updateFormatting('color', e.target.value)}
-                      title="Text color"
-                      style={{ width: '28px', height: '28px', borderRadius: '6px', border: `1px solid ${c.border}`, padding: '2px', cursor: 'pointer', background: 'transparent' }} />
-                  </div>
-
-                  {/* BG color */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <span style={{ fontSize: '10px', color: c.muted, fontWeight: '600' }}>BG</span>
-                    <input type="color" value={activeFmt.bgColor || '#000000'}
-                      onChange={e => updateFormatting('bgColor', e.target.value)}
-                      title="Slide background color"
-                      style={{ width: '28px', height: '28px', borderRadius: '6px', border: `1px solid ${c.border}`, padding: '2px', cursor: 'pointer', background: 'transparent' }} />
-                    {activeFmt.bgColor && (
-                      <button onClick={() => updateFormatting('bgColor', '')}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.muted, display: 'flex', padding: '2px' }}>
-                        <X size={10} />
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Separator */}
-                  <div style={{ width: '1px', height: '22px', background: c.border, margin: '0 2px' }} />
-
-                  {/* Shadow toggle */}
-                  <FmtBtn
-                    icon={activeFmt.shadowEnabled ? Eye : EyeOff}
-                    title={activeFmt.shadowEnabled ? 'Shadow On' : 'Shadow Off'}
-                    active={activeFmt.shadowEnabled}
-                    onClick={() => updateFormatting('shadowEnabled', !activeFmt.shadowEnabled)}
-                  />
-
-                  {/* Uppercase */}
-                  <button
-                    onClick={() => updateFormatting('uppercase', !activeFmt.uppercase)}
-                    title="ALL CAPS"
-                    style={{
-                      height: '28px', padding: '0 8px', borderRadius: '6px', border: 'none',
-                      background: activeFmt.uppercase ? c.primary : 'transparent',
-                      color: activeFmt.uppercase ? '#fff' : c.text,
-                      cursor: 'pointer', fontSize: '11px', fontWeight: '700', display: 'flex', alignItems: 'center'
-                    }}
-                  >
-                    AA
-                  </button>
-
-                  {/* Separator */}
-                  <div style={{ width: '1px', height: '22px', background: c.border, margin: '0 2px' }} />
-
-                  {/* Line height */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <span style={{ fontSize: '10px', color: c.muted, fontWeight: '600', whiteSpace: 'nowrap' }}>Line</span>
-                    <input type="number" min="0.8" max="3" step="0.05"
-                      value={activeFmt.lineHeight}
-                      onChange={e => updateFormatting('lineHeight', parseFloat(e.target.value) || 1.35)}
-                      style={{ ...inputStyle, width: '52px', textAlign: 'center', padding: '4px 6px' }} />
-                  </div>
-
-                  {/* Letter spacing */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <span style={{ fontSize: '10px', color: c.muted, fontWeight: '600', whiteSpace: 'nowrap' }}>Spacing</span>
-                    <input type="number" min="-5" max="20" step="0.5"
-                      value={activeFmt.letterSpacing}
-                      onChange={e => updateFormatting('letterSpacing', parseFloat(e.target.value) || 0)}
-                      style={{ ...inputStyle, width: '52px', textAlign: 'center', padding: '4px 6px' }} />
-                  </div>
-                </>
-            }
-          </div>
-
-          {/* Slide grid */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '12px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px', alignContent: 'start' }}>
-
-            {/* Blank Slate tile */}
             <SlateTile
-              label="Blank Slate"
+              label="Clear"
+              number="0"
               content=""
-              isActive={currentSlide === -1}
+              isLive={currentSlide === -1}
               onClick={() => goSlide(-1)}
               formatting={DEFAULT_FMT}
-              isDarkMode={isDarkMode}
               c={c}
               isBlankSlate
             />
 
             {!selectedSong
-              ? <div style={{ gridColumn: '1/-1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px', padding: '40px', opacity: 0.4 }}>
-                  <Music size={40} />
-                  <div style={{ fontSize: '14px', fontWeight: '600', color: c.heading }}>Select a song from the library</div>
+              ? <div style={{ gridColumn: '1/-1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '48px 24px', border: `1px dashed ${c.border2}`, borderRadius: 'var(--r-card)', background: c.card }}>
+                  <Music size={24} strokeWidth={1.5} color={c.muted} />
+                  <div style={{ fontSize: '15px', fontWeight: 500, color: c.heading }}>Pick a song to build its slides</div>
+                  <div style={{ fontSize: '13px', color: c.text }}>Each verse and chorus becomes its own slide</div>
                 </div>
               : slides.length === 0
-                ? <div style={{ gridColumn: '1/-1', padding: '20px', textAlign: 'center', color: c.muted, fontSize: '13px' }}>
-                    No lyrics. Click <Edit2 size={11} style={{ display: 'inline', verticalAlign: 'middle' }} /> to add lyrics.
+                ? <div style={{ gridColumn: '1/-1', padding: '24px', textAlign: 'center', color: c.text, fontSize: '14px', border: `1px dashed ${c.border2}`, borderRadius: 'var(--r-card)', background: c.card }}>
+                    This song has no lyrics yet. Use the pencil next to it in the library to add them.
                   </div>
                 : slides.map((slide, i) => (
                   <SlateTile
                     key={slide.id}
                     label={slide.label}
+                    number={String(i + 1)}
                     content={slide.content}
-                    isActive={currentSlide === i}
+                    isLive={currentSlide === i}
+                    isNext={nextIndex === i}
                     onClick={() => goSlide(i)}
                     formatting={slide.formatting}
-                    isDarkMode={isDarkMode}
                     c={c}
                   />
                 ))
             }
 
-            {/* Add Blank Slate button */}
             <div
               onClick={addBlankSlate}
+              role="button"
               style={{
-                aspectRatio: '16/9', borderRadius: '8px', cursor: 'pointer',
-                border: `2px dashed ${c.border}`, display: 'flex', flexDirection: 'column',
-                alignItems: 'center', justifyContent: 'center', gap: '6px',
-                color: c.muted, transition: 'all 0.15s'
+                borderRadius: 'var(--r-card)', cursor: 'pointer', minHeight: '120px',
+                border: `1px dashed ${c.border2}`, display: 'flex',
+                alignItems: 'center', justifyContent: 'center', gap: '8px',
+                color: c.text, fontSize: '13px', fontWeight: 500,
+                transition: 'border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease)',
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = c.primary; e.currentTarget.style.color = c.primary; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = c.border;  e.currentTarget.style.color = c.muted;  }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = c.muted; e.currentTarget.style.color = c.heading; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = c.border2; e.currentTarget.style.color = c.text; }}
             >
-              <Plus size={18} />
-              <span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Add Blank Slate</span>
+              <Plus size={16} strokeWidth={1.5} /> Add blank slide
             </div>
           </div>
 
-          {/* Prev / Next footer */}
-          {selectedSong && slides.length > 0 && (
-            <div style={{ padding: '8px 12px', background: c.card, borderTop: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-              <button onClick={() => goSlide(Math.max(-1, currentSlide - 1))} disabled={currentSlide <= -1}
-                style={{ ...btnBase, border: `1px solid ${c.border}`, background: 'transparent', color: c.text, opacity: currentSlide <= -1 ? 0.35 : 1, cursor: currentSlide <= -1 ? 'not-allowed' : 'pointer' }}>
-                <ChevronLeft size={15} /> Prev
-              </button>
-              <div style={{ flex: 1, textAlign: 'center', fontSize: '11px', color: c.muted }}>
-                {currentSlide === -1 ? 'Blank Slate' : `Slide ${currentSlide + 1} of ${slides.length}`}
-              </div>
-              <button onClick={() => goSlide(Math.min(slides.length - 1, currentSlide + 1))} disabled={currentSlide >= slides.length - 1}
-                style={{ ...btnBase, background: c.primary, color: 'white', opacity: currentSlide >= slides.length - 1 ? 0.35 : 1, cursor: currentSlide >= slides.length - 1 ? 'not-allowed' : 'pointer' }}>
-                Next <ChevronRight size={15} />
-              </button>
+          {/* Transport */}
+          <div style={{ height: '56px', padding: '0 16px', background: c.card, borderTop: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+            <button onClick={() => goSlide(Math.max(-1, currentSlide - 1))} disabled={currentSlide <= -1}
+              style={{ ...btnSecondary, height: '36px', opacity: currentSlide <= -1 ? 0.45 : 1, cursor: currentSlide <= -1 ? 'default' : 'pointer' }}>
+              <ChevronLeft size={16} strokeWidth={1.5} /> Previous
+            </button>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '13px', color: c.text, minWidth: 0 }}>
+              {liveSlide && <span style={{ width: 8, height: 8, borderRadius: '2px', background: groupColor(liveSlide.label), flexShrink: 0 }} />}
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {liveSlide ? liveSlide.label : 'Clear'}
+              </span>
+              {slides.length > 0 && (
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: c.muted, fontVariantNumeric: 'tabular-nums' }}>
+                  {currentSlide + 1} / {slides.length}
+                </span>
+              )}
             </div>
-          )}
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: c.muted, whiteSpace: 'nowrap' }}>
+              <span style={kbd}>←</span><span style={kbd}>→</span> move <span style={{ ...kbd, marginLeft: '8px' }}>B</span> black
+            </span>
+            <button onClick={() => goSlide(Math.min(slides.length - 1, currentSlide + 1))} disabled={currentSlide >= slides.length - 1}
+              style={{ ...btnPrimary, height: '36px', opacity: currentSlide >= slides.length - 1 ? 0.45 : 1, cursor: currentSlide >= slides.length - 1 ? 'default' : 'pointer' }}>
+              Next <ChevronRight size={16} strokeWidth={1.5} />
+            </button>
+          </div>
         </div>
 
-        {/* ── RIGHT: Preview + slide text editor ─────────────────────────── */}
-        <div style={{ width: '270px', minWidth: '270px', borderLeft: `1px solid ${c.border}`, background: c.card, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {/* ── RIGHT: Outputs + slide inspector ────────────────────────────── */}
+        <div style={{ width: '320px', minWidth: '320px', borderLeft: `1px solid ${c.border}`, background: c.card, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
 
-          {/* LIVE label */}
-          <div style={{ padding: '8px 12px 4px', display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-            <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: c.danger }} />
-            <span style={{ fontSize: '9px', fontWeight: '800', color: c.danger, letterSpacing: '1px', textTransform: 'uppercase' }}>Live</span>
-          </div>
-          <div style={{ padding: '0 10px 8px', flexShrink: 0 }}>
+          {/* Live */}
+          <div style={{ padding: '16px 16px 0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: isBlack ? c.muted : c.primary, boxShadow: isBlack ? 'none' : '0 0 0 3px var(--accent-soft)' }} />
+              <span style={sectionLabel}>Live</span>
+              <span style={{ marginLeft: 'auto', fontSize: '12px', color: c.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '170px' }}>
+                {isBlack ? 'Blacked out' : liveSlide ? liveSlide.label : 'Clear'}
+              </span>
+            </div>
             <SlatePreview
-              content={!isBlack && currentSlide >= 0 ? slides[currentSlide]?.content : ''}
-              formatting={!isBlack && currentSlide >= 0 ? slides[currentSlide]?.formatting : null}
-              isDarkMode={isDarkMode}
+              content={!isBlack && liveSlide ? liveSlide.content : ''}
+              formatting={!isBlack && liveSlide ? liveSlide.formatting : null}
+              bgOn={!!bgUrl && !isBlack}
+              live
+              c={c}
             />
           </div>
 
-          {/* NEXT label */}
-          <div style={{ padding: '4px 12px', display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-            <span style={{ fontSize: '9px', fontWeight: '800', color: c.muted, letterSpacing: '1px', textTransform: 'uppercase' }}>Next</span>
-          </div>
-          <div style={{ padding: '0 10px 10px', flexShrink: 0 }}>
+          {/* Next */}
+          <div style={{ padding: '16px 16px 0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <span style={{ ...sectionLabel, color: c.text }}>Next</span>
+              <span style={{ marginLeft: 'auto', fontSize: '12px', color: c.muted }}>{nextSlide ? nextSlide.label : 'End of song'}</span>
+            </div>
             <SlatePreview
-              content={currentSlide >= 0 && currentSlide < slides.length - 1 ? slides[currentSlide + 1]?.content : ''}
-              formatting={currentSlide >= 0 && currentSlide < slides.length - 1 ? slides[currentSlide + 1]?.formatting : null}
-              isDarkMode={isDarkMode}
+              content={nextSlide ? nextSlide.content : ''}
+              formatting={nextSlide ? nextSlide.formatting : null}
+              emptyText={selectedSong ? 'End of song' : ''}
               dim
+              c={c}
             />
           </div>
 
-          {/* Divider */}
-          <div style={{ height: '1px', background: c.border, flexShrink: 0 }} />
+          <div style={{ height: '1px', background: c.border, margin: '16px 0 0', flexShrink: 0 }} />
 
-          {/* Slide text editor */}
-          {currentSlide >= 0 && slides[currentSlide] ? (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '10px', gap: '6px', minHeight: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '9px', fontWeight: '800', color: c.muted, textTransform: 'uppercase', letterSpacing: '1px' }}>
-                  Slide Text — {slides[currentSlide].label}
-                </span>
+          {/* Slide inspector */}
+          {liveSlide ? (
+            <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+              <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '2px', background: groupColor(liveSlide.label) }} />
+                  <span style={sectionLabel}>{liveSlide.label}</span>
+                  <span style={{ marginLeft: 'auto', fontSize: '12px', color: c.muted, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={kbd}>Ctrl</span><span style={kbd}>Enter</span>
+                  </span>
+                </div>
+                <textarea
+                  value={editingSlideText}
+                  onChange={e => setEditingSlideText(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && e.ctrlKey) applySlideText(editingSlideText); }}
+                  placeholder="Slide text"
+                  style={{
+                    resize: 'vertical', padding: '8px 12px', minHeight: '112px',
+                    background: c.bg, color: c.heading, fontSize: '14px', lineHeight: '22px',
+                    border: `1px solid ${c.border2}`, borderRadius: 'var(--r-control)', outline: 'none',
+                    fontFamily: 'inherit', boxSizing: 'border-box', width: '100%',
+                  }}
+                />
                 <button
                   onClick={() => applySlideText(editingSlideText)}
-                  title="Apply text changes"
-                  style={{ ...btnBase, background: c.primary, color: 'white', padding: '3px 10px', fontSize: '11px' }}
+                  disabled={editingSlideText === liveSlide.content}
+                  style={{ ...btnSecondary, justifyContent: 'center', opacity: editingSlideText === liveSlide.content ? 0.5 : 1 }}
                 >
-                  <Check size={11} /> Apply
+                  <Check size={16} strokeWidth={1.5} /> Update live text
                 </button>
               </div>
-              <textarea
-                value={editingSlideText}
-                onChange={e => setEditingSlideText(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && e.ctrlKey) applySlideText(editingSlideText); }}
-                placeholder="Type slide text here… (Ctrl+Enter to apply)"
-                style={{
-                  flex: 1, resize: 'none', padding: '10px',
-                  background: isDarkMode ? '#0d0d0f' : '#f9fafb',
-                  color: c.text, fontSize: '13px', lineHeight: '1.65',
-                  border: `1px solid ${c.border}`, borderRadius: '8px', outline: 'none',
-                  fontFamily: 'inherit', minHeight: '80px'
-                }}
-              />
-              <div style={{ fontSize: '10px', color: c.muted }}>Ctrl+Enter to apply · changes broadcast live</div>
+
+              {/* Look */}
+              <button
+                onClick={() => setShowLook(v => !v)}
+                style={{ ...btnBase, height: '44px', borderRadius: 0, border: 'none', borderTop: `1px solid ${c.border}`, background: 'transparent', color: c.heading, padding: '0 16px', justifyContent: 'flex-start' }}
+              >
+                <SlidersHorizontal size={16} strokeWidth={1.5} color={c.muted} />
+                Look
+                <span style={{ marginLeft: 'auto', fontSize: '12px', color: c.muted, fontWeight: 400 }}>
+                  {FONT_FAMILIES.find(f => f.value === activeFmt.fontFamily)?.label || 'Custom'} · {activeFmt.fontSize}
+                </span>
+                <ChevronDown size={16} strokeWidth={1.5} color={c.muted} style={{ transform: showLook ? 'rotate(180deg)' : 'none', transition: 'transform var(--t-fast) var(--ease)' }} />
+              </button>
+              {showLook && (
+                <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <select value={activeFmt.fontFamily} onChange={e => updateFormatting('fontFamily', e.target.value)}
+                      style={{ ...inputStyle, flex: 1, minWidth: 0 }}>
+                      {FONT_FAMILIES.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
+                    </select>
+                    <div style={{ display: 'flex', alignItems: 'center', border: `1px solid ${c.border2}`, borderRadius: 'var(--r-control)', overflow: 'hidden', height: '32px', boxSizing: 'border-box' }}>
+                      <button onClick={() => updateFormatting('fontSize', Math.max(12, activeFmt.fontSize - 2))} title="Smaller"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.text, width: '28px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Minus size={14} strokeWidth={1.5} />
+                      </button>
+                      <input type="number" min="12" max="200" value={activeFmt.fontSize}
+                        onChange={e => updateFormatting('fontSize', parseInt(e.target.value) || 52)}
+                        style={{ width: '40px', textAlign: 'center', border: 'none', background: 'transparent', color: c.heading, fontSize: '13px', fontFamily: 'var(--font-mono)', outline: 'none' }} />
+                      <button onClick={() => updateFormatting('fontSize', Math.min(200, activeFmt.fontSize + 2))} title="Larger"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.text, width: '28px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Plus size={14} strokeWidth={1.5} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexWrap: 'wrap' }}>
+                    <FmtBtn icon={Bold} title="Bold" active={activeFmt.fontWeight === '700' || activeFmt.fontWeight === 'bold'}
+                      onClick={() => updateFormatting('fontWeight', activeFmt.fontWeight === '700' ? '400' : '700')} />
+                    <FmtBtn icon={Italic} title="Italic" active={activeFmt.fontStyle === 'italic'}
+                      onClick={() => updateFormatting('fontStyle', activeFmt.fontStyle === 'italic' ? 'normal' : 'italic')} />
+                    <FmtBtn icon={Underline} title="Underline" active={activeFmt.textDecoration === 'underline'}
+                      onClick={() => updateFormatting('textDecoration', activeFmt.textDecoration === 'underline' ? 'none' : 'underline')} />
+                    <FmtBtn title="All caps" active={activeFmt.uppercase} onClick={() => updateFormatting('uppercase', !activeFmt.uppercase)}>Aa</FmtBtn>
+                    <FmtBtn icon={activeFmt.shadowEnabled ? Eye : EyeOff} title={activeFmt.shadowEnabled ? 'Text shadow on' : 'Text shadow off'}
+                      active={activeFmt.shadowEnabled} onClick={() => updateFormatting('shadowEnabled', !activeFmt.shadowEnabled)} />
+                    <div style={{ width: '1px', height: '20px', background: c.border, margin: '0 4px' }} />
+                    {[
+                      { icon: AlignLeft, val: 'left', title: 'Align left' },
+                      { icon: AlignCenter, val: 'center', title: 'Align center' },
+                      { icon: AlignRight, val: 'right', title: 'Align right' },
+                      { icon: AlignJustify, val: 'justify', title: 'Justify' },
+                    ].map(({ icon, val, title }) => (
+                      <FmtBtn key={val} icon={icon} title={title} active={activeFmt.textAlign === val} onClick={() => updateFormatting('textAlign', val)} />
+                    ))}
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 12px' }}>
+                    {[
+                      { label: 'Text', key: 'color', val: activeFmt.color },
+                      { label: 'Slide fill', key: 'bgColor', val: activeFmt.bgColor || '#000000', clearable: !!activeFmt.bgColor },
+                    ].map(({ label, key, val, clearable }) => (
+                      <label key={key} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: c.text }}>
+                        <input type="color" value={val} onChange={e => updateFormatting(key, e.target.value)} title={label}
+                          style={{ width: '32px', height: '32px', borderRadius: 'var(--r-control)', border: `1px solid ${c.border2}`, padding: '3px', cursor: 'pointer', background: c.card, boxSizing: 'border-box' }} />
+                        {label}
+                        {clearable && (
+                          <button onClick={(e) => { e.preventDefault(); updateFormatting('bgColor', ''); }} title="Remove slide fill"
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.muted, display: 'flex', padding: 0, marginLeft: 'auto' }}>
+                            <X size={14} strokeWidth={1.5} />
+                          </button>
+                        )}
+                      </label>
+                    ))}
+                    {[
+                      { label: 'Line height', key: 'lineHeight', min: 0.8, max: 3, step: 0.05, val: activeFmt.lineHeight, fallback: 1.35 },
+                      { label: 'Letter spacing', key: 'letterSpacing', min: -5, max: 20, step: 0.5, val: activeFmt.letterSpacing, fallback: 0 },
+                    ].map(f => (
+                      <label key={f.key} style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: c.muted }}>
+                        {f.label}
+                        <input type="number" min={f.min} max={f.max} step={f.step} value={f.val}
+                          onChange={e => updateFormatting(f.key, parseFloat(e.target.value) || f.fallback)}
+                          style={{ ...inputStyle, width: '100%', fontFamily: 'var(--font-mono)' }} />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-              <div style={{ textAlign: 'center', color: c.muted, fontSize: '12px', opacity: 0.6 }}>
-                <Type size={24} style={{ marginBottom: '8px', display: 'block', margin: '0 auto 8px' }} />
-                Select a slide to edit text and formatting
-              </div>
+            <div style={{ padding: '16px', fontSize: '13px', color: c.muted, lineHeight: '20px' }}>
+              Put a slide on screen to edit its text and look here.
             </div>
           )}
 
           {bgUrl && (
-            <div style={{ padding: '8px 12px', borderTop: `1px solid ${c.border}`, fontSize: '11px', color: c.success, display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-              {bgType === 'video' ? <Video size={11} /> : <Image size={11} />}
-              BG {bgType} active
+            <div style={{ marginTop: 'auto', padding: '12px 16px', borderTop: `1px solid ${c.border}`, fontSize: '13px', color: c.text, display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--positive)' }} />
+              {bgType === 'video' ? 'Video background on' : 'Image background on'}
             </div>
           )}
         </div>
@@ -805,34 +809,33 @@ export default function StageView({ isDarkMode, songs = [], onRefresh }) {
 
       {/* ── EDIT LYRICS MODAL ────────────────────────────────────────────── */}
       {editingSong && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 999, background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ width: '100%', maxWidth: '660px', background: c.card, borderRadius: '14px', border: `1px solid ${c.border}`, boxShadow: '0 24px 80px rgba(0,0,0,0.4)', display: 'flex', flexDirection: 'column', maxHeight: 'calc(100vh - 60px)' }}>
-            <div style={{ padding: '18px 20px', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 999, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+          <div style={{ width: '100%', maxWidth: '660px', background: c.card, borderRadius: 'var(--r-panel)', border: `1px solid ${c.border2}`, boxShadow: 'var(--shadow-lg)', display: 'flex', flexDirection: 'column', maxHeight: 'calc(100vh - 64px)', overflow: 'hidden' }}>
+            <div style={{ padding: '16px 16px 16px 24px', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
               <div>
-                <div style={{ fontWeight: '700', fontSize: '16px', color: c.heading }}>Edit Lyrics</div>
-                <div style={{ fontSize: '12px', color: c.muted, marginTop: '2px' }}>{editingSong.title}</div>
+                <div style={{ fontWeight: 500, fontSize: '16px', color: c.heading }}>Edit lyrics</div>
+                <div style={{ fontSize: '13px', color: c.muted, marginTop: '2px' }}>{editingSong.title}</div>
               </div>
-              <button onClick={() => setEditingSong(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.muted, padding: '4px' }}>
-                <X size={20} />
+              <button onClick={() => setEditingSong(null)} title="Close" className="wo-icon-btn"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.muted, width: '32px', height: '32px', borderRadius: 'var(--r-control)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <X size={16} strokeWidth={1.5} />
               </button>
             </div>
-            <div style={{ padding: '10px 20px', background: isDarkMode ? 'rgba(59,130,246,0.08)' : 'rgba(59,130,246,0.04)', borderBottom: `1px solid ${c.border}`, fontSize: '12px', color: c.muted, flexShrink: 0 }}>
-              Use <strong>[Verse 1]</strong>, <strong>[Chorus]</strong>, <strong>[Bridge]</strong> labels on their own line. Separate sections with a blank line.
+            <div style={{ padding: '12px 24px', background: c.deep, borderBottom: `1px solid ${c.border}`, fontSize: '13px', color: c.text, flexShrink: 0, lineHeight: '20px' }}>
+              Put a label like <code style={kbd}>[Verse 1]</code> or <code style={kbd}>[Chorus]</code> on its own line, and leave a blank line between sections.
             </div>
             <textarea
               value={editLyrics}
               onChange={e => setEditLyrics(e.target.value)}
-              style={{ flex: 1, resize: 'none', padding: '16px 20px', background: isDarkMode ? '#0d0d0f' : '#f9fafb', color: c.text, fontSize: '13px', lineHeight: '1.7', border: 'none', outline: 'none', fontFamily: 'monospace', minHeight: '300px' }}
+              style={{ flex: 1, resize: 'none', padding: '16px 24px', background: c.card, color: c.heading, fontSize: '14px', lineHeight: '22px', border: 'none', outline: 'none', fontFamily: 'var(--font-mono)', minHeight: '300px' }}
               placeholder={'[Verse 1]\nAmazing grace how sweet the sound\n\n[Chorus]\nPraise the Lord'}
             />
-            <div style={{ padding: '14px 20px', borderTop: `1px solid ${c.border}`, display: 'flex', justifyContent: 'flex-end', gap: '10px', flexShrink: 0 }}>
-              <button onClick={() => setEditingSong(null)}
-                style={{ ...btnBase, background: 'transparent', border: `1px solid ${c.border}`, color: c.text, padding: '8px 18px', fontSize: '13px' }}>
+            <div style={{ padding: '16px 24px', borderTop: `1px solid ${c.border}`, display: 'flex', justifyContent: 'flex-end', gap: '8px', flexShrink: 0 }}>
+              <button onClick={() => setEditingSong(null)} style={{ ...btnSecondary, height: '36px' }}>
                 Cancel
               </button>
-              <button onClick={saveEdit} disabled={editSaving}
-                style={{ ...btnBase, background: c.primary, color: 'white', padding: '8px 18px', fontSize: '13px', opacity: editSaving ? 0.7 : 1 }}>
-                <Check size={14} /> {editSaving ? 'Saving…' : 'Save Lyrics'}
+              <button onClick={saveEdit} disabled={editSaving} style={{ ...btnPrimary, height: '36px', opacity: editSaving ? 0.7 : 1 }}>
+                <Check size={16} strokeWidth={1.5} /> {editSaving ? 'Saving…' : 'Save lyrics'}
               </button>
             </div>
           </div>
@@ -842,118 +845,150 @@ export default function StageView({ isDarkMode, songs = [], onRefresh }) {
   );
 }
 
-// ── Slate tile (thumbnail in grid) ────────────────────────────────────────────
-function SlateTile({ label, content, isActive, onClick, formatting, isDarkMode, c, isBlankSlate }) {
+// ── Look panel toggle button ────────────────────────────────────────────────────────
+function FmtBtn({ icon: Icon, active, title, onClick, disabled, children }) {
+  return (
+    <button
+      title={title}
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        minWidth: '32px', height: '32px', padding: children ? '0 8px' : 0, borderRadius: 'var(--r-control)',
+        border: `1px solid ${active ? 'var(--accent-line)' : 'transparent'}`,
+        background: active ? 'var(--accent-soft)' : 'transparent',
+        color: active ? 'var(--accent-ink)' : disabled ? 'var(--text-3)' : 'var(--text-2)',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexShrink: 0, fontFamily: 'inherit', fontSize: '12px', fontWeight: 500,
+      }}
+    >
+      {Icon ? <Icon size={16} strokeWidth={1.5} /> : children}
+    </button>
+  );
+}
+
+// ── Output window button with an open/closed dot ──────────────────────────────────────────
+function OutputBtn({ label, open, onClick, icon: Icon, style }) {
+  return (
+    <button onClick={onClick} title={open ? `${label} window is open. Click to bring it back` : `Open the ${label.toLowerCase()} window`} style={style}>
+      <Icon size={16} strokeWidth={1.5} />
+      {label}
+      <span style={{ width: 6, height: 6, borderRadius: '50%', background: open ? 'var(--positive)' : 'transparent', boxShadow: open ? 'none' : 'inset 0 0 0 1px var(--text-3)' }} />
+    </button>
+  );
+}
+
+// ── Group colors: each section type gets one color, used on its label bar ────
+const GROUP_COLORS = [
+  [/^pre[- ]?chorus/i,              '#a67bd8'],
+  [/^(chorus|refrain)/i,            '#d8615b'],
+  [/^bridge/i,                      '#d99a33'],
+  [/^(tag|vamp|coda)/i,             '#35a587'],
+  [/^(intro|outro|ending|interlude|instrumental)/i, '#8a919c'],
+  [/^(verse|slide)/i,               '#5b8fd8'],
+];
+const groupColor = (label = '') => (GROUP_COLORS.find(([re]) => re.test(label.trim()))?.[1]) || '#8a919c';
+
+// ── Slate tile: a miniature screen with its group bar ────────────────────────
+function SlateTile({ label, number, content, isLive, isNext, onClick, formatting, c, isBlankSlate }) {
   const fmt = formatting || DEFAULT_FMT;
   const displayText = fmt.uppercase ? content.toUpperCase() : content;
   const shadow = fmt.shadowEnabled
-    ? `${fmt.shadowX}px ${fmt.shadowY}px ${fmt.shadowBlur}px ${fmt.shadowColor}`
+    ? `${fmt.shadowX * 0.4}px ${fmt.shadowY * 0.4}px ${fmt.shadowBlur * 0.4}px ${fmt.shadowColor}`
     : 'none';
+  const col = isBlankSlate ? '#8a919c' : groupColor(label);
 
   return (
     <div
       onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={e => { if (e.key === 'Enter') onClick(); }}
       style={{
-        aspectRatio: '16/9', borderRadius: '8px', cursor: 'pointer',
-        overflow: 'hidden', position: 'relative', transition: 'border-color 0.12s',
-        border: `2px solid ${isActive ? c.primary : c.border}`,
-        background: isBlankSlate ? '#000' : (fmt.bgColor || '#000'),
-        display: 'flex', flexDirection: 'column',
+        borderRadius: 'var(--r-card)', cursor: 'pointer', overflow: 'hidden',
+        background: c.card,
+        border: `1px solid ${isLive ? c.primary : c.border}`,
+        boxShadow: isLive ? `0 0 0 1px ${c.primary}, var(--shadow-lg)` : 'var(--shadow-sm)',
+        display: 'flex', flexDirection: 'column', outline: 'none',
+        transition: 'border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease)',
       }}
-      onMouseEnter={e => { if (!isActive) e.currentTarget.style.borderColor = c.muted; }}
-      onMouseLeave={e => { e.currentTarget.style.borderColor = isActive ? c.primary : c.border; }}
+      onMouseEnter={e => { if (!isLive) e.currentTarget.style.borderColor = c.muted; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = isLive ? c.primary : c.border; }}
     >
-      {/* Label strip */}
+      {/* The screen */}
       <div style={{
-        padding: '4px 6px', fontSize: '9px', fontWeight: '700',
-        color: isActive ? c.primary : c.muted,
-        textTransform: 'uppercase', letterSpacing: '0.5px',
-        background: isDarkMode ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.45)',
-        flexShrink: 0,
+        aspectRatio: '16/9', background: isBlankSlate ? '#000' : (fmt.bgColor || '#000'),
+        display: 'flex', alignItems: 'center',
+        justifyContent: fmt.textAlign === 'left' ? 'flex-start' : fmt.textAlign === 'right' ? 'flex-end' : 'center',
+        padding: '8px 12px', overflow: 'hidden', position: 'relative',
       }}>
-        {label}
+        {!isBlankSlate && displayText && (
+          <div style={{
+            fontSize: `${Math.max(9, fmt.fontSize * 0.2)}px`,
+            fontFamily: fmt.fontFamily, fontWeight: fmt.fontWeight, fontStyle: fmt.fontStyle,
+            textDecoration: fmt.textDecoration, color: fmt.color, textAlign: fmt.textAlign,
+            lineHeight: fmt.lineHeight, letterSpacing: `${fmt.letterSpacing * 0.2}px`,
+            textShadow: shadow, width: '100%', whiteSpace: 'pre-line', overflow: 'hidden',
+            display: '-webkit-box', WebkitLineClamp: 5, WebkitBoxOrient: 'vertical',
+          }}>
+            {displayText}
+          </div>
+        )}
+        {isLive && (
+          <span style={{ position: 'absolute', top: '8px', right: '8px', display: 'flex', alignItems: 'center', gap: '4px', padding: '0 6px', borderRadius: '4px', background: c.primary, color: c.onAccent, fontSize: '11px', fontWeight: 500, lineHeight: '18px' }}>
+            Live
+          </span>
+        )}
+        {isNext && !isLive && (
+          <span style={{ position: 'absolute', top: '8px', right: '8px', padding: '0 6px', borderRadius: '4px', background: 'rgba(255,255,255,0.14)', color: 'rgba(255,255,255,0.85)', fontSize: '11px', fontWeight: 500, lineHeight: '18px' }}>
+            Next
+          </span>
+        )}
       </div>
-
-      {/* Content preview */}
-      <div style={{
-        flex: 1, display: 'flex', alignItems: 'center', justifyContent:
-          fmt.textAlign === 'left' ? 'flex-start' :
-          fmt.textAlign === 'right' ? 'flex-end' : 'center',
-        padding: '4px 8px', overflow: 'hidden',
-      }}>
-        {isBlankSlate
-          ? <div style={{ color: '#333', fontSize: '9px', textAlign: 'center', width: '100%' }}>BLANK</div>
-          : displayText
-            ? <div style={{
-                fontSize: `${Math.max(8, fmt.fontSize * 0.13)}px`,
-                fontFamily: fmt.fontFamily,
-                fontWeight: fmt.fontWeight,
-                fontStyle: fmt.fontStyle,
-                textDecoration: fmt.textDecoration,
-                color: fmt.color,
-                textAlign: fmt.textAlign,
-                lineHeight: fmt.lineHeight,
-                letterSpacing: `${fmt.letterSpacing * 0.13}px`,
-                textShadow: shadow,
-                width: '100%', overflow: 'hidden',
-                display: '-webkit-box', WebkitLineClamp: 4,
-                WebkitBoxOrient: 'vertical',
-              }}>
-                {displayText}
-              </div>
-            : null
-        }
+      {/* Group bar */}
+      <div style={{ height: '32px', display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px', borderTop: `3px solid ${col}`, background: `${col}14` }}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: c.muted, fontVariantNumeric: 'tabular-nums', minWidth: '12px' }}>{number}</span>
+        <span style={{ fontSize: '13px', fontWeight: 500, color: c.heading, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
       </div>
-
-      {/* Active dot */}
-      {isActive && (
-        <div style={{ position: 'absolute', top: '5px', right: '5px', width: '7px', height: '7px', borderRadius: '50%', background: c.primary }} />
-      )}
     </div>
   );
 }
 
-// ── Slate preview box (right panel) ──────────────────────────────────────────
-function SlatePreview({ content, formatting, isDarkMode, dim }) {
+// ── Output preview (right column): always the projector's black ─────────────
+function SlatePreview({ content, formatting, dim, live, bgOn, emptyText = '', c }) {
   const fmt = formatting || DEFAULT_FMT;
   const displayText = fmt.uppercase ? (content || '').toUpperCase() : (content || '');
-  const shadow = !dim && fmt.shadowEnabled
-    ? `${fmt.shadowX}px ${fmt.shadowY}px ${fmt.shadowBlur}px ${fmt.shadowColor}`
+  const shadow = fmt.shadowEnabled
+    ? `${fmt.shadowX * 0.3}px ${fmt.shadowY * 0.3}px ${fmt.shadowBlur * 0.3}px ${fmt.shadowColor}`
     : 'none';
 
   return (
     <div style={{
-      aspectRatio: '16/9', borderRadius: '6px',
-      background: dim ? (isDarkMode ? '#111111' : '#f1f5f9') : (fmt.bgColor || '#000'),
-      border: dim ? `1px solid ${isDarkMode ? '#27272a' : '#e5e7eb'}` : 'none',
-      display: 'flex', alignItems: 'center', padding: '8px',
-      overflow: 'hidden',
-      justifyContent:
-        fmt.textAlign === 'left' ? 'flex-start' :
-        fmt.textAlign === 'right' ? 'flex-end' : 'center',
+      aspectRatio: '16/9', borderRadius: 'var(--r-control)',
+      background: fmt.bgColor || '#000',
+      border: `1px solid ${live ? 'var(--accent-line)' : c.border}`,
+      display: 'flex', alignItems: 'center', padding: '12px',
+      overflow: 'hidden', position: 'relative', boxSizing: 'border-box',
+      justifyContent: fmt.textAlign === 'left' ? 'flex-start' : fmt.textAlign === 'right' ? 'flex-end' : 'center',
     }}>
       {displayText
         ? <div style={{
-            fontSize: `${Math.max(8, fmt.fontSize * 0.18)}px`,
-            fontFamily: dim ? 'sans-serif' : fmt.fontFamily,
-            fontWeight: dim ? '400' : fmt.fontWeight,
-            fontStyle: dim ? 'normal' : fmt.fontStyle,
-            textDecoration: dim ? 'none' : fmt.textDecoration,
-            color: dim ? (isDarkMode ? '#6b7280' : '#9ca3af') : fmt.color,
-            textAlign: fmt.textAlign,
-            lineHeight: fmt.lineHeight,
-            letterSpacing: dim ? 0 : `${fmt.letterSpacing * 0.18}px`,
-            textShadow: shadow,
-            width: '100%',
-            whiteSpace: 'pre-line',
-            opacity: dim ? 0.65 : 1,
+            fontSize: `${Math.max(9, fmt.fontSize * (live ? 0.26 : 0.22))}px`,
+            fontFamily: fmt.fontFamily, fontWeight: fmt.fontWeight, fontStyle: fmt.fontStyle,
+            textDecoration: fmt.textDecoration, color: fmt.color, textAlign: fmt.textAlign,
+            lineHeight: fmt.lineHeight, letterSpacing: `${fmt.letterSpacing * 0.25}px`,
+            textShadow: shadow, width: '100%', whiteSpace: 'pre-line',
+            opacity: dim ? 0.6 : 1,
           }}>
             {displayText}
           </div>
-        : <div style={{ color: dim ? '#555' : '#333', fontSize: '10px', width: '100%', textAlign: 'center' }}>
-            {dim ? '(end)' : '—'}
-          </div>
+        : emptyText
+          ? <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', width: '100%', textAlign: 'center' }}>{emptyText}</div>
+          : null
       }
+      {bgOn && (
+        <span style={{ position: 'absolute', bottom: '8px', left: '8px', fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)' }}>bg</span>
+      )}
     </div>
   );
 }
