@@ -19,6 +19,7 @@ export const ramps = {
     "--text-3": "#737373",    // muted: meta, captions, icons
     "--positive": "#16a34a",
     "--negative": "#dc2626",
+    "--warning": "#b45309",
     "--shadow-sm": "0 1px 2px rgba(0,0,0,0.05)",
     "--shadow-lg": "0 8px 24px rgba(0,0,0,0.08)",
   },
@@ -34,6 +35,7 @@ export const ramps = {
     "--text-3": "#85858b",
     "--positive": "#4cc38a",
     "--negative": "#e5484d",
+    "--warning": "#e2a336",
     "--shadow-sm": "none",
     "--shadow-lg": "0 8px 24px rgba(0,0,0,0.4)",
   },
@@ -42,6 +44,8 @@ export const ramps = {
 export const type = {
   "--font-sans": '"Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif',
   "--font-mono": '"Geist Mono", ui-monospace, "SF Mono", Menlo, monospace',
+  // Scripture strip only: the one serif in the app.
+  "--font-verse": '"Newsreader", Georgia, "Times New Roman", serif',
   // size / line height. Weights: 400 body, 500 labels and titles, 600 rare emphasis.
   "--fs-meta": "12px",  "--lh-meta": "16px",   // times, counts, tags (mono welcome)
   "--fs-small": "13px", "--lh-small": "20px",  // secondary text, table cells

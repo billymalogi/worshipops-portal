@@ -22,10 +22,8 @@ import OrgInviteManager from './components/OrgInviteManager';
 import FeatureRequestPage from './components/FeatureRequestPage';
 import PlanningCenterImport from './components/PlanningCenterImport';
 import HubIcon from './components/HubIcon';
-import { contrast } from './theme';
+import { applyTheme } from './theme';
 
-// Contrast-aware text color for the logo mark / any solid brand-color fill.
-const onAccentFor = (hex) => (contrast(hex, '#ffffff') >= contrast(hex, '#171717') ? '#ffffff' : '#171717');
 
 // --- ICONS ---
 import {
@@ -163,9 +161,9 @@ const getAllowedTabs = (role, email, guestPermissions = {}) => {
   return tabs;
 };
 
-// Active tab highlight: lighter in dark mode, darker in light mode
-const tabActiveBg  = (isDark) => isDark ? '#1F1F22' : '#E4E4E7';
-const subNavBg     = (isDark) => isDark ? '#0A0A0A' : '#F4F4F5';
+// Active tab highlight: one surface step up from the bar it sits on
+const tabActiveBg  = () => 'var(--raised)';
+const subNavBg     = () => 'var(--page)';
 
 // --- HEADER COMPONENT ---
 const CAT_DISPLAY = { myschedule: 'My Schedule', planner: 'Planner', production: 'Production', admin: 'Admin' };
@@ -201,19 +199,19 @@ const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, se
       position: 'sticky',
       top: 0,
       zIndex: 200,
-      padding: isMobile ? '0 12px' : '0 20px',
+      padding: isMobile ? '0 12px' : '0 24px',
     }}>
       {/* LEFT: Logo */}
       <div onClick={() => { setSelectedService(null); setActiveTab('dashboard'); refreshData(); }}
-        style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px', cursor: 'pointer', justifySelf: 'start' }}>
+        style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '10px', cursor: 'pointer', justifySelf: 'start' }}>
         <div style={{
           height: isMobile ? '28px' : '32px', width: isMobile ? '28px' : '32px', borderRadius: '8px',
           background: colors.primary, display: 'grid', placeItems: 'center', flexShrink: 0,
         }}>
-          <HubIcon size={isMobile ? 16 : 18} color={onAccentFor(colors.primary)} />
+          <HubIcon size={isMobile ? 16 : 18} color="var(--on-accent)" />
         </div>
         {!isMobile && (
-          <span style={{ fontWeight: '600', fontSize: isTablet ? '15px' : '17px', color: colors.navText, letterSpacing: '-0.3px' }}>WorshipOps</span>
+          <span style={{ fontWeight: 500, fontSize: isTablet ? '16px' : '17px', color: colors.navText }}>WorshipOps</span>
         )}
       </div>
 
@@ -231,12 +229,11 @@ const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, se
                   border: 'none',
                   borderBottom: `2px solid ${isActive ? colors.primary : 'transparent'}`,
                   cursor: 'pointer',
-                  padding: isTablet ? '0 14px' : '0 24px',
-                  fontSize: isTablet ? '12px' : '14px',
-                  fontWeight: isActive ? '700' : '500',
+                  padding: isTablet ? '0 16px' : '0 20px',
+                  fontSize: isTablet ? '13px' : '14px',
+                  fontWeight: 500,
                   color: isActive ? colors.navText : colors.navSubText,
-                  textTransform: 'capitalize',
-                  transition: 'all 0.15s',
+                  transition: 'background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease)',
                   whiteSpace: 'nowrap',
                 }}
                 onMouseEnter={e => {
@@ -255,25 +252,25 @@ const Header = ({ colors, activeTab, setActiveTab, isDarkMode, setIsDarkMode, se
 
       {/* Mobile: app name centered */}
       {isMobile && (
-        <span style={{ textAlign: 'center', fontWeight: '600', fontSize: '15px', color: colors.navText, letterSpacing: '-0.3px' }}>
+        <span style={{ textAlign: 'center', fontWeight: 500, fontSize: '16px', color: colors.navText }}>
           WorshipOps
         </span>
       )}
 
       {/* RIGHT: Controls */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: isMobile ? '4px' : '10px', justifySelf: 'end' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: isMobile ? '4px' : '8px', justifySelf: 'end' }}>
         {!isMobile && (
-          <span style={{ fontSize: '11px', fontWeight: '600', color: colors.navSubText, padding: '2px 8px', border: `1px solid ${colors.navBorder}`, borderRadius: '12px', whiteSpace: 'nowrap' }}>
+          <span style={{ fontSize: 'var(--fs-meta)', fontFamily: 'var(--font-mono)', color: 'var(--text-3)', padding: '0 4px', whiteSpace: 'nowrap' }}>
             {ROLE_LABELS[realRole] || realRole}
           </span>
         )}
-        <button onClick={() => setIsDarkMode(!isDarkMode)}
-          style={{ background: 'transparent', color: colors.navSubText, border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-          {isDarkMode ? <Sun size={isMobile ? 20 : 18} /> : <Moon size={isMobile ? 20 : 18} />}
+        <button onClick={() => setIsDarkMode(!isDarkMode)} title={isDarkMode ? 'Light mode' : 'Dark mode'} className="wo-icon-btn"
+          style={{ background: 'transparent', color: colors.navSubText, border: 'none', padding: '8px', borderRadius: 'var(--r-control)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+          {isDarkMode ? <Sun size={18} strokeWidth={1.5} /> : <Moon size={18} strokeWidth={1.5} />}
         </button>
-        <button onClick={onLogout} title="Log Out"
-          style={{ background: 'transparent', color: colors.navSubText, border: 'none', padding: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-          <LogOut size={isMobile ? 20 : 18} />
+        <button onClick={onLogout} title="Log out" className="wo-icon-btn"
+          style={{ background: 'transparent', color: colors.navSubText, border: 'none', padding: '8px', borderRadius: 'var(--r-control)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+          <LogOut size={18} strokeWidth={1.5} />
         </button>
       </div>
     </div>
@@ -294,8 +291,8 @@ const SubNav = ({ colors, activeTab, setActiveTab, setSelectedService, isDarkMod
       display: 'flex',
       alignItems: 'center',
       justifyContent: isMobile ? 'flex-start' : 'center',
-      gap: '2px',
-      padding: isMobile ? '0 8px' : '0 30px',
+      gap: '4px',
+      padding: isMobile ? '0 8px' : '0 24px',
       height: isMobile ? '40px' : '44px',
       borderBottom: `1px solid ${colors.border}`,
       background: subNavBg(isDarkMode),
@@ -318,16 +315,18 @@ const SubNav = ({ colors, activeTab, setActiveTab, setSelectedService, isDarkMod
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: isMobile ? '5px' : '7px',
-              padding: isMobile ? '5px 12px' : '6px 14px',
-              borderRadius: '6px',
+              gap: '8px',
+              height: '32px',
+              padding: '0 12px',
+              borderRadius: 'var(--r-control)',
               border: 'none',
               background: isActive ? tabActiveBg(isDarkMode) : 'transparent',
+              boxShadow: isActive ? 'inset 0 0 0 1px var(--line)' : 'none',
               color: isActive ? colors.heading : colors.text,
-              fontWeight: isActive ? '700' : '500',
-              fontSize: isMobile ? '12px' : '13px',
+              fontWeight: 500,
+              fontSize: '13px',
               cursor: 'pointer',
-              transition: 'all 0.15s',
+              transition: 'background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease)',
               whiteSpace: 'nowrap',
               flexShrink: 0,
             }}
@@ -338,7 +337,7 @@ const SubNav = ({ colors, activeTab, setActiveTab, setSelectedService, isDarkMod
               if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = colors.text; }
             }}
           >
-            <Icon size={isMobile ? 12 : 13} />
+            <Icon size={16} strokeWidth={1.5} style={{ color: isActive ? 'var(--text-1)' : 'var(--text-3)' }} />
             {label}
           </button>
         );
@@ -374,13 +373,13 @@ const MobileBottomNav = ({ colors, isDarkMode, activeCategory, visibleCats, onCa
         <button key={cat} onClick={() => onCategoryChange(cat)}
           style={{
             flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
-            justifyContent: 'center', gap: '3px',
+            justifyContent: 'center', gap: '4px',
             background: 'transparent', border: 'none', cursor: 'pointer',
-            color: isActive ? colors.primary : colors.text,
-            transition: 'color 0.15s',
+            color: isActive ? 'var(--accent-ink)' : colors.muted,
+            transition: 'color var(--t-fast) var(--ease)',
           }}>
-          <Icon size={20} strokeWidth={isActive ? 2.5 : 1.75} />
-          <span style={{ fontSize: '10px', fontWeight: isActive ? '700' : '400', letterSpacing: '0.2px' }}>
+          <Icon size={20} strokeWidth={1.5} />
+          <span style={{ fontSize: '11px', fontWeight: 500 }}>
             {CAT_SHORT[cat]}
           </span>
         </button>
@@ -396,8 +395,8 @@ function OrgSwitcher({ orgName, allOrgs, currentOrgId, onSwitch, isDarkMode }) {
   const ref = React.useRef(null);
 
   const currentOrg  = allOrgs.find(o => o.organization_id === currentOrgId);
-  const activeColor = currentOrg?.brand_color || '#6366f1';
-  const textCol     = isDarkMode ? '#EDEDED' : '#09090B';
+  const activeColor = currentOrg?.brand_color || 'var(--text-3)';
+  const textCol     = 'var(--text-2)';
 
   React.useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
@@ -411,7 +410,7 @@ function OrgSwitcher({ orgName, allOrgs, currentOrgId, onSwitch, isDarkMode }) {
     <span
       onClick={onClick}
       style={{
-        display: 'inline-flex', alignItems: 'center', gap: '7px',
+        display: 'inline-flex', alignItems: 'center', gap: '8px',
         fontSize: '12px', fontWeight: '500', color: textCol,
         padding: '4px 8px', borderRadius: '8px',
         whiteSpace: 'nowrap', flexShrink: 0,
@@ -425,7 +424,7 @@ function OrgSwitcher({ orgName, allOrgs, currentOrgId, onSwitch, isDarkMode }) {
 
   if (allOrgs.length <= 1) {
     return pill(
-      <><span style={{ width: 7, height: 7, borderRadius: '50%', background: activeColor, display: 'inline-block' }} />{orgName}</>
+      <><span style={{ width: 6, height: 6, borderRadius: '50%', background: activeColor, display: 'inline-block' }} />{orgName}</>
     );
   }
 
@@ -433,32 +432,32 @@ function OrgSwitcher({ orgName, allOrgs, currentOrgId, onSwitch, isDarkMode }) {
     <div ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
       {pill(
         <>
-          <span style={{ width: 7, height: 7, borderRadius: '50%', background: activeColor, display: 'inline-block' }} />
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: activeColor, display: 'inline-block' }} />
           {orgName}
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5L5 6.5L8 3.5" stroke={textCol} strokeOpacity="0.5" strokeWidth="1.5" strokeLinecap="round"/></svg>
         </>,
         () => setOpen(v => !v)
       )}
       {open && (
-        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, minWidth: '240px', background: isDarkMode ? '#1f1f22' : '#ffffff', border: `1px solid ${isDarkMode ? '#27272a' : '#e5e7eb'}`, borderRadius: '12px', boxShadow: '0 8px 32px rgba(0,0,0,0.25)', zIndex: 9999, overflow: 'hidden' }}>
-          <div style={{ padding: '8px 14px', fontSize: '10px', fontWeight: '700', color: isDarkMode ? '#6b7280' : '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.8px', borderBottom: `1px solid ${isDarkMode ? '#27272a' : '#e5e7eb'}` }}>
-            Switch Organization
+        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, minWidth: '240px', background: 'var(--card)', border: '1px solid var(--line-2)', borderRadius: 'var(--r-card)', boxShadow: 'var(--shadow-lg)', zIndex: 9999, overflow: 'hidden', padding: '4px' }}>
+          <div style={{ padding: '8px 12px 4px', fontSize: 'var(--fs-meta)', color: 'var(--text-3)' }}>
+            Switch organization
           </div>
           {allOrgs.map(org => {
             const isCurrent = org.organization_id === currentOrgId;
-            const dot = org.brand_color || '#6366f1';
+            const dot = org.brand_color || 'var(--text-3)';
             return (
               <button
                 key={org.organization_id}
                 onClick={() => { setOpen(false); if (!isCurrent) onSwitch(org); }}
-                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: isCurrent ? (isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)') : 'transparent', border: 'none', cursor: isCurrent ? 'default' : 'pointer', textAlign: 'left' }}
-                onMouseEnter={e => { if (!isCurrent) e.currentTarget.style.background = isDarkMode ? '#27272a' : '#f3f4f6'; }}
-                onMouseLeave={e => { if (!isCurrent) e.currentTarget.style.background = isCurrent ? (isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)') : 'transparent'; }}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', height: '36px', padding: '0 8px', borderRadius: 'var(--r-control)', background: isCurrent ? 'var(--raised)' : 'transparent', border: 'none', cursor: isCurrent ? 'default' : 'pointer', textAlign: 'left', transition: 'background-color var(--t-fast) var(--ease)' }}
+                onMouseEnter={e => { if (!isCurrent) e.currentTarget.style.background = 'var(--raised)'; }}
+                onMouseLeave={e => { if (!isCurrent) e.currentTarget.style.background = 'transparent'; }}
               >
                 {/* Brand color dot */}
-                <span style={{ width: 10, height: 10, borderRadius: '50%', background: dot, flexShrink: 0, boxShadow: isCurrent ? `0 0 0 2px ${dot}55` : 'none' }} />
-                <span style={{ flex: 1, fontSize: '13px', fontWeight: isCurrent ? '700' : '500', color: isDarkMode ? '#d1d5db' : '#27272a' }}>{org.name}</span>
-                <span style={{ fontSize: '10px', color: isDarkMode ? '#6b7280' : '#9ca3af', textTransform: 'capitalize' }}>{org.role}</span>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: dot, flexShrink: 0 }} />
+                <span style={{ flex: 1, fontSize: '13px', fontWeight: 500, color: isCurrent ? 'var(--text-1)' : 'var(--text-2)' }}>{org.name}</span>
+                <span style={{ fontSize: 'var(--fs-meta)', fontFamily: 'var(--font-mono)', color: 'var(--text-3)' }}>{ROLE_LABELS[org.role] || org.role}</span>
               </button>
             );
           })}
@@ -514,34 +513,42 @@ export default function Dashboard() {
   // underline, a 2px rule under the header. It no longer fills the nav bar,
   // verse bar, or sidebar — those stay neutral regardless of brandColor /
   // brandHeaderColor / brandSidebarColor, so the brand color reads as a
-  // deliberate highlight instead of a wall of color. Manual text-color
-  // overrides (brandNavTextColor etc.) still apply if an admin has set one.
+  // deliberate highlight instead of a wall of color. The old manual
+  // text-color overrides (brandNavTextColor etc.) are intentionally ignored
+  // here — they were computed for contrast against a solid colored fill
+  // that no longer exists, so honoring them just makes text disappear
+  // (e.g. white verse text saved for an orange bar, now sitting on a
+  // neutral light strip). These surfaces always follow light/dark mode.
 
   const colors = {
-    bg:      isDarkMode ? '#000000' : '#F7F8FA',
-    bgSolid: isDarkMode ? '#0A0A0A' : '#FFFFFF',
-    card:    isDarkMode ? '#111111' : '#FFFFFF',
-    text:    isDarkMode ? '#A1A1AA' : '#52525B',
-    heading: isDarkMode ? '#EDEDED' : '#09090B',
-    border:  isDarkMode ? '#27272A' : '#E4E4E7',
-    hover:   isDarkMode ? '#1F1F22' : '#F4F4F5',
-    primary:    brandColor || '#0070F3',
-    accent:     brandColor || '#10B981',
-    danger:     '#EF4444',
-    // Nav bar — neutral background; brand color shows as the header's 2px
-    // accent rule and the active category tab's underline instead.
-    headerBg:       isDarkMode ? '#111111' : '#ffffff',
-    navText:        brandNavTextColor || (isDarkMode ? '#EDEDED' : '#09090B'),
-    navSubText:     isDarkMode ? '#A1A1AA' : '#52525B',
-    navBorder:      isDarkMode ? '#27272A' : '#E4E4E7',
-    navTabActiveBg: isDarkMode ? '#1F1F22' : '#F4F4F5',
-    // Sidebar — neutral, matches every other panel in the app.
-    sidebarBg:   isDarkMode ? '#0a0a0a' : '#f8f9fa',
-    sidebarText: brandSidebarTextColor || (isDarkMode ? '#EDEDED' : '#09090B'),
-    // Verse bar — a quiet neutral strip, not a solid color fill.
-    verseBg:     isDarkMode ? '#0A0A0A' : '#F4F4F5',
-    verseText:   brandHeaderTextColor || (isDarkMode ? '#A1A1AA' : '#52525B'),
+    bg:      'var(--page)',
+    bgSolid: 'var(--card)',
+    card:    'var(--card)',
+    text:    'var(--text-2)',
+    heading: 'var(--text-1)',
+    muted:   'var(--text-3)',
+    border:  'var(--line)',
+    hover:   'var(--raised)',
+    primary: 'var(--accent)',
+    accent:  'var(--accent)',
+    danger:  'var(--negative)',
+    // Nav bar: neutral. The brand color shows only as the 2px rule and the
+    // active tab underline.
+    headerBg:       'var(--card)',
+    navText:        'var(--text-1)',
+    navSubText:     'var(--text-2)',
+    navBorder:      'var(--line)',
+    navTabActiveBg: 'var(--raised)',
+    sidebarBg:   'var(--deep)',
+    sidebarText: 'var(--text-1)',
+    verseBg:     'var(--deep)',
+    verseText:   'var(--text-2)',
   };
+
+  // Push mode + church brand color into the CSS variables every screen reads.
+  useEffect(() => {
+    applyTheme(isDarkMode ? 'dark' : 'light', brandColor || '#3b82f6');
+  }, [isDarkMode, brandColor]);
 
   // Helper function to format TIME values (e.g., "09:00:00" -> "9:00 AM")
   const formatTime = (timeStr) => {
@@ -737,8 +744,8 @@ export default function Dashboard() {
   const handleDeleteFolder = async (e, id) => { e.stopPropagation(); if (userRole !== 'admin') return; if(!confirm("Delete this series? All services in it will become uncategorized.")) return; await supabase.from('service_folders').delete().eq('id', id); refreshAllData(orgId); };
   const handleQuickCreateService = async (dateStr) => { if (userRole !== 'admin' && userRole !== 'editor') return; const { data } = await supabase.from('services').insert([{ name: 'Weekend Service', date: dateStr, organization_id: orgId }]).select().single(); refreshAllData(orgId); if (data) openService(data.id); };
   const openService = async (serviceId) => { const { data } = await supabase.from('services').select('*').eq('id', serviceId).single(); setSelectedService(data); };
-  const handleSavePlan = async (updatedStart, updatedItems) => { if (userRole === 'viewer') return; await supabase.from('services').update({ date: updatedStart, items: updatedItems }).eq('id', selectedService.id); refreshAllData(orgId); setSelectedService({...selectedService, items: updatedItems, date: updatedStart}); };
-  const handleSaveTemplate = async (_, updatedItems) => { if (userRole === 'viewer') return; await supabase.from('service_templates').update({ items: updatedItems }).eq('id', selectedTemplate.id); refreshAllData(orgId); setSelectedTemplate({...selectedTemplate, items: updatedItems}); };
+  const handleSavePlan = async (updatedStart, updatedItems, updatedTimes) => { if (userRole === 'viewer') return; await supabase.from('services').update({ date: updatedStart, items: updatedItems, times: updatedTimes ?? selectedService.times ?? [] }).eq('id', selectedService.id); refreshAllData(orgId); setSelectedService({...selectedService, items: updatedItems, date: updatedStart, times: updatedTimes ?? selectedService.times ?? []}); };
+  const handleSaveTemplate = async (_, updatedItems, updatedTimes) => { if (userRole === 'viewer') return; await supabase.from('service_templates').update({ items: updatedItems, times: updatedTimes ?? selectedTemplate.times ?? [] }).eq('id', selectedTemplate.id); refreshAllData(orgId); setSelectedTemplate({...selectedTemplate, items: updatedItems, times: updatedTimes ?? selectedTemplate.times ?? []}); };
   const handleDeleteService = async (e, id) => { e.stopPropagation(); if (userRole !== 'admin') return; if(!window.confirm("Delete plan?")) return; await supabase.from('services').delete().eq('id', id); setServices(services.filter(s => s.id !== id)); };
   const handleMoveService = (e, id) => { e.stopPropagation(); alert(`Moving functionality coming soon!`); };
 
@@ -785,39 +792,37 @@ export default function Dashboard() {
   };
 
   return (
-    <div style={{ minHeight: isMobile ? '100dvh' : '100vh', fontFamily: 'sans-serif', background: colors.bg, color: colors.text, overflowX: 'hidden' }}>
+    <div style={{ minHeight: isMobile ? '100dvh' : '100vh', fontFamily: 'var(--font-sans)', background: colors.bg, color: colors.text, overflowX: 'hidden' }}>
 
       {/* ALERT OVERLAY — shown on any screen when an alert message is sent */}
       {alertOverlay && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: '60px', background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}>
-          <div style={{ width: 'min(480px, 92vw)', background: isDarkMode ? '#111111' : '#ffffff', borderRadius: '16px', border: '2px solid #ef4444', boxShadow: '0 0 0 4px rgba(239,68,68,0.15), 0 24px 60px rgba(0,0,0,0.5)', overflow: 'hidden', fontFamily: 'sans-serif' }}>
-            {/* Red header */}
-            <div style={{ background: '#ef4444', padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ width: 'min(480px, 92vw)', background: 'var(--card)', borderRadius: 'var(--r-panel)', border: '1px solid var(--line-2)', borderTop: '3px solid var(--negative)', boxShadow: 'var(--shadow-lg)', overflow: 'hidden' }}>
+            <div style={{ padding: '16px 20px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Bell size={16} color="#fff" />
-                <span style={{ fontWeight: '800', fontSize: '13px', color: '#fff', textTransform: 'uppercase', letterSpacing: '1px' }}>Alert</span>
+                <Bell size={16} strokeWidth={1.5} color="var(--negative)" />
+                <span style={{ fontWeight: 500, fontSize: '14px', color: 'var(--negative)' }}>Alert</span>
                 {alertOverlay.serviceName && (
-                  <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)', fontWeight: '400' }}>— {alertOverlay.serviceName}</span>
+                  <span style={{ fontSize: '13px', color: colors.muted }}>· {alertOverlay.serviceName}</span>
                 )}
               </div>
-              <button onClick={() => setAlertOverlay(null)} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%', width: '26px', height: '26px', cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <X size={14} />
+              <button onClick={() => setAlertOverlay(null)} title="Close" className="wo-icon-btn" style={{ background: 'transparent', border: 'none', borderRadius: 'var(--r-control)', width: '28px', height: '28px', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <X size={16} strokeWidth={1.5} />
               </button>
             </div>
-            {/* Body */}
-            <div style={{ padding: '20px 22px 24px' }}>
-              <div style={{ fontSize: '12px', color: colors.text, marginBottom: '10px', opacity: 0.7 }}>
-                From <strong style={{ color: colors.heading }}>{alertOverlay.sender_name}</strong>
+            <div style={{ padding: '12px 20px 20px' }}>
+              <div style={{ fontSize: '13px', color: colors.muted, marginBottom: '8px' }}>
+                From <strong style={{ color: colors.heading, fontWeight: 500 }}>{alertOverlay.sender_name}</strong>
                 {alertOverlay.thread && alertOverlay.thread !== 'global' && (
-                  <span> in <strong style={{ color: colors.heading }}>{alertOverlay.thread}</strong></span>
+                  <span> in <strong style={{ color: colors.heading, fontWeight: 500 }}>{alertOverlay.thread}</strong></span>
                 )}
               </div>
-              <div style={{ fontSize: '16px', fontWeight: '600', color: colors.heading, lineHeight: '1.6' }}>
+              <div style={{ fontSize: '16px', fontWeight: 500, color: colors.heading, lineHeight: '24px' }}>
                 {alertOverlay.message}
               </div>
               <button
                 onClick={() => setAlertOverlay(null)}
-                style={{ marginTop: '20px', width: '100%', padding: '10px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}
+                style={{ marginTop: '20px', width: '100%', height: '40px', background: 'var(--text-1)', color: 'var(--card)', border: 'none', borderRadius: 'var(--r-control)', fontWeight: 500, fontSize: '14px', cursor: 'pointer' }}
               >
                 Dismiss
               </button>
@@ -830,22 +835,23 @@ export default function Dashboard() {
       <div style={{
         background: colors.verseBg,
         borderBottom: `1px solid ${colors.navBorder}`,
-        padding: '4px 20px',
+        padding: '0 24px',
         display: isMobile ? 'none' : 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        gap: '20px',
-        minHeight: '28px',
+        gap: '24px',
+        height: '28px',
       }}>
         <span style={{
-          fontSize: '13px',
+          fontSize: '14px',
+          fontFamily: 'var(--font-verse)',
           color: colors.verseText,
           flex: 1,
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
         }}>
-          {verseOfDay ? <>&ldquo;{verseOfDay.text}&rdquo; <cite style={{ fontStyle: 'normal', color: colors.navSubText }}>— {verseOfDay.ref}</cite></> : ''}
+          {verseOfDay ? <>&ldquo;{verseOfDay.text}&rdquo; <cite style={{ fontStyle: 'normal', fontFamily: 'var(--font-mono)', fontSize: 'var(--fs-meta)', color: colors.muted, marginLeft: '8px' }}>{verseOfDay.ref}</cite></> : ''}
         </span>
         {orgName && (
           <OrgSwitcher
@@ -867,9 +873,10 @@ export default function Dashboard() {
         const daysLeft = Math.ceil((new Date(guestExpiry) - new Date()) / (1000 * 60 * 60 * 24));
         if (daysLeft > 3 || daysLeft <= 0) return null;
         return (
-          <div style={{ background: 'rgba(245,158,11,0.12)', borderBottom: '1px solid rgba(245,158,11,0.3)', padding: '8px 24px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#92400e' }}>
-            <span style={{ fontWeight: '600' }}>Guest access expires in {daysLeft} day{daysLeft !== 1 ? 's' : ''}.</span>
-            <span style={{ opacity: 0.7 }}>Contact your admin to extend access.</span>
+          <div style={{ background: 'var(--deep)', borderBottom: '1px solid var(--line)', padding: '8px 24px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-1)' }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--warning, #d97706)' }} />
+            <span style={{ fontWeight: 500 }}>Guest access ends in {daysLeft} day{daysLeft !== 1 ? 's' : ''}</span>
+            <span style={{ color: 'var(--text-3)' }}>Ask your admin to extend it</span>
           </div>
         );
       })()}
@@ -1007,20 +1014,18 @@ export default function Dashboard() {
 
             {/* Folders Header */}
             <div style={{
-              padding: '20px 20px 15px',
-              borderBottom: `1px solid ${isDarkMode ? '#111111' : '#e1e4e8'}`
+              padding: '16px 16px 8px 20px',
             }}>
               <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                marginBottom: '10px'
               }}>
                 <h3 style={{
                   margin: 0,
                   fontSize: '13px',
-                  fontWeight: '500',
-                  color: colors.text,
+                  fontWeight: 500,
+                  color: colors.muted,
                 }}>
                   Series
                 </h3>
@@ -1031,60 +1036,53 @@ export default function Dashboard() {
                       background: 'transparent',
                       border: 'none',
                       cursor: 'pointer',
-                      color: colors.primary,
-                      padding: '4px',
+                      color: colors.text,
+                      width: '28px',
+                      height: '28px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      borderRadius: '4px',
-                      transition: 'background 0.2s'
+                      borderRadius: 'var(--r-tag)',
+                      transition: 'background-color var(--t-fast) var(--ease)'
                     }}
-                    onMouseEnter={(e) => e.target.style.background = isDarkMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.15)'}
-                    onMouseLeave={(e) => e.target.style.background = 'transparent'}
-                    title="Create Series"
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--raised)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    title="New series"
                   >
-                    <Plus size={18} />
+                    <Plus size={16} strokeWidth={1.5} />
                   </button>
                 )}
               </div>
             </div>
 
             {/* Folders List */}
-            <div style={{ flex: 1, padding: '8px' }}>
-              {/* All Series (Default View) */}
-              <div style={{
-                fontSize: '12px',
-                fontWeight: '500',
-                color: colors.navSubText,
-                marginBottom: '8px',
-                padding: '0 10px'
-              }}>
-                Series
-              </div>
+            <div style={{ flex: 1, padding: '0 8px 8px' }}>
 
               {/* Individual Folders (Series) */}
               {folders.map(folder => (
                 <div
                   key={folder.id}
                   style={{
-                    padding: '8px 10px',
-                    margin: '1px 0',
-                    borderRadius: '5px',
+                    height: '32px',
+                    padding: '0 4px 0 12px',
+                    margin: '0 0 2px',
+                    borderRadius: 'var(--r-control)',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     gap: '8px',
-                    background: currentFolder?.id === folder.id ? (isDarkMode ? '#1c2128' : '#e1e4e8') : 'transparent',
+                    background: currentFolder?.id === folder.id ? 'var(--raised)' : 'transparent',
+                    boxShadow: currentFolder?.id === folder.id ? 'inset 0 0 0 1px var(--line)' : 'none',
                     color: currentFolder?.id === folder.id ? colors.heading : colors.text,
-                    fontWeight: currentFolder?.id === folder.id ? '600' : '500',
+                    fontWeight: 500,
                     fontSize: '13px',
-                    transition: 'background 0.15s',
+                    transition: 'background-color var(--t-fast) var(--ease)',
                     position: 'relative'
                   }}
                   onMouseEnter={(e) => {
                     if (currentFolder?.id === folder.id) return;
-                    e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)';
+                    e.currentTarget.style.background = 'var(--raised)';
                   }}
                   onMouseLeave={(e) => {
                     if (currentFolder?.id === folder.id) return;
@@ -1093,63 +1091,65 @@ export default function Dashboard() {
                 >
                   <div
                     onClick={() => setCurrentFolder(folder)}
-                    style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0, height: '100%' }}
                   >
-                    <Folder size={16} style={{ opacity: 0.7 }} />
-                    <span>{folder.name}</span>
+                    <Folder size={16} strokeWidth={1.5} style={{ color: 'var(--text-3)', flexShrink: 0 }} />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{folder.name}</span>
                   </div>
                   {userRole === 'admin' && (
-                    <div style={{ display: 'flex', gap: '4px' }}>
+                    <div style={{ display: 'flex', gap: '0' }}>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          alert(`Folder settings for "${folder.name}" - Coming soon!`);
+                          alert(`Settings for "${folder.name}" are not available yet`);
                         }}
-                        title="Folder Settings"
+                        title="Series settings"
                         style={{
                           background: 'none',
                           border: 'none',
                           cursor: 'pointer',
-                          color: colors.text,
-                          opacity: 0.4,
-                          padding: '4px',
+                          color: colors.muted,
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: 'var(--r-tag)',
                           display: 'flex',
-                          alignItems: 'center'
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'color var(--t-fast) var(--ease)'
                         }}
                         onMouseEnter={(e) => {
-                          e.target.style.opacity = '0.8';
-                          e.target.style.color = colors.primary;
+                          e.currentTarget.style.color = colors.heading;
                         }}
                         onMouseLeave={(e) => {
-                          e.target.style.opacity = '0.4';
-                          e.target.style.color = colors.text;
+                          e.currentTarget.style.color = colors.muted;
                         }}
                       >
-                        <Settings size={13}/>
+                        <Settings size={14} strokeWidth={1.5}/>
                       </button>
                       <button
                         onClick={(e) => handleDeleteFolder(e, folder.id)}
-                        title="Delete Series"
+                        title="Delete series"
                         style={{
                           background: 'none',
                           border: 'none',
                           cursor: 'pointer',
-                          color: colors.text,
-                          opacity: 0.4,
-                          padding: '4px',
+                          color: colors.muted,
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: 'var(--r-tag)',
                           display: 'flex',
-                          alignItems: 'center'
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'color var(--t-fast) var(--ease)'
                         }}
                         onMouseEnter={(e) => {
-                          e.target.style.opacity = '0.8';
-                          e.target.style.color = colors.danger;
+                          e.currentTarget.style.color = colors.danger;
                         }}
                         onMouseLeave={(e) => {
-                          e.target.style.opacity = '0.4';
-                          e.target.style.color = colors.text;
+                          e.currentTarget.style.color = colors.muted;
                         }}
                       >
-                        <Trash2 size={13}/>
+                        <Trash2 size={14} strokeWidth={1.5}/>
                       </button>
                     </div>
                   )}
@@ -1166,35 +1166,37 @@ export default function Dashboard() {
             overflowY: 'auto',
             background: colors.bg
           }}>
-            <div style={{ maxWidth: '1000px', margin: '0 auto', padding: isMobile ? '16px' : '30px' }}>
+            <div style={{ maxWidth: '1200px', margin: '0 auto', padding: isMobile ? '16px' : '32px' }}>
 
               {/* Header */}
-              <div style={{ marginBottom: isMobile ? '16px' : '30px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+              <div style={{ marginBottom: isMobile ? '16px' : '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                   {currentFolder && (
                     <button
                       onClick={() => setCurrentFolder(null)}
                       style={{
-                        background: 'transparent',
-                        border: `1px solid ${colors.border}`,
-                        padding: '8px 16px',
-                        borderRadius: '6px',
+                        background: 'var(--card)',
+                        border: '1px solid var(--line-2)',
+                        height: '36px',
+                        padding: '0 12px',
+                        borderRadius: 'var(--r-control)',
                         cursor: 'pointer',
-                        fontWeight: '600',
-                        color: colors.text,
+                        fontWeight: 500,
+                        fontSize: '13px',
+                        color: colors.heading,
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '6px'
+                        gap: '8px'
                       }}
                     >
-                      <ArrowLeft size={16} /> Back
+                      <ArrowLeft size={16} strokeWidth={1.5} /> Back
                     </button>
                   )}
                   <div>
-                    <h1 style={{ margin: 0, fontSize: isMobile ? '20px' : '28px', color: colors.heading, fontWeight: '700' }}>
+                    <h1 style={{ margin: 0, fontSize: isMobile ? '22px' : '28px', lineHeight: 1.15, color: colors.heading, fontWeight: 500 }}>
                       {currentFolder ? currentFolder.name : 'All Services'}
                     </h1>
-                    <p style={{ margin: '5px 0 0', color: colors.text, fontSize: '14px' }}>
+                    <p style={{ margin: '4px 0 0', color: colors.muted, fontSize: '13px', fontVariantNumeric: 'tabular-nums' }}>
                       {visibleServices.length} service{visibleServices.length !== 1 ? 's' : ''}
                     </p>
                   </div>
@@ -1202,61 +1204,69 @@ export default function Dashboard() {
                 {currentFolder && (
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     {/* View Toggle */}
-                    <div style={{ display: 'flex', gap: '4px', background: isDarkMode ? '#1f1f22' : '#f3f4f6', padding: '4px', borderRadius: '6px' }}>
+                    <div style={{ display: 'flex', gap: '2px', background: 'var(--raised)', padding: '2px', borderRadius: 'var(--r-control)', border: '1px solid var(--line)' }}>
                       <button
                         onClick={() => setFolderViewMode('list')}
                         style={{
-                          background: folderViewMode === 'list' ? (isDarkMode ? '#27272a' : 'white') : 'transparent',
+                          background: folderViewMode === 'list' ? 'var(--card)' : 'transparent',
+                          boxShadow: folderViewMode === 'list' ? 'var(--shadow-sm)' : 'none',
                           color: folderViewMode === 'list' ? colors.heading : colors.text,
                           border: 'none',
-                          padding: '6px 12px',
-                          borderRadius: '4px',
+                          height: '28px',
+                          padding: '0 10px',
+                          borderRadius: '6px',
                           cursor: 'pointer',
                           fontSize: '13px',
-                          fontWeight: '600',
+                          fontWeight: 500,
+                          transition: 'background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease)',
                           display: 'flex',
                           alignItems: 'center',
                           gap: '6px'
                         }}
                       >
-                        <LayoutGrid size={14}/> List
+                        <LayoutGrid size={16} strokeWidth={1.5}/> List
                       </button>
                       <button
                         onClick={() => setFolderViewMode('matrix')}
                         style={{
-                          background: folderViewMode === 'matrix' ? (isDarkMode ? '#27272a' : 'white') : 'transparent',
+                          background: folderViewMode === 'matrix' ? 'var(--card)' : 'transparent',
+                          boxShadow: folderViewMode === 'matrix' ? 'var(--shadow-sm)' : 'none',
                           color: folderViewMode === 'matrix' ? colors.heading : colors.text,
                           border: 'none',
-                          padding: '6px 12px',
-                          borderRadius: '4px',
+                          height: '28px',
+                          padding: '0 10px',
+                          borderRadius: '6px',
                           cursor: 'pointer',
                           fontSize: '13px',
-                          fontWeight: '600',
+                          fontWeight: 500,
+                          transition: 'background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease)',
                           display: 'flex',
                           alignItems: 'center',
                           gap: '6px'
                         }}
                       >
-                        <Grid3x3 size={14}/> Matrix
+                        <Grid3x3 size={16} strokeWidth={1.5}/> Matrix
                       </button>
                     </div>
                     {userRole === 'admin' && (
                       <button
-                        onClick={() => alert('Folder settings - Coming soon!')}
+                        onClick={() => alert('Series settings are not available yet')}
                         style={{
-                          background: 'transparent',
-                          border: `1px solid ${colors.border}`,
-                          padding: '8px 16px',
-                          borderRadius: '6px',
+                          background: 'var(--card)',
+                          border: '1px solid var(--line-2)',
+                          height: '36px',
+                          padding: '0 12px',
+                          borderRadius: 'var(--r-control)',
                           cursor: 'pointer',
-                          fontWeight: '600',
-                          color: colors.text,
+                          fontWeight: 500,
+                          fontSize: '13px',
+                          color: colors.heading,
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '6px'
+                          gap: '8px'
                         }}
                       >
-                        <Settings size={16} /> Settings
+                        <Settings size={16} strokeWidth={1.5} /> Settings
                       </button>
                     )}
                   </div>
@@ -1276,13 +1286,13 @@ export default function Dashboard() {
               {visibleServices.length === 0 ? (
                 <div style={{
                   textAlign: 'center',
-                  padding: '60px 20px',
+                  padding: '64px 24px',
                   background: colors.card,
                   borderRadius: '12px',
                   border: `1px solid ${colors.border}`
                 }}>
-                  <Calendar size={48} color={colors.text} style={{ opacity: 0.3, marginBottom: '15px' }} />
-                  <p style={{ color: colors.text, opacity: 0.6, fontSize: '15px', margin: 0 }}>
+                  <Calendar size={24} strokeWidth={1.5} color="var(--text-3)" style={{ marginBottom: '12px' }} />
+                  <p style={{ color: colors.text, fontSize: '14px', margin: 0 }}>
                     No services yet. Click a date on the calendar to create one.
                   </p>
                 </div>
@@ -1301,14 +1311,14 @@ export default function Dashboard() {
                         key={service.id}
                         onClick={() => openService(service.id)}
                         style={{
-                          padding: '12px 18px',
+                          padding: '12px 16px 12px 20px',
                           borderBottom: index < visibleServices.length - 1 ? `1px solid ${colors.border}` : 'none',
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
-                          transition: 'background 0.15s'
+                          transition: 'background-color var(--t-fast) var(--ease)'
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--raised)'}
                         onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                       >
                         <div style={{
@@ -1318,9 +1328,9 @@ export default function Dashboard() {
                           flexShrink: 0,
                         }}>
                           <div style={{
-                            fontSize: '11px',
-                            color: colors.navSubText,
-                            marginBottom: '2px',
+                            fontSize: '12px',
+                            color: colors.muted,
+                            marginBottom: '4px',
                             fontFamily: 'var(--font-mono)',
                           }}>
                             {localDate.toLocaleDateString('en-US', { month: 'short' })}
@@ -1341,71 +1351,74 @@ export default function Dashboard() {
                             fontSize: '15px',
                             fontWeight: '500',
                             color: colors.heading,
-                            marginBottom: '3px'
+                            marginBottom: '2px'
                           }}>
                             {service.name}
                           </div>
                           <div style={{
-                            fontSize: '12px',
-                            color: colors.navSubText,
+                            fontSize: '13px',
+                            color: colors.muted,
+                            fontVariantNumeric: 'tabular-nums',
                           }}>
                             {localDate.toLocaleDateString('en-US', { weekday: 'long' })} · {service.start_time ? formatTime(service.start_time) : '9:00 AM'} · {localDate.toLocaleDateString('en-US', { year: 'numeric' })}
                           </div>
                         </div>
                         {!isMobile && (
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                           <button
                             onClick={(e) => handleMoveService(e, service.id)}
-                            title="Move to Folder"
+                            title="Move to series"
                             style={{
                               background: 'none',
                               border: 'none',
                               cursor: 'pointer',
-                              color: colors.text,
-                              opacity: 0.5,
-                              padding: '8px',
-                              borderRadius: '6px',
+                              color: colors.muted,
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: 'var(--r-control)',
                               display: 'flex',
                               alignItems: 'center',
-                              transition: 'all 0.2s'
+                              justifyContent: 'center',
+                              transition: 'background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease)'
                             }}
                             onMouseEnter={(e) => {
-                              e.target.style.opacity = '1';
-                              e.target.style.background = isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+                              e.currentTarget.style.color = colors.heading;
+                              e.currentTarget.style.background = 'var(--card)';
                             }}
                             onMouseLeave={(e) => {
-                              e.target.style.opacity = '0.5';
-                              e.target.style.background = 'none';
+                              e.currentTarget.style.color = colors.muted;
+                              e.currentTarget.style.background = 'none';
                             }}
                           >
-                            <FolderInput size={18}/>
+                            <FolderInput size={16} strokeWidth={1.5}/>
                           </button>
                           {userRole === 'admin' && (
                             <button
                               onClick={(e) => handleDeleteService(e, service.id)}
-                              title="Delete Plan"
+                              title="Delete plan"
                               style={{
                                 background: 'none',
                                 border: 'none',
                                 cursor: 'pointer',
-                                color: colors.danger,
-                                opacity: 0.5,
-                                padding: '8px',
-                                borderRadius: '6px',
+                                color: colors.muted,
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: 'var(--r-control)',
                                 display: 'flex',
                                 alignItems: 'center',
-                                transition: 'all 0.2s'
+                                justifyContent: 'center',
+                                transition: 'background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease)'
                               }}
                               onMouseEnter={(e) => {
-                                e.target.style.opacity = '1';
-                                e.target.style.background = 'rgba(239, 68, 68, 0.1)';
+                                e.currentTarget.style.color = colors.danger;
+                                e.currentTarget.style.background = 'var(--card)';
                               }}
                               onMouseLeave={(e) => {
-                                e.target.style.opacity = '0.5';
-                                e.target.style.background = 'none';
+                                e.currentTarget.style.color = colors.muted;
+                                e.currentTarget.style.background = 'none';
                               }}
                             >
-                              <Trash2 size={18}/>
+                              <Trash2 size={16} strokeWidth={1.5}/>
                             </button>
                           )}
                         </div>
@@ -1424,7 +1437,7 @@ export default function Dashboard() {
 
           {/* Service/Plan Editor - Full Width */}
           {(selectedService || selectedTemplate) && (
-            <div style={{ padding: isMobile ? '10px' : '20px' }}>
+            <div style={{ padding: isMobile ? '12px' : '24px', background: colors.bg, flex: 1, overflowY: 'auto' }}>
             <ScheduleTable
                 isDarkMode={isDarkMode}
                 serviceData={selectedService || selectedTemplate}

@@ -4,13 +4,16 @@ import ServiceTimeModal from './ServiceTimeModal';
 
 export default function PersistentCalendar({ isDarkMode, onDateSelect, services = [], orgId, onRefresh }) {
   const colors = {
-    text: isDarkMode ? '#e5e7eb' : '#27272a',
-    subText: isDarkMode ? '#9ca3af' : '#6b7280',
-    hover: isDarkMode ? '#1f1f22' : '#f3f4f6',
-    accent: '#3b82f6',
-    bg: isDarkMode ? '#0a0a0a' : '#f8f9fa',
-    border: isDarkMode ? '#111111' : '#e1e4e8',
-    heading: isDarkMode ? '#f9fafb' : '#111111',
+    text: 'var(--text-2)',
+    subText: 'var(--text-3)',
+    hover: 'var(--raised)',
+    accent: 'var(--accent)',
+    accentInk: 'var(--accent-ink)',
+    accentSoft: 'var(--accent-soft)',
+    onAccent: 'var(--on-accent)',
+    bg: 'var(--deep)',
+    border: 'var(--line)',
+    heading: 'var(--text-1)',
   };
 
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -78,21 +81,20 @@ export default function PersistentCalendar({ isDarkMode, onDateSelect, services 
 
       {/* Calendar Header */}
       <div style={{
-        padding: '20px 20px 15px',
+        padding: '16px 20px 20px',
         borderBottom: `1px solid ${colors.border}`
       }}>
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '15px'
+          height: '28px',
+          marginBottom: '12px'
         }}>
           <h3 style={{
             margin: 0,
             fontSize: '13px',
-            fontWeight: '700',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
+            fontWeight: 500,
             color: colors.subText
           }}>
             Calendar
@@ -103,11 +105,11 @@ export default function PersistentCalendar({ isDarkMode, onDateSelect, services 
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '15px'
+          marginBottom: '12px'
         }}>
           <h4 style={{
             margin: 0,
-            fontWeight: '700',
+            fontWeight: 500,
             fontSize: '15px',
             color: colors.heading
           }}>
@@ -120,14 +122,17 @@ export default function PersistentCalendar({ isDarkMode, onDateSelect, services 
                 background: 'transparent',
                 border: 'none',
                 cursor: 'pointer',
-                padding: '4px',
-                borderRadius: '4px',
+                width: '28px',
+                height: '28px',
+                borderRadius: 'var(--r-tag)',
                 display: 'flex',
                 alignItems: 'center',
-                color: colors.subText
+                justifyContent: 'center',
+                color: colors.subText,
+                transition: 'background-color var(--t-fast) var(--ease)'
               }}
-              onMouseEnter={(e) => e.target.style.background = colors.hover}
-              onMouseLeave={(e) => e.target.style.background = 'transparent'}
+              onMouseEnter={(e) => e.currentTarget.style.background = colors.hover}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
             >
               <ChevronLeft size={18} />
             </button>
@@ -137,14 +142,17 @@ export default function PersistentCalendar({ isDarkMode, onDateSelect, services 
                 background: 'transparent',
                 border: 'none',
                 cursor: 'pointer',
-                padding: '4px',
-                borderRadius: '4px',
+                width: '28px',
+                height: '28px',
+                borderRadius: 'var(--r-tag)',
                 display: 'flex',
                 alignItems: 'center',
-                color: colors.subText
+                justifyContent: 'center',
+                color: colors.subText,
+                transition: 'background-color var(--t-fast) var(--ease)'
               }}
-              onMouseEnter={(e) => e.target.style.background = colors.hover}
-              onMouseLeave={(e) => e.target.style.background = 'transparent'}
+              onMouseEnter={(e) => e.currentTarget.style.background = colors.hover}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
             >
               <ChevronRight size={18} />
             </button>
@@ -160,9 +168,9 @@ export default function PersistentCalendar({ isDarkMode, onDateSelect, services 
         }}>
           {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
             <div key={i} style={{
-              fontSize: '11px',
-              color: colors.subText,
-              fontWeight: '600'
+              fontSize: '12px',
+              fontFamily: 'var(--font-mono)',
+              color: colors.subText
             }}>
               {d}
             </div>
@@ -187,23 +195,27 @@ export default function PersistentCalendar({ isDarkMode, onDateSelect, services 
                 onClick={() => handleDayClick(day)}
                 style={{
                   fontSize: '13px',
-                  padding: '8px 4px',
-                  borderRadius: '6px',
+                  fontVariantNumeric: 'tabular-nums',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: 'var(--r-control)',
                   cursor: day ? 'pointer' : 'default',
                   background: isTodayDay
                     ? colors.accent
                     : hasServices
-                      ? `${colors.accent}${isDarkMode ? '26' : '1a'}`
+                      ? colors.accentSoft
                       : 'transparent',
                   color: isTodayDay
-                    ? 'white'
+                    ? colors.onAccent
                     : hasServices
-                      ? colors.accent
+                      ? colors.accentInk
                       : colors.text,
                   opacity: day ? 1 : 0,
-                  fontWeight: hasServices || isTodayDay ? '700' : '400',
+                  fontWeight: hasServices || isTodayDay ? 500 : 400,
                   position: 'relative',
-                  transition: 'all 0.15s'
+                  transition: 'background-color var(--t-fast) var(--ease)'
                 }}
                 onMouseEnter={(e) => {
                   if (day && !isTodayDay) {
@@ -213,7 +225,7 @@ export default function PersistentCalendar({ isDarkMode, onDateSelect, services 
                 onMouseLeave={(e) => {
                   if (day && !isTodayDay) {
                     e.currentTarget.style.backgroundColor = hasServices
-                      ? `${colors.accent}${isDarkMode ? '26' : '1a'}`
+                      ? colors.accentSoft
                       : 'transparent';
                   }
                 }}
@@ -235,7 +247,7 @@ export default function PersistentCalendar({ isDarkMode, onDateSelect, services 
                           width: '3px',
                           height: '3px',
                           borderRadius: '50%',
-                          background: isTodayDay ? 'white' : colors.accent
+                          background: isTodayDay ? colors.onAccent : colors.accent
                         }}
                       />
                     ))}
@@ -256,18 +268,16 @@ export default function PersistentCalendar({ isDarkMode, onDateSelect, services 
                serviceDate.getFullYear() === today.getFullYear();
       }).length > 0 && (
         <div style={{
-          padding: '15px 20px',
+          padding: '16px 20px',
           borderBottom: `1px solid ${colors.border}`
         }}>
           <h4 style={{
-            margin: '0 0 10px 0',
-            fontSize: '12px',
-            fontWeight: '700',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
+            margin: '0 0 8px 0',
+            fontSize: '13px',
+            fontWeight: 500,
             color: colors.subText
           }}>
-            Today's Services
+            Today
           </h4>
           {services
             .filter(s => {
@@ -282,15 +292,16 @@ export default function PersistentCalendar({ isDarkMode, onDateSelect, services 
               <div
                 key={service.id}
                 style={{
-                  padding: '8px 10px',
-                  background: isDarkMode ? '#1c2128' : '#f3f4f6',
-                  borderRadius: '6px',
-                  marginBottom: '6px',
+                  padding: '8px 12px',
+                  background: 'var(--card)',
+                  border: '1px solid var(--line)',
+                  borderRadius: 'var(--r-control)',
+                  marginBottom: '8px',
                   fontSize: '13px'
                 }}
               >
                 <div style={{
-                  fontWeight: '600',
+                  fontWeight: 500,
                   color: colors.heading,
                   marginBottom: '2px'
                 }}>
@@ -298,13 +309,14 @@ export default function PersistentCalendar({ isDarkMode, onDateSelect, services 
                 </div>
                 <div style={{
                   color: colors.subText,
-                  fontSize: '11px',
+                  fontSize: '12px',
+                  fontFamily: 'var(--font-mono)',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '4px'
                 }}>
-                  <Clock size={11} />
-                  {service.start_time || '9:00'} - {service.end_time || '10:30'}
+                  <Clock size={12} strokeWidth={1.5} />
+                  {service.start_time || '9:00'}–{service.end_time || '10:30'}
                 </div>
               </div>
             ))}
@@ -313,13 +325,13 @@ export default function PersistentCalendar({ isDarkMode, onDateSelect, services 
 
       {/* Quick Info */}
       <div style={{
-        padding: '15px 20px',
-        fontSize: '12px',
+        padding: '16px 20px',
+        fontSize: '13px',
         color: colors.subText,
-        lineHeight: '1.6'
+        lineHeight: '20px'
       }}>
-        <div style={{ marginBottom: '8px' }}>
-          <strong style={{ color: colors.heading }}>Click a date</strong> to create a new service
+        <div style={{ marginBottom: '4px' }}>
+          <span style={{ color: colors.heading, fontWeight: 500 }}>Click a date</span> to create a new service
         </div>
         <div>
           Days with <span style={{
@@ -328,7 +340,8 @@ export default function PersistentCalendar({ isDarkMode, onDateSelect, services 
             height: '6px',
             borderRadius: '50%',
             background: colors.accent,
-            margin: '0 2px'
+            margin: '0 4px',
+            verticalAlign: 'middle'
           }}></span> have scheduled services
         </div>
       </div>
