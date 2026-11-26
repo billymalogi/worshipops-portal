@@ -6,8 +6,14 @@ import {
   User, HelpCircle, Lightbulb, X, Users, Check, AlertCircle,
 } from 'lucide-react';
 import MessagesInbox from './MessagesInbox';
+import SabbathPanel, { useSabbath } from './SabbathPanel';
 
-export default function MyScheduleView({ session, isDarkMode, colors, orgId, onNavigate }) {
+// Roles that manage people (they can open the Teams roster) see the team's rest status here too.
+const LEADER_ROLES = ['admin', 'org_leader', 'leader', 'weekly_scheduler', 'campus_leader', 'editor'];
+
+export default function MyScheduleView({ session, isDarkMode, colors, orgId, onNavigate, userRole, services = [] }) {
+  const isLeader = LEADER_ROLES.includes(userRole);
+  const sabbath  = useSabbath(orgId, services, isLeader);
   const [loading, setLoading]         = useState(true);
   const [positions, setPositions]     = useState([]);
   const [member, setMember]           = useState(null);
@@ -544,7 +550,7 @@ export default function MyScheduleView({ session, isDarkMode, colors, orgId, onN
 
   // ─────────────────────────────────────────────────────────────────────
   return (
-    <div style={{ display: 'flex', height: '100%', fontFamily: 'sans-serif', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100%', fontFamily: 'var(--font-sans)', overflow: 'hidden' }}>
 
       {/* ── MAIN SCHEDULE ────────────────────────────────────────────── */}
       <div style={{ flex: 1, overflowY: 'auto', minWidth: 0 }}>
@@ -611,6 +617,20 @@ export default function MyScheduleView({ session, isDarkMode, colors, orgId, onN
           <ActionBtn icon={Mail} label="Email My Leader" onClick={() => window.location.href = 'mailto:leader@worshipops.com'} />
           <ActionBtn icon={User} label="Profile" onClick={() => onNavigate?.('profile')} />
         </div>
+
+        {/* The Sabbath Feature — leaders see their team's rest before their own schedule */}
+        {isLeader && sabbath.loaded && sabbath.enabled && (
+          <div style={{ padding: '20px 28px 0' }}>
+            <SabbathPanel
+              framed
+              members={sabbath.members}
+              burnoutMap={sabbath.burnoutMap}
+              warningThreshold={sabbath.warningThreshold}
+              autoThreshold={sabbath.autoThreshold}
+              onOpenRoster={() => onNavigate?.('team')}
+            />
+          </div>
+        )}
 
         {/* Schedule content */}
         <div style={{ padding: '8px 28px 32px' }}>

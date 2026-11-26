@@ -906,6 +906,8 @@ export default function Dashboard() {
               colors={colors}
               orgId={orgId}
               onNavigate={setActiveTab}
+              userRole={userRole}
+              services={services}
             />
           )}
 

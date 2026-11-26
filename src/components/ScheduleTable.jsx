@@ -38,14 +38,12 @@ const MUSIC_KEYS = [
   'C13','D13','E13','F13','G13','A13','B13',
 ];
 
-const AVATAR_COLORS = ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4'];
-
 // Common song-arrangement segments — free text is also allowed
 const SEQUENCE_PRESETS = ['Intro','Verse 1','Verse 2','Verse 3','Pre-Chorus','Chorus','Bridge','Instrumental','Interlude','Tag','Outro'];
 
 // Named time-block types (Service / Rehearsal / Other), each tied to one plan
 const TIME_TYPE_LABEL = { service: 'Service', rehearsal: 'Rehearsal', other: 'Other' };
-const TIME_TYPE_COLOR = { service: '#3b82f6', rehearsal: '#a78bfa', other: '#9ca3af' };
+const TIME_TYPE_COLOR = { service: 'var(--accent)', rehearsal: 'var(--text-2)', other: 'var(--text-3)' };
 
 // Preset section-header colors — lighter for dark mode, darker for light mode
 // Indices match for auto-invert when switching modes
@@ -115,19 +113,23 @@ export default function ScheduleTable({
 
   // ── Colors ───────────────────────────────────────────────────────────────────
   const colors = {
-    bg:           isDarkMode ? '#111111' : '#ffffff',
-    text:         isDarkMode ? '#e5e7eb' : '#27272a',
-    subText:      isDarkMode ? '#9ca3af' : '#6b7280',
-    border:       isDarkMode ? '#27272a' : '#e5e7eb',
-    hover:        isDarkMode ? '#1f1f22' : '#f9fafb',
-    inputBg:      isDarkMode ? '#1f1f22' : '#ffffff',
-    card:         isDarkMode ? '#18181b' : '#f8fafc',
-    heading:      isDarkMode ? '#f9fafb' : '#111111',
-    accent:       '#3b82f6',
-    danger:       '#ef4444',
-    success:      '#10b981',
-    popover:      isDarkMode ? '#1f1f22' : '#ffffff',
-    dropHighlight: isDarkMode ? 'rgba(59,130,246,0.2)' : 'rgba(59,130,246,0.1)',
+    bg:           'var(--page)',
+    text:         'var(--text-2)',
+    subText:      'var(--text-3)',
+    border:       'var(--line)',
+    hover:        'var(--raised)',
+    inputBg:      'var(--card)',
+    card:         'var(--card)',
+    heading:      'var(--text-1)',
+    accent:       'var(--accent)',
+    accentInk:    'var(--accent-ink)',
+    accentSoft:   'var(--accent-soft)',
+    onAccent:     'var(--on-accent)',
+    danger:       'var(--negative)',
+    success:      'var(--positive)',
+    warning:      'var(--warning)',
+    popover:      'var(--card)',
+    dropHighlight: 'var(--accent-soft)',
   };
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -460,44 +462,44 @@ export default function ScheduleTable({
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', color: colors.text, userSelect: isDraggingAny ? 'none' : 'auto' }}>
 
       {/* ── TOP BAR ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '16px', borderBottom: `1px solid ${colors.border}` }}>
-        <button onClick={onBack} style={{ background: 'transparent', border: `1px solid ${colors.border}`, padding: '7px 14px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', color: colors.text, fontSize: '13px' }}>
-          ← Back
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', paddingBottom: '16px', borderBottom: `1px solid ${colors.border}` }}>
+        <button onClick={onBack} style={{ background: colors.card, border: '1px solid var(--line-2)', height: '36px', padding: '0 12px', borderRadius: 'var(--r-control)', cursor: 'pointer', fontWeight: 500, color: colors.heading, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'inherit' }}>
+          <ArrowLeft size={16} strokeWidth={1.5} /> Back
         </button>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           {!isTemplate && (
-            <button onClick={() => setShowChat(true)} style={{ background: 'transparent', border: `1px solid ${colors.border}`, color: colors.text, padding: '7px 14px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <MessageSquare size={15} /> Chat
+            <button onClick={() => setShowChat(true)} style={{ background: colors.card, border: '1px solid var(--line-2)', color: colors.heading, height: '36px', padding: '0 12px', borderRadius: 'var(--r-control)', cursor: 'pointer', fontWeight: 500, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'inherit' }}>
+              <MessageSquare size={16} strokeWidth={1.5} /> Chat
             </button>
           )}
           {/* Auto-save status indicator */}
           {saveStatus === 'pending' && (
-            <span style={{ fontSize: '12px', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '5px', opacity: 0.9 }}>
-              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#f59e0b', display: 'inline-block' }} />
+            <span style={{ fontSize: '12px', color: colors.subText, display: 'flex', alignItems: 'center', gap: '8px', padding: '0 4px' }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: colors.warning, display: 'inline-block' }} />
               Unsaved
             </span>
           )}
           {saveStatus === 'saving' && (
-            <span style={{ fontSize: '12px', color: colors.subText, display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} /> Saving...
+            <span style={{ fontSize: '12px', color: colors.subText, display: 'flex', alignItems: 'center', gap: '8px', padding: '0 4px' }}>
+              <Loader2 size={12} strokeWidth={1.5} style={{ animation: 'spin 1s linear infinite' }} /> Saving…
             </span>
           )}
           {saveStatus === 'success' && (
-            <span style={{ fontSize: '12px', color: colors.success, display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <CheckCircle size={12} /> Saved
+            <span style={{ fontSize: '12px', color: colors.subText, display: 'flex', alignItems: 'center', gap: '8px', padding: '0 4px' }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: colors.success, display: 'inline-block' }} /> Saved
             </span>
           )}
           {saveStatus === 'error' && (
-            <span style={{ fontSize: '12px', color: colors.danger, display: 'flex', alignItems: 'center', gap: '5px' }}>
-              ✕ Save failed
+            <span style={{ fontSize: '12px', color: colors.danger, display: 'flex', alignItems: 'center', gap: '8px', padding: '0 4px' }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: colors.danger, display: 'inline-block' }} /> Save failed
             </span>
           )}
           <button
             onClick={handleMainSave}
             disabled={saveStatus === 'saving' || !canEdit}
-            style={{ background: !canEdit ? colors.subText : colors.accent, color: 'white', border: 'none', padding: '7px 18px', borderRadius: '8px', cursor: canEdit ? 'pointer' : 'not-allowed', fontWeight: '700', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '7px', opacity: canEdit ? 1 : 0.5 }}
+            style={{ background: !canEdit ? colors.hover : colors.accent, color: !canEdit ? colors.subText : colors.onAccent, border: 'none', height: '36px', padding: '0 16px', borderRadius: 'var(--r-control)', cursor: canEdit ? 'pointer' : 'not-allowed', fontWeight: 500, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'inherit', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12)' }}
           >
-            <Save size={15} /> Save
+            <Save size={16} strokeWidth={1.5} /> Save
           </button>
         </div>
       </div>
@@ -517,12 +519,12 @@ export default function ScheduleTable({
                 <div style={{ flex: 1, minWidth: 0, textAlign: (isMobile || isTablet) ? 'center' : 'left' }}>
                   {canEdit
                     ? <EditableTitle initialTitle={planName} onSave={setPlanName} isDarkMode={isDarkMode} />
-                    : <div style={{ fontSize: '24px', fontWeight: '600', color: colors.heading, letterSpacing: '-0.3px' }}>{planName}</div>
+                    : <div style={{ fontSize: '28px', lineHeight: 1.15, fontWeight: 500, color: colors.heading }}>{planName}</div>
                   }
-                  <div style={{ fontSize: '13px', color: colors.subText, marginTop: '5px', display: 'flex', alignItems: 'center', justifyContent: (isMobile || isTablet) ? 'center' : 'flex-start', gap: '6px' }}>
+                  <div style={{ fontSize: '13px', color: colors.subText, marginTop: '4px', display: 'flex', alignItems: 'center', justifyContent: (isMobile || isTablet) ? 'center' : 'flex-start', gap: '6px' }}>
                     <CalendarIcon date={planDate} />
                     {!isTemplate && serviceData?.start_time && (
-                      <><span style={{ opacity: 0.35 }}>•</span><span>{formatTime(serviceData.start_time)} Service</span></>
+                      <><span>·</span><span>{formatTime(serviceData.start_time)} service</span></>
                     )}
                   </div>
                 </div>
@@ -532,47 +534,47 @@ export default function ScheduleTable({
                   </span>
                 )}
                 {isTemplate && (
-                  <span style={{ fontSize: '12px', fontWeight: '500', color: colors.subText, border: `1px solid ${colors.border}`, padding: '3px 10px', borderRadius: '6px', flexShrink: 0, marginTop: '4px' }}>Template</span>
+                  <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: colors.subText, border: `1px solid ${colors.border}`, padding: '2px 8px', borderRadius: 'var(--r-tag)', flexShrink: 0, marginTop: '4px' }}>Template</span>
                 )}
               </div>
 
               {/* TIMES — named Service / Rehearsal / Other blocks for this plan */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px', marginTop: '10px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
                 {times.map(t => (
                   <button
                     key={t.id}
                     onClick={() => openEditTime(t)}
                     title={`${t.name || TIME_TYPE_LABEL[t.type]} — click to edit`}
                     style={{
-                      display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: '500',
-                      padding: '4px 10px', borderRadius: '20px', border: `1px solid ${colors.border}`, background: colors.card,
+                      display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 500, height: '28px',
+                      padding: '0 10px', borderRadius: 'var(--r-control)', border: '1px solid var(--line-2)', background: colors.card,
                       color: colors.text, cursor: canEdit ? 'pointer' : 'default', fontFamily: 'inherit',
                     }}
                   >
                     <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: TIME_TYPE_COLOR[t.type], flexShrink: 0 }} />
                     {t.name || TIME_TYPE_LABEL[t.type]}
-                    <span style={{ color: colors.subText, fontFamily: 'var(--font-mono)', fontSize: '11px' }}>{formatTime(t.startTime)}</span>
+                    <span style={{ color: colors.subText, fontFamily: 'var(--font-mono)', fontSize: '12px' }}>{formatTime(t.startTime)}</span>
                   </button>
                 ))}
                 {canEdit && (
                   <div style={{ position: 'relative' }}>
                     <button
                       onClick={(e) => { e.stopPropagation(); setShowAddTimeMenu(v => !v); }}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: '500', padding: '4px 10px', borderRadius: '20px', border: `1px dashed ${colors.border}`, background: 'transparent', color: colors.subText, cursor: 'pointer', fontFamily: 'inherit' }}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: 500, height: '28px', padding: '0 10px', borderRadius: 'var(--r-control)', border: '1px dashed var(--line-2)', background: 'transparent', color: colors.text, cursor: 'pointer', fontFamily: 'inherit' }}
                     >
-                      <Plus size={12} /> Add time
+                      <Plus size={14} strokeWidth={1.5} /> Add time
                     </button>
                     {showAddTimeMenu && (
-                      <div onClick={(e) => e.stopPropagation()} style={{ position: 'absolute', top: '100%', left: 0, marginTop: '6px', background: colors.popover, border: `1px solid ${colors.border}`, borderRadius: '10px', boxShadow: '0 10px 25px rgba(0,0,0,0.25)', zIndex: 60, minWidth: '140px', overflow: 'hidden' }}>
+                      <div onClick={(e) => e.stopPropagation()} style={{ position: 'absolute', top: '100%', left: 0, marginTop: '6px', background: colors.popover, border: `1px solid ${colors.border}`, borderRadius: '10px', boxShadow: 'var(--shadow-lg)', zIndex: 60, minWidth: '140px', overflow: 'hidden' }}>
                         {['service', 'rehearsal', 'other'].map(type => (
                           <div
                             key={type}
                             onClick={() => { setShowAddTimeMenu(false); openAddTime(type); }}
-                            style={{ padding: '9px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: colors.text, fontWeight: '500', fontSize: '13px' }}
+                            style={{ height: '36px', padding: '0 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: colors.heading, fontWeight: 400, fontSize: '13px' }}
                             onMouseEnter={(e) => e.currentTarget.style.background = colors.hover}
                             onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                           >
-                            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: TIME_TYPE_COLOR[type] }} />
+                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: TIME_TYPE_COLOR[type] }} />
                             {TIME_TYPE_LABEL[type]}
                           </div>
                         ))}
@@ -584,27 +586,27 @@ export default function ScheduleTable({
             </div>
 
             {/* STATS ROW */}
-            <div style={{ display: 'flex', gap: '12px', justifyContent: (isMobile || isTablet) ? 'center' : 'flex-start' }}>
-              <div style={{ flex: (isMobile || isTablet) ? 'unset' : 1, background: colors.card, borderRadius: '12px', border: `1px solid ${colors.border}`, padding: '14px 18px', textAlign: (isMobile || isTablet) ? 'center' : 'left' }}>
-                <div style={{ fontSize: '12px', fontWeight: '500', color: colors.subText, marginBottom: '6px' }}>Total time</div>
-                <div style={{ fontSize: '20px', fontWeight: '500', color: (isMobile || isTablet) ? colors.subText : colors.heading, letterSpacing: '-0.3px', fontFamily: 'var(--font-mono)' }}>
-                  {totalMinutes > 0 ? `${totalMinutes} Min` : '—'}
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', justifyContent: (isMobile || isTablet) ? 'center' : 'flex-start' }}>
+              <div style={{ flex: (isMobile || isTablet) ? 'unset' : '0 0 220px', background: colors.card, borderRadius: 'var(--r-card)', border: `1px solid ${colors.border}`, padding: '16px 20px', textAlign: (isMobile || isTablet) ? 'center' : 'left' }}>
+                <div style={{ fontSize: '13px', color: colors.subText, marginBottom: '8px' }}>Total time</div>
+                <div style={{ fontSize: '28px', lineHeight: 1, fontWeight: 500, color: colors.heading, fontVariantNumeric: 'tabular-nums' }}>
+                  {totalMinutes > 0 ? <>{totalMinutes}<span style={{ fontSize: '14px', color: colors.subText, marginLeft: '4px' }}>min</span></> : '—'}
                 </div>
               </div>
               {!isTemplate && !isMobile && !isTablet && (
-                <div style={{ flex: 1, background: colors.card, borderRadius: '12px', border: `1px solid ${colors.border}`, padding: '14px 18px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: '500', color: colors.subText, marginBottom: '10px' }}>Team status</div>
+                <div style={{ flex: 1, background: colors.card, borderRadius: 'var(--r-card)', border: `1px solid ${colors.border}`, padding: '16px 20px' }}>
+                  <div style={{ fontSize: '13px', color: colors.subText, marginBottom: '12px' }}>Team status</div>
 
                   {/* Ministry toggle pills */}
                   {ministries.length > 0 && (
-                    <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '16px' }}>
                       {ministries.map(m => {
                         const active = selectedMinistries.includes(m.id);
                         return (
                           <button
                             key={m.id}
                             onClick={() => setSelectedMinistries(prev => active ? prev.filter(id => id !== m.id) : [...prev, m.id])}
-                            style={{ fontSize: '10px', fontWeight: '600', padding: '3px 9px', borderRadius: '99px', border: `1px solid ${active ? colors.accent : colors.border}`, background: active ? `${colors.accent}18` : 'transparent', color: active ? colors.accent : colors.subText, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+                            style={{ fontSize: '12px', fontWeight: 500, height: '24px', padding: '0 8px', borderRadius: 'var(--r-tag)', border: `1px solid ${active ? 'var(--accent-line)' : 'var(--line-2)'}`, background: active ? colors.accentSoft : 'transparent', color: active ? colors.accentInk : colors.text, cursor: 'pointer', fontFamily: 'inherit', transition: 'background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease)' }}
                           >
                             {m.name}
                           </button>
@@ -620,29 +622,31 @@ export default function ScheduleTable({
                       : positions;
 
                     if (filteredPos.length === 0) {
-                      return <div style={{ fontSize: '12px', color: colors.subText, fontStyle: 'italic' }}>{positions.length === 0 ? 'No positions yet' : 'Select a ministry above'}</div>;
+                      return <div style={{ fontSize: '13px', color: colors.subText }}>{positions.length === 0 ? 'No positions yet' : 'Select a ministry above'}</div>;
                     }
 
-                    const badge = { confirmed: { bg: '#10b981', icon: '✓' }, declined: { bg: '#ef4444', icon: '✗' }, pending: { bg: '#f59e0b', icon: '!' } };
+                    const statusDot = { confirmed: colors.success, declined: colors.danger, pending: colors.warning };
+                    const statusLabel = { confirmed: 'Confirmed', declined: 'Declined', pending: 'Pending' };
 
                     return (
-                      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-                        {filteredPos.map((pos, idx) => {
+                      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                        {filteredPos.map((pos) => {
                           const member = teamMembers.find(t => t.id === pos.member_id);
-                          const name   = member?.name || '?';
-                          const b      = badge[pos.status] || badge.pending;
+                          const open   = !member;
+                          const name   = member?.name || '';
+                          const dot    = statusDot[pos.status] || statusDot.pending;
                           return (
-                            <div key={pos.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
+                            <div key={pos.id} title={`${pos.role_name || 'Position'} · ${open ? 'Open' : `${name} · ${statusLabel[pos.status] || 'Pending'}`}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', width: '44px' }}>
                               <div style={{ position: 'relative' }}>
-                                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: AVATAR_COLORS[idx % AVATAR_COLORS.length], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '700', color: 'white' }}>
-                                  {name.charAt(0)}
+                                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: open ? 'transparent' : colors.hover, border: open ? '1px dashed var(--line-2)' : '1px solid var(--line)', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 500, color: colors.text }}>
+                                  {open ? '' : name.charAt(0)}
                                 </div>
-                                <div style={{ position: 'absolute', top: '-3px', right: '-3px', width: '14px', height: '14px', borderRadius: '50%', background: b.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px', fontWeight: '800', color: 'white', border: `1.5px solid ${isDarkMode ? '#18181b' : '#f8fafc'}` }}>
-                                  {b.icon}
-                                </div>
+                                {!open && (
+                                  <span style={{ position: 'absolute', bottom: '0', right: '0', width: '8px', height: '8px', borderRadius: '50%', background: dot, boxShadow: '0 0 0 2px var(--card)' }} />
+                                )}
                               </div>
-                              <span style={{ fontSize: '9px', color: colors.subText, textAlign: 'center', maxWidth: '40px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {name.split(' ')[0]}
+                              <span style={{ fontSize: '11px', color: open ? colors.subText : colors.text, textAlign: 'center', maxWidth: '44px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {open ? 'Open' : name.split(' ')[0]}
                               </span>
                             </div>
                           );
@@ -653,7 +657,7 @@ export default function ScheduleTable({
 
                   {/* Selected ministry names */}
                   {selectedMinistries.length > 0 && (
-                    <div style={{ marginTop: '10px', fontSize: '10px', color: colors.subText, opacity: 0.7 }}>
+                    <div style={{ marginTop: '12px', fontSize: '12px', color: colors.subText }}>
                       {ministries.filter(m => selectedMinistries.includes(m.id)).map(m => m.name).join(' · ')}
                     </div>
                   )}
@@ -664,20 +668,20 @@ export default function ScheduleTable({
           </div>{/* end sticky header */}
 
           {/* SERVICE PLAN label + Add Item */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <span style={{ fontSize: '13px', fontWeight: '500', color: colors.subText }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '12px' }}>
+            <span style={{ flex: 1, fontSize: '13px', fontWeight: 500, color: colors.subText }}>
               Service plan
             </span>
             {canEdit && (
               <div style={{ position: 'relative' }}>
                 <button
                   onClick={() => setShowAddMenu(!showAddMenu)}
-                  style={{ background: 'transparent', border: 'none', color: colors.accent, fontSize: '13px', fontWeight: '700', cursor: 'pointer', padding: '4px 0', display: 'flex', alignItems: 'center', gap: '5px', fontFamily: 'inherit' }}
+                  style={{ background: 'transparent', border: 'none', color: colors.accentInk, fontSize: '13px', fontWeight: 500, cursor: 'pointer', height: '32px', padding: '0 8px', borderRadius: 'var(--r-control)', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'inherit' }}
                 >
-                  <Plus size={14} /> Add Item
+                  <Plus size={16} strokeWidth={1.5} /> Add item
                 </button>
                 {showAddMenu && (
-                  <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '6px', background: colors.popover, border: `1px solid ${colors.border}`, borderRadius: '10px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', zIndex: 50, minWidth: '180px', overflow: 'hidden' }}>
+                  <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '6px', background: colors.popover, border: `1px solid ${colors.border}`, borderRadius: '10px', boxShadow: 'var(--shadow-lg)', zIndex: 50, minWidth: '180px', overflow: 'hidden' }}>
                     {[
                       { type: 'song',   label: 'Song',    icon: Music         },
                       { type: 'header', label: 'Section', icon: LayoutTemplate },
@@ -689,11 +693,11 @@ export default function ScheduleTable({
                         draggable
                         onDragStart={(e) => handleNewDragStart(e, type)}
                         onClick={() => handleAddItemClick(type)}
-                        style={{ padding: '11px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', color: colors.text, fontWeight: '500', fontSize: '13px' }}
+                        style={{ height: '36px', padding: '0 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', color: colors.heading, fontWeight: 400, fontSize: '13px' }}
                         onMouseEnter={(e) => e.currentTarget.style.background = colors.hover}
                         onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                       >
-                        <Icon size={16} color={colors.accent} />{label}
+                        <Icon size={16} strokeWidth={1.5} color={colors.subText} />{label}
                       </div>
                     ))}
                   </div>
@@ -704,16 +708,16 @@ export default function ScheduleTable({
               <button
                 onClick={(e) => { e.stopPropagation(); setShowViewMenu(v => !v); }}
                 title="Choose what shows on each row"
-                style={{ background: showViewMenu ? colors.hover : 'transparent', border: `1px solid ${colors.border}`, borderRadius: '6px', padding: '5px 9px', color: colors.subText, fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontFamily: 'inherit', marginLeft: canEdit ? '8px' : 0 }}
+                style={{ background: showViewMenu ? colors.hover : colors.card, border: '1px solid var(--line-2)', borderRadius: 'var(--r-control)', height: '32px', padding: '0 10px', color: colors.text, fontSize: '13px', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'inherit', marginLeft: canEdit ? '8px' : 0 }}
               >
-                <Filter size={12} /> View
+                <Filter size={14} strokeWidth={1.5} /> View
               </button>
               {showViewMenu && (
                 <div
                   onClick={(e) => e.stopPropagation()}
-                  style={{ position: 'absolute', top: '100%', right: 0, marginTop: '6px', background: colors.popover, border: `1px solid ${colors.border}`, borderRadius: '10px', boxShadow: '0 10px 25px rgba(0,0,0,0.25)', zIndex: 60, minWidth: '220px', padding: '12px' }}
+                  style={{ position: 'absolute', top: '100%', right: 0, marginTop: '6px', background: colors.popover, border: `1px solid ${colors.border}`, borderRadius: '10px', boxShadow: 'var(--shadow-lg)', zIndex: 60, minWidth: '220px', padding: '12px' }}
                 >
-                  <div style={{ fontSize: '10px', fontWeight: '700', color: colors.subText, letterSpacing: '0.04em', marginBottom: '8px' }}>SHOW ON ROW</div>
+                  <div style={{ fontSize: '12px', color: colors.subText, marginBottom: '4px' }}>Show on row</div>
                   {[
                     ['showTime', 'Time'], ['showLength', 'Length'], ['showKey', 'Key'],
                     ['showBpm', 'BPM'], ['showLeader', 'Leader'],
@@ -728,17 +732,18 @@ export default function ScheduleTable({
                       {label}
                     </label>
                   ))}
-                  <div style={{ fontSize: '10px', fontWeight: '700', color: colors.subText, letterSpacing: '0.04em', margin: '12px 0 8px' }}>DENSITY</div>
-                  <div style={{ display: 'flex', gap: '4px' }}>
+                  <div style={{ fontSize: '12px', color: colors.subText, margin: '12px 0 8px' }}>Density</div>
+                  <div style={{ display: 'flex', gap: '2px', padding: '2px', background: colors.hover, borderRadius: 'var(--r-control)', border: `1px solid ${colors.border}` }}>
                     {['condensed', 'default', 'expanded'].map(d => (
                       <button
                         key={d}
                         onClick={() => setViewSettings(v => ({ ...v, density: d }))}
                         style={{
-                          flex: 1, fontSize: '11px', fontWeight: '500', textTransform: 'capitalize', padding: '5px 0', borderRadius: '6px', cursor: 'pointer', fontFamily: 'inherit',
-                          border: `1px solid ${viewSettings.density === d ? colors.accent : colors.border}`,
-                          background: viewSettings.density === d ? colors.accent : 'transparent',
-                          color: viewSettings.density === d ? 'white' : colors.subText,
+                          flex: 1, fontSize: '12px', fontWeight: 500, textTransform: 'capitalize', height: '26px', borderRadius: '6px', cursor: 'pointer', fontFamily: 'inherit',
+                          border: 'none',
+                          background: viewSettings.density === d ? colors.card : 'transparent',
+                          boxShadow: viewSettings.density === d ? 'var(--shadow-sm)' : 'none',
+                          color: viewSettings.density === d ? colors.heading : colors.text,
                         }}
                       >
                         {d}
@@ -758,18 +763,18 @@ export default function ScheduleTable({
             onDrop={(e) => handleDrop(e, items.length)}
           >
             {items.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '60px 20px', color: colors.subText, fontSize: '14px' }}>
-                <Plus size={32} color={colors.border} style={{ margin: '0 auto 12px', display: 'block' }} />
-                No items yet — click <strong>+ Add Item</strong> to begin
+              <div style={{ textAlign: 'center', padding: '64px 24px', color: colors.text, fontSize: '14px', background: colors.card, border: `1px dashed var(--line-2)`, borderRadius: 'var(--r-card)' }}>
+                <FileText size={24} strokeWidth={1.5} color={colors.subText} style={{ margin: '0 auto 12px', display: 'block' }} />
+                No items yet. Use <span style={{ color: colors.heading, fontWeight: 500 }}>Add item</span> to start the plan.
               </div>
             ) : (
-            <div style={{ background: colors.card, borderRadius: '12px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
+            <div style={{ background: colors.card, borderRadius: 'var(--r-card)', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
             {/* Column header — same grid as every row below, so values line up like a real table */}
             {viewSettings.density !== 'condensed' && (
-              <div style={{ display: 'grid', gridTemplateColumns: metaGridCols, alignItems: 'center', gap: '8px', padding: '7px 14px', borderBottom: `1px solid ${colors.border}`, fontSize: '10px', fontWeight: '600', color: colors.subText, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: metaGridCols, alignItems: 'center', gap: '8px', height: '32px', padding: '0 16px', borderBottom: `1px solid ${colors.border}`, fontSize: '12px', color: colors.subText, background: 'var(--deep)' }}>
                 {canEdit && <span />}
                 <span />
-                {timeColLabels.map((label, ci) => <span key={ci} style={{ fontFamily: 'var(--font-mono)', textTransform: 'none' }}>{viewSettings.showTime ? label : ''}</span>)}
+                {timeColLabels.map((label, ci) => <span key={ci} style={{ fontFamily: 'var(--font-mono)' }}>{viewSettings.showTime ? label : ''}</span>)}
                 <span>{viewSettings.showLength ? 'Len' : ''}</span>
                 <span>{viewSettings.showKey ? 'Key' : ''}</span>
                 <span>{viewSettings.showBpm ? 'BPM' : ''}</span>
@@ -788,7 +793,7 @@ export default function ScheduleTable({
                     onDragOver={(e) => handleDragOver(e, i)}
                     onDragLeave={() => setDropTargetIndex(null)}
                     onDrop={(e) => handleDrop(e, i)}
-                    style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '42px', padding: '0 14px', background: sc['--sc-soft'], borderTop: i > 0 ? `1px solid ${colors.border}` : 'none', opacity: draggedItemIndex === i ? 0.3 : 1 }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '40px', padding: '0 16px', background: sc['--sc-soft'], borderTop: i > 0 ? `1px solid ${colors.border}` : 'none', opacity: draggedItemIndex === i ? 0.3 : 1 }}
                   >
                     {/* Drag handle */}
                     {canEdit && (
@@ -798,15 +803,15 @@ export default function ScheduleTable({
                     )}
 
                     {/* Color dot */}
-                    <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: sc['--sc'], flexShrink: 0 }} />
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: sc['--sc'], flexShrink: 0 }} />
 
                     {/* Section name — left-aligned, fills remaining space */}
                     <input
                       readOnly={!canEdit}
                       value={item.title || ''}
                       onChange={e => updateItem(i, 'title', e.target.value)}
-                      placeholder="New Section"
-                      style={{ flex: 1, minWidth: 0, background: 'transparent', border: 'none', outline: 'none', fontSize: '13px', fontWeight: '600', color: sc['--sc-ink'], pointerEvents: isDraggingAny ? 'none' : 'auto', fontFamily: 'inherit' }}
+                      placeholder="New section"
+                      style={{ flex: 1, minWidth: 0, background: 'transparent', border: 'none', outline: 'none', fontSize: '13px', fontWeight: 500, color: sc['--sc-ink'], pointerEvents: isDraggingAny ? 'none' : 'auto', fontFamily: 'inherit' }}
                     />
 
                     {/* Pre-service flag — excludes this whole section from the running total */}
@@ -815,8 +820,8 @@ export default function ScheduleTable({
                         onClick={() => updateItem(i, 'isPreService', !item.isPreService)}
                         title={item.isPreService ? 'Pre-service — excluded from the total time. Click to unmark.' : 'Mark this section as pre-service (excluded from the total time)'}
                         style={{
-                          fontSize: '10px', fontWeight: '600', flexShrink: 0, cursor: 'pointer', fontFamily: 'inherit',
-                          borderRadius: '10px', padding: '2px 8px',
+                          fontSize: '11px', fontWeight: 500, flexShrink: 0, cursor: 'pointer', fontFamily: 'inherit',
+                          borderRadius: 'var(--r-tag)', padding: '2px 6px',
                           background: item.isPreService ? `${sc['--sc-ink']}22` : 'transparent',
                           border: item.isPreService ? `1px solid ${sc['--sc-ink']}55` : '1px solid transparent',
                           color: sc['--sc-ink'],
@@ -828,11 +833,11 @@ export default function ScheduleTable({
                         Pre-service
                       </button>
                     ) : item.isPreService && (
-                      <span style={{ fontSize: '10px', fontWeight: '600', color: sc['--sc-ink'], opacity: 0.85, flexShrink: 0 }}>Pre-service</span>
+                      <span style={{ fontSize: '11px', fontWeight: 500, color: sc['--sc-ink'], opacity: 0.85, flexShrink: 0 }}>Pre-service</span>
                     )}
 
                     {/* Section total */}
-                    <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: sc['--sc-ink'], opacity: 0.85, flexShrink: 0 }}>{mins} min</span>
+                    <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums', color: sc['--sc-ink'], opacity: 0.85, flexShrink: 0 }}>{mins} min</span>
 
                     {/* Controls: color popover + delete */}
                     {canEdit && (
@@ -847,14 +852,14 @@ export default function ScheduleTable({
                           {colorPopoverItemId === item.id && (
                             <div
                               onClick={(e) => e.stopPropagation()}
-                              style={{ position: 'absolute', right: 0, top: '20px', zIndex: 100, background: colors.popover, border: `1px solid ${colors.border}`, borderRadius: '10px', padding: '8px', boxShadow: '0 8px 24px rgba(0,0,0,0.3)' }}
+                              style={{ position: 'absolute', right: 0, top: '20px', zIndex: 100, background: colors.popover, border: `1px solid ${colors.border}`, borderRadius: '10px', padding: '8px', boxShadow: 'var(--shadow-lg)' }}
                             >
                               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '5px', marginBottom: '8px' }}>
                                 {(isDarkMode ? DARK_MODE_COLORS : LIGHT_MODE_COLORS).map(color => (
                                   <div
                                     key={color}
                                     onClick={() => { updateItem(i, 'color', color); setColorPopoverItemId(null); }}
-                                    style={{ width: '20px', height: '20px', borderRadius: '50%', background: color, cursor: 'pointer', border: item.color === color ? `2px solid ${isDarkMode ? '#ffffff' : '#000000'}` : '2px solid transparent', boxSizing: 'border-box' }}
+                                    style={{ width: '20px', height: '20px', borderRadius: '50%', background: color, cursor: 'pointer', border: item.color === color ? '2px solid var(--text-1)' : '2px solid transparent', boxSizing: 'border-box' }}
                                   />
                                 ))}
                               </div>
@@ -870,8 +875,8 @@ export default function ScheduleTable({
                             </div>
                           )}
                         </div>
-                        <button onClick={() => handleDeleteItem(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: sc['--sc-ink'], opacity: 0.6, padding: 0, display: 'flex' }}>
-                          <X size={11} />
+                        <button onClick={() => handleDeleteItem(i)} title="Delete section" style={{ background: 'none', border: 'none', cursor: 'pointer', color: sc['--sc-ink'], opacity: 0.6, width: '24px', height: '24px', borderRadius: 'var(--r-tag)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <X size={14} strokeWidth={1.5} />
                         </button>
                       </div>
                     )}
@@ -901,7 +906,7 @@ export default function ScheduleTable({
                       style={{
                         display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer',
                         borderTop: i > 0 ? `1px solid ${colors.border}` : 'none',
-                        padding: '8px 14px',
+                        padding: '8px 16px',
                         opacity: draggedItemIndex === i ? 0.4 : 1,
                         boxShadow: dropTargetIndex === i && isDraggingAny ? `inset 0 0 0 2px ${colors.accent}` : 'none',
                       }}
@@ -911,13 +916,13 @@ export default function ScheduleTable({
                           <GripVertical size={14} />
                         </div>
                       )}
-                      <span style={{ fontWeight: '600', fontSize: '15px', color: colors.heading, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <span style={{ fontWeight: 500, fontSize: '15px', color: colors.heading, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {item.title || 'Untitled'}
                       </span>
                       {item.isBackup && (
-                        <span style={{ fontSize: '10px', fontWeight: '600', color: colors.subText, border: `1px dashed ${colors.border}`, borderRadius: '10px', padding: '1px 7px', flexShrink: 0 }}>Standby</span>
+                        <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: colors.subText, border: '1px dashed var(--line-2)', borderRadius: 'var(--r-tag)', padding: '0 6px', flexShrink: 0 }}>Standby</span>
                       )}
-                      <ChevronRight size={13} color={colors.subText} style={{ opacity: 0.4, flexShrink: 0, transform: 'rotate(90deg)' }} />
+                      <ChevronRight size={14} strokeWidth={1.5} color={colors.subText} style={{ flexShrink: 0, transform: 'rotate(90deg)' }} />
                     </div>
                   );
                 }
@@ -935,7 +940,8 @@ export default function ScheduleTable({
                     style={{
                       display: 'grid', gridTemplateColumns: metaGridCols, alignItems: 'center', gap: '8px', cursor: 'pointer',
                       borderTop: i > 0 ? `1px solid ${colors.border}` : 'none',
-                      padding: '10px 14px',
+                      minHeight: '44px',
+                      padding: '0 16px',
                       opacity: draggedItemIndex === i ? 0.4 : 1,
                       boxShadow: dropTargetIndex === i && isDraggingAny ? `inset 0 0 0 2px ${colors.accent}` : 'none',
                     }}
@@ -946,11 +952,11 @@ export default function ScheduleTable({
                       </div>
                     )}
                     <span style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-                      <span style={{ fontWeight: '600', fontSize: '15px', color: colors.heading, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <span style={{ fontWeight: 500, fontSize: '15px', color: colors.heading, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {item.title || 'Untitled'}
                       </span>
                       {item.isBackup && (
-                        <span style={{ fontSize: '10px', fontWeight: '600', color: colors.subText, border: `1px dashed ${colors.border}`, borderRadius: '10px', padding: '1px 7px', flexShrink: 0 }}>Standby</span>
+                        <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: colors.subText, border: '1px dashed var(--line-2)', borderRadius: 'var(--r-tag)', padding: '0 6px', flexShrink: 0 }}>Standby</span>
                       )}
                     </span>
                     {(multiTimes || [displayTime]).map((t, ci) => (
@@ -958,15 +964,15 @@ export default function ScheduleTable({
                         {t === null ? '—' : t}
                       </span>
                     ))}
-                    <span style={{ fontSize: '12px', color: colors.subText, visibility: viewSettings.showLength && item.length ? 'visible' : 'hidden' }}>{item.length}</span>
-                    <span style={{ fontSize: '10px', fontWeight: '500', color: colors.subText, border: `1px solid ${colors.border}`, borderRadius: '5px', padding: '2px 6px', fontFamily: 'var(--font-mono)', textAlign: 'center', visibility: viewSettings.showKey && item.key ? 'visible' : 'hidden' }}>{item.key || '—'}</span>
-                    <span style={{ fontSize: '11px', color: colors.subText, visibility: viewSettings.showBpm && item.bpm ? 'visible' : 'hidden' }}>{item.bpm} bpm</span>
+                    <span style={{ fontSize: '12px', color: colors.subText, fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums', visibility: viewSettings.showLength && item.length ? 'visible' : 'hidden' }}>{item.length}</span>
+                    <span style={{ fontSize: '12px', color: colors.text, background: 'var(--deep)', border: '1px solid var(--line-2)', borderRadius: 'var(--r-tag)', padding: '0 6px', lineHeight: '20px', fontFamily: 'var(--font-mono)', textAlign: 'center', justifySelf: 'start', visibility: viewSettings.showKey && item.key ? 'visible' : 'hidden' }}>{item.key || '—'}</span>
+                    <span style={{ fontSize: '12px', color: colors.subText, fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums', visibility: viewSettings.showBpm && item.bpm ? 'visible' : 'hidden' }}>{item.bpm}</span>
                     <span style={{ visibility: viewSettings.showLeader && item.leaderId ? 'visible' : 'hidden' }}>
-                      <span title={leaderName} style={{ width: '18px', height: '18px', borderRadius: '50%', background: AVATAR_COLORS[i % AVATAR_COLORS.length], color: 'white', fontSize: '9px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <span title={leaderName} style={{ width: '22px', height: '22px', borderRadius: '50%', background: colors.hover, border: '1px solid var(--line)', boxSizing: 'border-box', color: colors.text, fontSize: '11px', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {leaderName.charAt(0)}
                       </span>
                     </span>
-                    <ChevronRight size={13} color={colors.subText} style={{ opacity: 0.4, transform: 'rotate(90deg)' }} />
+                    <ChevronRight size={14} strokeWidth={1.5} color={colors.subText} style={{ transform: 'rotate(90deg)' }} />
                   </div>
                 );
               }
@@ -979,10 +985,10 @@ export default function ScheduleTable({
                   onDrop={(e) => handleDrop(e, i)}
                   style={{
                     borderTop: i > 0 ? `1px solid ${colors.border}` : 'none',
-                    padding: '12px 14px 12px 12px',
+                    padding: '12px 16px',
                     opacity: draggedItemIndex === i ? 0.4 : 1,
                     boxShadow: dropTargetIndex === i && isDraggingAny ? `inset 0 0 0 2px ${colors.accent}` : 'none',
-                    transition: 'box-shadow 0.1s',
+                    transition: 'box-shadow var(--t-fast) var(--ease)',
                   }}
                 >
                   {/* Title first — the subject of the row */}
@@ -996,20 +1002,20 @@ export default function ScheduleTable({
                       readOnly={!canEdit}
                       value={item.title || ''}
                       onChange={e => updateItem(i, 'title', e.target.value)}
-                      style={{ flex: 1, minWidth: 0, background: 'transparent', border: 'none', fontWeight: '700', fontSize: '16px', color: colors.heading, outline: 'none', letterSpacing: '-0.3px', boxSizing: 'border-box', pointerEvents: isDraggingAny ? 'none' : 'auto', fontFamily: 'inherit' }}
+                      style={{ flex: 1, minWidth: 0, background: 'transparent', border: 'none', fontWeight: 500, fontSize: '16px', color: colors.heading, outline: 'none', boxSizing: 'border-box', pointerEvents: isDraggingAny ? 'none' : 'auto', fontFamily: 'inherit' }}
                     />
                     {item.isBackup && (
-                      <span style={{ fontSize: '10px', fontWeight: '600', color: colors.subText, border: `1px dashed ${colors.border}`, borderRadius: '10px', padding: '1px 7px', flexShrink: 0 }}>Standby</span>
+                      <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: colors.subText, border: '1px dashed var(--line-2)', borderRadius: 'var(--r-tag)', padding: '0 6px', flexShrink: 0 }}>Standby</span>
                     )}
                     {viewSettings.density !== 'expanded' && (
-                      <button onClick={toggleExpand} title="Collapse" style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.subText, opacity: 0.4, padding: '2px', display: 'flex', flexShrink: 0 }}>
-                        <ChevronRight size={13} style={{ transform: 'rotate(270deg)' }} />
+                      <button onClick={toggleExpand} title="Collapse" style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.subText, width: '24px', height: '24px', borderRadius: 'var(--r-tag)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <ChevronRight size={14} strokeWidth={1.5} style={{ transform: 'rotate(270deg)' }} />
                       </button>
                     )}
                   </div>
 
                   {/* Meta line — time • duration • key • bpm • leader • standby • delete */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', paddingLeft: canEdit ? '22px' : 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', paddingLeft: canEdit ? '22px' : 0 }}>
                     {multiTimes ? (
                       <span style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
                         {multiTimes.map((t, ci) => (
@@ -1021,7 +1027,7 @@ export default function ScheduleTable({
                         {displayTime}
                       </span>
                     )}
-                    <span style={{ fontSize: '12px', color: colors.subText, opacity: 0.35 }}>•</span>
+                    <span style={{ fontSize: '12px', color: colors.subText }}>·</span>
                     <input
                       readOnly={!canEdit}
                       value={item.length || ''}
@@ -1036,29 +1042,29 @@ export default function ScheduleTable({
                         value={item.key || ''}
                         onChange={(e) => updateItem(i, 'key', e.target.value)}
                         disabled={!canEdit}
-                        title="Song Key"
-                        style={{ fontSize: '10px', fontWeight: '500', background: item.key ? colors.hover : 'transparent', color: colors.subText, border: item.key ? `1px solid ${colors.border}` : `1px dashed ${colors.border}`, padding: '2px 6px', borderRadius: '5px', cursor: canEdit ? 'pointer' : 'default', outline: 'none', appearance: 'none', WebkitAppearance: 'none', fontFamily: 'var(--font-mono)' }}
+                        title="Song key"
+                        style={{ fontSize: '12px', background: item.key ? 'var(--deep)' : 'transparent', color: item.key ? colors.text : colors.subText, border: item.key ? '1px solid var(--line-2)' : '1px dashed var(--line-2)', padding: '0 6px', lineHeight: '20px', borderRadius: 'var(--r-tag)', cursor: canEdit ? 'pointer' : 'default', outline: 'none', appearance: 'none', WebkitAppearance: 'none', fontFamily: 'var(--font-mono)' }}
                       >
-                        <option value="">KEY</option>
-                        {MUSIC_KEYS.map(k => <option key={k} value={k}>KEY: {k}</option>)}
+                        <option value="">Key</option>
+                        {MUSIC_KEYS.map(k => <option key={k} value={k}>{k}</option>)}
                       </select>
                     )}
 
                     {/* BPM */}
                     {item.type === 'song' && (
-                      <input readOnly={!canEdit} value={item.bpm || ''} onChange={(e) => updateItem(i, 'bpm', e.target.value)} placeholder="BPM" style={{ background: 'transparent', border: 'none', color: colors.subText, fontSize: '11px', width: '38px', outline: 'none', pointerEvents: isDraggingAny ? 'none' : 'auto', fontFamily: 'inherit' }} />
+                      <input readOnly={!canEdit} value={item.bpm || ''} onChange={(e) => updateItem(i, 'bpm', e.target.value)} placeholder="BPM" style={{ background: 'transparent', border: 'none', color: colors.subText, fontSize: '12px', fontFamily: 'var(--font-mono)', width: '40px', outline: 'none', pointerEvents: isDraggingAny ? 'none' : 'auto', fontFamily: 'inherit' }} />
                     )}
 
-                    {item.type === 'song' && <Music size={13} color={colors.subText} style={{ opacity: 0.4, flexShrink: 0 }} />}
+                    {item.type === 'song' && <Music size={14} strokeWidth={1.5} color={colors.subText} style={{ flexShrink: 0 }} />}
 
                     {/* Arrangement toggle — songs only */}
                     {item.type === 'song' && (
                       <button
                         onClick={() => setArrangementItemId(arrangementItemId === item.id ? null : item.id)}
                         title="Song arrangement"
-                        style={{ background: item.sequence?.length ? colors.hover : 'transparent', border: `1px solid ${colors.border}`, borderRadius: '5px', padding: '2px 6px', fontSize: '10px', color: colors.subText, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'inherit' }}
+                        style={{ background: item.sequence?.length ? colors.hover : 'transparent', border: '1px solid var(--line-2)', borderRadius: 'var(--r-tag)', height: '22px', padding: '0 6px', fontSize: '12px', color: colors.text, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'inherit' }}
                       >
-                        <LayoutTemplate size={11} />
+                        <LayoutTemplate size={12} strokeWidth={1.5} />
                         {item.sequence?.length ? `${item.sequence.length} parts` : 'Arrangement'}
                       </button>
                     )}
@@ -1071,19 +1077,19 @@ export default function ScheduleTable({
                         onClick={(e) => { e.stopPropagation(); setLeaderPickerItemId(leaderPickerItemId === item.id ? null : item.id); }}
                         title={item.leaderId ? teamMembers.find(p => p.id === item.leaderId)?.name || 'Leader' : 'Tag a leader'}
                         style={{
-                          width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0, cursor: canEdit ? 'pointer' : 'default',
-                          background: item.leaderId ? AVATAR_COLORS[i % AVATAR_COLORS.length] : 'transparent',
-                          border: item.leaderId ? 'none' : `1px dashed ${colors.border}`,
+                          width: '22px', height: '22px', borderRadius: '50%', flexShrink: 0, cursor: canEdit ? 'pointer' : 'default', boxSizing: 'border-box',
+                          background: item.leaderId ? colors.hover : 'transparent',
+                          border: item.leaderId ? '1px solid var(--line)' : '1px dashed var(--line-2)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: '9px', fontWeight: '700', color: 'white',
+                          fontSize: '11px', fontWeight: 500, color: colors.text,
                         }}
                       >
-                        {item.leaderId ? (teamMembers.find(p => p.id === item.leaderId)?.name || '?').charAt(0) : (canEdit ? <Users size={10} color={colors.subText} /> : null)}
+                        {item.leaderId ? (teamMembers.find(p => p.id === item.leaderId)?.name || '?').charAt(0) : (canEdit ? <Users size={12} strokeWidth={1.5} color={colors.subText} /> : null)}
                       </button>
                       {leaderPickerItemId === item.id && (
                         <div
                           onClick={(e) => e.stopPropagation()}
-                          style={{ position: 'absolute', right: 0, top: '24px', zIndex: 100, background: colors.popover, border: `1px solid ${colors.border}`, borderRadius: '10px', padding: '6px', boxShadow: '0 8px 24px rgba(0,0,0,0.3)', minWidth: '160px', maxHeight: '220px', overflowY: 'auto' }}
+                          style={{ position: 'absolute', right: 0, top: '24px', zIndex: 100, background: colors.popover, border: `1px solid ${colors.border}`, borderRadius: '10px', padding: '6px', boxShadow: 'var(--shadow-lg)', minWidth: '160px', maxHeight: '220px', overflowY: 'auto' }}
                         >
                           <button
                             onClick={() => { updateItem(i, 'leaderId', null); setLeaderPickerItemId(null); }}
@@ -1113,15 +1119,15 @@ export default function ScheduleTable({
                       <button
                         onClick={() => updateItem(i, 'isBackup', !item.isBackup)}
                         title={item.isBackup ? 'On the plan as standby — click to make it a scheduled item' : 'Mark as standby / contingency (excluded from the total time)'}
-                        style={{ fontSize: '10px', fontWeight: '500', background: 'none', border: 'none', color: colors.subText, opacity: item.isBackup ? 0.9 : 0.4, cursor: 'pointer', padding: '2px', fontFamily: 'inherit' }}
+                        style={{ fontSize: '12px', background: 'none', border: 'none', color: item.isBackup ? colors.text : colors.subText, cursor: 'pointer', padding: '2px 4px', fontFamily: 'inherit' }}
                       >
                         {item.isBackup ? 'Standby' : 'Mark standby'}
                       </button>
                     )}
 
                     {canEdit && (
-                      <button onClick={() => handleDeleteItem(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.subText, opacity: 0.4, padding: '2px', display: 'flex', alignItems: 'center' }}>
-                        <Trash2 size={13} />
+                      <button onClick={() => handleDeleteItem(i)} title="Delete item" style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.subText, width: '24px', height: '24px', borderRadius: 'var(--r-tag)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Trash2 size={14} strokeWidth={1.5} />
                       </button>
                     )}
                   </div>
@@ -1131,7 +1137,7 @@ export default function ScheduleTable({
                     <div onClick={(e) => e.stopPropagation()} style={{ marginTop: '8px', marginLeft: canEdit ? '22px' : 0, padding: '10px', background: colors.hover, borderRadius: '8px' }}>
                       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px', marginBottom: canEdit ? '8px' : 0 }}>
                         {(item.sequence || []).length === 0 && (
-                          <span style={{ fontSize: '12px', color: colors.subText, fontStyle: 'italic' }}>No arrangement yet</span>
+                          <span style={{ fontSize: '12px', color: colors.subText }}>No arrangement yet</span>
                         )}
                         {(item.sequence || []).map((part, si) => (
                           <span key={si} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: '500', color: colors.text, background: colors.card, border: `1px solid ${colors.border}`, borderRadius: '6px', padding: '3px 4px 3px 8px' }}>
@@ -1158,7 +1164,7 @@ export default function ScheduleTable({
                               }
                             }}
                             list="sequence-presets"
-                            placeholder="Add a part (Intro, Verse 1, Chorus...) and press Enter"
+                            placeholder="Add a part, like Verse 1, then press Enter"
                             style={{ flex: 1, background: colors.card, border: `1px solid ${colors.border}`, borderRadius: '6px', padding: '5px 8px', fontSize: '12px', color: colors.text, outline: 'none', fontFamily: 'inherit' }}
                           />
                         </div>
@@ -1174,14 +1180,14 @@ export default function ScheduleTable({
                         if (match) {
                           return (
                             <div key={li} style={{ display: 'flex', gap: '5px', alignItems: 'baseline', flexWrap: 'wrap', marginBottom: '3px' }}>
-                              <span style={{ fontWeight: '700', fontSize: '13px', color: colors.text }}>"{match[1]}"</span>
-                              <span style={{ fontStyle: 'italic', fontSize: '12px', color: colors.subText }}>{match[2]}</span>
-                              <span style={{ fontSize: '10px', color: colors.subText, fontWeight: '300', opacity: 0.7 }}>{match[3]}</span>
+                              <span style={{ fontSize: '13px', color: colors.heading }}>{match[1]}</span>
+                              <span style={{ fontSize: '12px', color: colors.text }}>{match[2]}</span>
+                              <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: colors.subText }}>{match[3]}</span>
                             </div>
                           );
                         }
                         // Legacy plain notes
-                        return <div key={li} style={{ fontSize: '13px', color: colors.subText, fontStyle: 'italic', marginBottom: '2px' }}>{line}</div>;
+                        return <div key={li} style={{ fontSize: '13px', color: colors.text, marginBottom: '2px' }}>{line}</div>;
                       })}
                     </div>
                   )}
@@ -1189,7 +1195,7 @@ export default function ScheduleTable({
                   {/* Draft input — clears after Enter, appends formatted note */}
                   {canEdit && (
                     <input
-                      placeholder={item.notes ? 'Add another note...' : 'Add a note...'}
+                      placeholder={item.notes ? 'Add another note' : 'Add a note'}
                       value={noteDrafts[item.id] || ''}
                       onChange={e => setNoteDrafts(prev => ({ ...prev, [item.id]: e.target.value }))}
                       onKeyDown={(e) => {
@@ -1218,8 +1224,8 @@ export default function ScheduleTable({
             <div style={{ marginTop: '20px', padding: '16px', background: colors.card, borderRadius: '12px', border: `1px solid ${colors.border}` }}>
               <div style={{ fontSize: '13px', fontWeight: '500', marginBottom: '10px', color: colors.subText }}>Other services today</div>
               {sameDayServices.map(svc => (
-                <div key={svc.id} onClick={() => onServiceClick && onServiceClick(svc.id)} style={{ padding: '10px 12px', borderRadius: '8px', border: `1px solid ${colors.border}`, marginBottom: '6px', cursor: 'pointer', transition: 'all 0.15s' }} onMouseEnter={(e) => { e.currentTarget.style.background = colors.hover; e.currentTarget.style.borderColor = colors.accent; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = colors.border; }}>
-                  <div style={{ fontWeight: '600', marginBottom: '2px', color: colors.text, fontSize: '13px' }}>{svc.name}</div>
+                <div key={svc.id} onClick={() => onServiceClick && onServiceClick(svc.id)} style={{ padding: '10px 12px', borderRadius: '8px', border: `1px solid ${colors.border}`, marginBottom: '6px', cursor: 'pointer', transition: 'background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease)' }} onMouseEnter={(e) => { e.currentTarget.style.background = colors.hover; e.currentTarget.style.borderColor = colors.accent; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = colors.border; }}>
+                  <div style={{ fontWeight: 500, marginBottom: '2px', color: colors.text, fontSize: '13px' }}>{svc.name}</div>
                   <div style={{ fontSize: '12px', color: colors.subText }}>{formatTime(svc.start_time)}</div>
                 </div>
               ))}
@@ -1232,7 +1238,7 @@ export default function ScheduleTable({
 
           {/* Conditional panel */}
           {activeRightPanel && (
-            <div className="wop-scroll" style={{ width: isTablet ? '260px' : '300px', overflowY: 'auto', height: '100%', padding: '12px', display: 'flex', flexDirection: 'column', gap: '12px', background: isDarkMode ? '#000000' : '#ffffff' }}>
+            <div className="wop-scroll" style={{ width: isTablet ? '260px' : '300px', overflowY: 'auto', height: '100%', padding: '12px', display: 'flex', flexDirection: 'column', gap: '12px', background: 'var(--card)' }}>
 
               {/* CALENDAR PANEL */}
               {activeRightPanel === 'calendar' && (
@@ -1244,7 +1250,7 @@ export default function ScheduleTable({
                       <div style={{ fontSize: '13px', fontWeight: '500', color: colors.subText, marginBottom: '8px' }}>Other services today</div>
                       {sameDayServices.map(svc => (
                         <div key={svc.id} onClick={() => onServiceClick && onServiceClick(svc.id)} style={{ padding: '10px 12px', borderRadius: '8px', border: `1px solid ${colors.border}`, marginBottom: '6px', cursor: 'pointer' }} onMouseEnter={e => { e.currentTarget.style.background = colors.hover; e.currentTarget.style.borderColor = colors.accent; }} onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = colors.border; }}>
-                          <div style={{ fontWeight: '600', fontSize: '13px', color: colors.text }}>{svc.name}</div>
+                          <div style={{ fontWeight: 500, fontSize: '13px', color: colors.text }}>{svc.name}</div>
                           <div style={{ fontSize: '12px', color: colors.subText }}>{formatTime(svc.start_time)}</div>
                         </div>
                       ))}
@@ -1268,7 +1274,7 @@ export default function ScheduleTable({
                           <div onClick={() => setExpandedMinistries({...expandedMinistries, [m.id]: !isExp})} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', flex: 1 }}>
                             {isExp ? <ChevronDown size={14} color={colors.subText}/> : <ChevronRight size={14} color={colors.subText}/>}
                             <div>
-                              <div style={{ fontWeight: '700', fontSize: '13px', color: colors.text }}>{m.name}</div>
+                              <div style={{ fontWeight: 500, fontSize: '13px', color: colors.text }}>{m.name}</div>
                               <div style={{ fontSize: '11px', color: colors.subText, display: 'flex', gap: '8px', marginTop: '2px' }}>
                                 <span style={{ color: colors.success }}>✓ {conf}</span>
                                 <span style={{ color: colors.danger }}>✗ {need}</span>
@@ -1280,15 +1286,15 @@ export default function ScheduleTable({
                         </div>
                         {isExp && (
                           <div style={{ padding: '5px' }}>
-                            {mPos.length === 0 && <div style={{ fontSize: '12px', color: colors.subText, fontStyle: 'italic', padding: '5px' }}>No positions yet.</div>}
+                            {mPos.length === 0 && <div style={{ fontSize: '12px', color: colors.subText, padding: '4px' }}>No positions yet</div>}
                             {mPos.map(pos => {
                               const assigned = teamMembers.find(t => t.id === pos.member_id);
                               return (
                                 <div key={pos.id} onClick={() => openPeoplePicker(pos)} style={{ display: 'flex', alignItems: 'center', padding: '8px 6px', marginBottom: '2px', borderRadius: '4px', background: assigned ? 'transparent' : 'rgba(239,68,68,0.05)', cursor: canEdit ? 'pointer' : 'default', border: `1px solid ${assigned ? 'transparent' : 'rgba(239,68,68,0.2)'}` }}>
                                   <div style={{ flex: 1 }}>
-                                    <div style={{ fontSize: '12px', fontWeight: '600', color: colors.text }}>{pos.role_name}</div>
+                                    <div style={{ fontSize: '12px', fontWeight: 500, color: colors.text }}>{pos.role_name}</div>
                                     <div style={{ fontSize: '12px', color: assigned ? colors.text : colors.danger, display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                      {assigned ? <><div style={{ width: '16px', height: '16px', background: colors.accent, borderRadius: '50%', fontSize: '9px', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{assigned.name.charAt(0)}</div>{assigned.name}</> : 'Needed'}
+                                      {assigned ? <><div style={{ width: '16px', height: '16px', background: colors.hover, border: '1px solid var(--line)', boxSizing: 'border-box', borderRadius: '50%', fontSize: '10px', color: colors.text, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{assigned.name.charAt(0)}</div>{assigned.name}</> : 'Needed'}
                                     </div>
                                   </div>
                                   {canEdit && <button onClick={(e) => { e.stopPropagation(); handleDeleteRole(pos.id); }} style={{ color: colors.subText, background: 'none', border: 'none', cursor: 'pointer', opacity: 0.5 }}><X size={14}/></button>}
@@ -1298,7 +1304,7 @@ export default function ScheduleTable({
                             {canEdit && activeMinistryId === m.id && (
                               <div style={{ padding: '5px', display: 'flex', gap: '5px' }}>
                                 <input autoFocus placeholder="Role Name..." value={newRoleName} onChange={e => setNewRoleName(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveNewRole()} style={{ width: '100%', fontSize: '12px', padding: '6px', borderRadius: '4px', border: `1px solid ${colors.border}`, background: colors.inputBg, color: colors.text }} />
-                                <button onClick={saveNewRole} style={{ background: colors.accent, color: 'white', border: 'none', borderRadius: '4px', padding: '0 8px', cursor: 'pointer' }}><CheckCircle size={14}/></button>
+                                <button onClick={saveNewRole} style={{ background: colors.accent, color: colors.onAccent, border: 'none', borderRadius: '4px', padding: '0 8px', cursor: 'pointer' }}><CheckCircle size={14}/></button>
                                 <button onClick={() => setActiveMinistryId(null)} style={{ background: 'transparent', color: colors.subText, border: 'none', cursor: 'pointer' }}><X size={14}/></button>
                               </div>
                             )}
@@ -1326,9 +1332,9 @@ export default function ScheduleTable({
                     </div>
                     {expandedSections.playlists && (
                       <div style={{ paddingLeft: '4px' }}>
-                        <div onClick={() => setCurrentPlaylist(null)} style={{ padding: '7px 10px', borderRadius: '6px', cursor: 'pointer', background: !currentPlaylist ? colors.accent : 'transparent', color: !currentPlaylist ? 'white' : colors.text, marginBottom: '3px', fontSize: '13px' }}>All Songs</div>
+                        <div onClick={() => setCurrentPlaylist(null)} style={{ padding: '7px 10px', borderRadius: '6px', cursor: 'pointer', background: !currentPlaylist ? colors.hover : 'transparent', color: !currentPlaylist ? colors.heading : colors.text, marginBottom: '3px', fontSize: '13px' }}>All Songs</div>
                         {playlists.map(pl => (
-                          <div key={pl.id} onClick={() => setCurrentPlaylist(pl)} style={{ padding: '7px 10px', borderRadius: '6px', cursor: 'pointer', background: currentPlaylist?.id === pl.id ? colors.accent : 'transparent', color: currentPlaylist?.id === pl.id ? 'white' : colors.text, marginBottom: '3px', fontSize: '13px', display: 'flex', justifyContent: 'space-between' }}>
+                          <div key={pl.id} onClick={() => setCurrentPlaylist(pl)} style={{ padding: '7px 10px', borderRadius: '6px', cursor: 'pointer', background: currentPlaylist?.id === pl.id ? colors.hover : 'transparent', color: currentPlaylist?.id === pl.id ? colors.heading : colors.text, marginBottom: '3px', fontSize: '13px', display: 'flex', justifyContent: 'space-between' }}>
                             <span>{pl.name}</span><span style={{ fontSize: '11px', opacity: 0.7 }}>({pl.songs.length})</span>
                           </div>
                         ))}
@@ -1357,13 +1363,13 @@ export default function ScheduleTable({
                   <div style={{ fontSize: '13px', fontWeight: '500', color: colors.subText, marginBottom: '10px' }}>Run order</div>
                   <div style={{ fontSize: '12px', color: colors.subText, marginBottom: '14px' }}>
                     {serviceData?.date && new Date(serviceData.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-                    {serviceData?.start_time && <span style={{ marginLeft: '8px', color: colors.accent, fontWeight: '600' }}>{formatTime(serviceData.start_time)}</span>}
+                    {serviceData?.start_time && <span style={{ marginLeft: '8px', color: colors.accentInk, fontFamily: 'var(--font-mono)' }}>{formatTime(serviceData.start_time)}</span>}
                   </div>
                   {items.map((item, i) => (
                     <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0', borderBottom: `1px solid ${colors.border}` }}>
                       <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: colors.hover, border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: colors.subText, flexShrink: 0 }}>{i + 1}</div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: '13px', fontWeight: '600', color: item.type === 'header' ? colors.accent : colors.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title || item.type}</div>
+                        <div style={{ fontSize: '13px', fontWeight: 500, color: item.type === 'header' ? colors.subText : colors.heading, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title || item.type}</div>
                         {item.type === 'song' && item.key && <div style={{ fontSize: '11px', color: colors.subText }}>Key: {item.key}</div>}
                       </div>
                       {item.type !== 'header' && item.duration && <div style={{ fontSize: '11px', color: colors.subText, flexShrink: 0 }}>{item.duration}m</div>}
@@ -1400,7 +1406,7 @@ export default function ScheduleTable({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    transition: 'all 0.15s',
+                    transition: 'background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease)',
                     padding: '0',
                   }}
                   onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'; }}
@@ -1427,7 +1433,7 @@ export default function ScheduleTable({
             <button onClick={() => setSidebarView('main')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.text }}><ArrowLeft size={18}/></button>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '12px', color: colors.subText, fontWeight: '500' }}>Assigning to</div>
-              <div style={{ fontSize: '15px', fontWeight: '600', color: colors.heading }}>{assigningRole?.role_name}</div>
+              <div style={{ fontSize: '15px', fontWeight: 500, color: colors.heading }}>{assigningRole?.role_name}</div>
             </div>
             <button onClick={() => setSidebarView('main')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.subText }}><X size={18}/></button>
           </div>
@@ -1451,7 +1457,7 @@ export default function ScheduleTable({
             )}
             {filteredPeople.map(person => (
               <div key={person.id} onClick={() => assignPerson(person.id)} style={{ padding: '10px', borderRadius: '6px', cursor: 'pointer', background: colors.inputBg, display: 'flex', alignItems: 'center', gap: '10px', border: `1px solid ${colors.border}` }}>
-                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: colors.accent, color: 'white', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{person.name.charAt(0)}</div>
+                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: colors.hover, border: '1px solid var(--line)', boxSizing: 'border-box', color: colors.text, fontSize: '12px', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{person.name.charAt(0)}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '13px', fontWeight: '500', color: colors.text }}>{person.name}</div>
                   {person.skills && (
@@ -1472,7 +1478,7 @@ export default function ScheduleTable({
       <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => { setShowTimeModal(false); setTimeDraft(null); }}>
         <div onClick={(e) => e.stopPropagation()} style={{ background: colors.bg, borderRadius: '12px', width: '360px', maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.4)', border: `1px solid ${colors.border}` }}>
           <div style={{ padding: '16px', borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ fontSize: '15px', fontWeight: '600', color: colors.heading }}>{editingTimeId ? 'Edit time' : 'Add time'}</div>
+            <div style={{ fontSize: '15px', fontWeight: 500, color: colors.heading }}>{editingTimeId ? 'Edit time' : 'Add time'}</div>
             <button onClick={() => { setShowTimeModal(false); setTimeDraft(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.subText }}><X size={18}/></button>
           </div>
 
@@ -1483,7 +1489,7 @@ export default function ScheduleTable({
                 <button
                   key={type}
                   onClick={() => setTimeDraft(d => ({ ...d, type }))}
-                  style={{ flex: 1, padding: '6px 0', borderRadius: '6px', border: 'none', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit', background: timeDraft.type === type ? colors.bg : 'transparent', color: timeDraft.type === type ? colors.heading : colors.subText, boxShadow: timeDraft.type === type ? '0 1px 3px rgba(0,0,0,0.15)' : 'none' }}
+                  style={{ flex: 1, padding: '6px 0', borderRadius: '6px', border: 'none', fontSize: '12px', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', background: timeDraft.type === type ? colors.bg : 'transparent', color: timeDraft.type === type ? colors.heading : colors.subText, boxShadow: timeDraft.type === type ? '0 1px 3px rgba(0,0,0,0.15)' : 'none' }}
                 >
                   {TIME_TYPE_LABEL[type]}
                 </button>
@@ -1491,7 +1497,7 @@ export default function ScheduleTable({
             </div>
 
             <div>
-              <label style={{ fontSize: '11px', fontWeight: '600', color: colors.subText, display: 'block', marginBottom: '5px' }}>Name</label>
+              <label style={{ fontSize: '11px', fontWeight: 500, color: colors.subText, display: 'block', marginBottom: '5px' }}>Name</label>
               <input
                 value={timeDraft.name}
                 onChange={e => setTimeDraft(d => ({ ...d, name: e.target.value }))}
@@ -1502,7 +1508,7 @@ export default function ScheduleTable({
 
             <div style={{ display: 'flex', gap: '10px' }}>
               <div style={{ flex: 1 }}>
-                <label style={{ fontSize: '11px', fontWeight: '600', color: colors.subText, display: 'block', marginBottom: '5px' }}>Start</label>
+                <label style={{ fontSize: '11px', fontWeight: 500, color: colors.subText, display: 'block', marginBottom: '5px' }}>Start</label>
                 <input
                   type="time"
                   value={timeDraft.startTime}
@@ -1511,7 +1517,7 @@ export default function ScheduleTable({
                 />
               </div>
               <div style={{ flex: 1 }}>
-                <label style={{ fontSize: '11px', fontWeight: '600', color: colors.subText, display: 'block', marginBottom: '5px' }}>End</label>
+                <label style={{ fontSize: '11px', fontWeight: 500, color: colors.subText, display: 'block', marginBottom: '5px' }}>End</label>
                 <input
                   type="time"
                   value={timeDraft.endTime}
@@ -1522,7 +1528,7 @@ export default function ScheduleTable({
             </div>
 
             <div>
-              <label style={{ fontSize: '11px', fontWeight: '600', color: colors.subText, display: 'block', marginBottom: '5px' }}>Date</label>
+              <label style={{ fontSize: '11px', fontWeight: 500, color: colors.subText, display: 'block', marginBottom: '5px' }}>Date</label>
               <input
                 type="date"
                 value={timeDraft.date}
@@ -1539,11 +1545,11 @@ export default function ScheduleTable({
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'space-between', marginTop: '4px' }}>
               {editingTimeId ? (
-                <button onClick={() => { deleteTime(editingTimeId); setShowTimeModal(false); setTimeDraft(null); }} style={{ padding: '9px 16px', borderRadius: '8px', border: `1px solid ${colors.danger}`, background: 'transparent', color: colors.danger, fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}>Delete</button>
+                <button onClick={() => { deleteTime(editingTimeId); setShowTimeModal(false); setTimeDraft(null); }} style={{ padding: '9px 16px', borderRadius: '8px', border: `1px solid ${colors.danger}`, background: 'transparent', color: colors.danger, fontSize: '13px', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Delete</button>
               ) : <span />}
               <div style={{ display: 'flex', gap: '8px' }}>
-                <button onClick={() => { setShowTimeModal(false); setTimeDraft(null); }} style={{ padding: '9px 16px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: 'transparent', color: colors.text, fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-                <button onClick={saveTimeDraft} style={{ padding: '9px 16px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}>Save</button>
+                <button onClick={() => { setShowTimeModal(false); setTimeDraft(null); }} style={{ padding: '9px 16px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: 'transparent', color: colors.text, fontSize: '13px', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
+                <button onClick={saveTimeDraft} style={{ padding: '9px 16px', borderRadius: '8px', border: 'none', background: colors.accent, color: colors.onAccent, fontSize: '13px', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Save</button>
               </div>
             </div>
           </div>

@@ -34,9 +34,10 @@ function TwilioField({ label, value, onChange, placeholder, isSecret, disabled, 
           <button
             type="button"
             onClick={() => setVisible(v => !v)}
-            style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: c.muted, padding: 0 }}
+            title={visible ? 'Hide' : 'Show'}
+            style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: c.muted, padding: 0, display: 'flex' }}
           >
-            {visible ? <EyeOff size={14} /> : <Eye size={14} />}
+            {visible ? <EyeOff size={16} strokeWidth={1.5} /> : <Eye size={16} strokeWidth={1.5} />}
           </button>
         )}
       </div>
@@ -44,7 +45,7 @@ function TwilioField({ label, value, onChange, placeholder, isSecret, disabled, 
   );
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 const BRAND_PRESETS = [
   '#6366f1', '#3b82f6', '#0ea5e9', '#10b981', '#f59e0b',
   '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316',
@@ -115,7 +116,7 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
     twilio_whatsapp_from:       '',
   });
 
-  // â”€â”€ Load â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Load ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!orgId) return;
     (async () => {
@@ -192,7 +193,7 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
 
-  // â”€â”€ Logo upload â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Logo upload ────────────────────────────────────────────────────────────
   const handleLogoUpload = async (file) => {
     if (!file) return;
     setUploading(true);
@@ -209,7 +210,7 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
     setUploading(false);
   };
 
-  // â”€â”€ Save â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Save ──────────────────────────────────────────────────────────────────
   const handleSave = async () => {
     if (!isAdmin) return;
     setSaving(true);
@@ -230,7 +231,7 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
     }
   };
 
-  // â”€â”€ Service times helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Service times helpers ─────────────────────────────────────────────────
   const addServiceTime = () => set('service_times', [...form.service_times, { day: 'Sunday', time: '09:00', name: '' }]);
   const updateST = (i, field, val) => {
     const next = [...form.service_times];
@@ -239,7 +240,7 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
   };
   const removeST = (i) => set('service_times', form.service_times.filter((_, idx) => idx !== i));
 
-  // â”€â”€ Ministry helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Ministry helpers ──────────────────────────────────────────────────────
   const addMinistry    = () => set('ministries', [...form.ministries, { name: '', positions: [] }]);
   const updateMinName  = (i, val) => { const n = [...form.ministries]; n[i] = { ...n[i], name: val }; set('ministries', n); };
   const removeMin      = (i) => set('ministries', form.ministries.filter((_, idx) => idx !== i));
@@ -247,7 +248,7 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
   const updatePosition = (mi, pi, val) => { const n = [...form.ministries]; const p = [...(n[mi].positions||[])]; p[pi] = val; n[mi] = { ...n[mi], positions: p }; set('ministries', n); };
   const removePosition = (mi, pi) => { const n = [...form.ministries]; n[mi] = { ...n[mi], positions: (n[mi].positions||[]).filter((_,idx) => idx !== pi) }; set('ministries', n); };
 
-  // â”€â”€ Verse helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Verse helpers ─────────────────────────────────────────────────────────
   const addVerse = () => {
     if (form.custom_verses.length >= 30) return;
     set('custom_verses', [...form.custom_verses, { text: '', reference: '' }]);
@@ -361,38 +362,54 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
     setProposal(null);
   };
 
-  // â”€â”€ Colors â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Colors ────────────────────────────────────────────────────────────────
   const c = {
-    bg:      isDarkMode ? '#111111' : '#f9fafb',
-    card:    isDarkMode ? '#1f1f22' : '#ffffff',
-    text:    isDarkMode ? '#d1d5db' : '#27272a',
-    heading: isDarkMode ? '#f9fafb' : '#111111',
-    border:  isDarkMode ? '#27272a' : '#e5e7eb',
-    muted:   isDarkMode ? '#6b7280' : '#9ca3af',
-    input:   isDarkMode ? '#111111' : '#f9fafb',
-    primary: '#3b82f6',
-    success: '#10b981',
-    danger:  '#ef4444',
-    section: isDarkMode ? '#0a0a0a' : '#f0f9ff',
+    bg:       'var(--page)',
+    card:     'var(--card)',
+    text:     'var(--text-2)',
+    heading:  'var(--text-1)',
+    border:   'var(--line)',
+    border2:  'var(--line-2)',
+    muted:    'var(--text-3)',
+    input:    'var(--page)',
+    primary:  'var(--accent)',
+    ink:      'var(--accent-ink)',
+    soft:     'var(--accent-soft)',
+    onAccent: 'var(--on-accent)',
+    success:  'var(--positive)',
+    danger:   'var(--negative)',
+    section:  'var(--card)',
+    deep:     'var(--deep)',
+    raised:   'var(--raised)',
   };
 
   const inp = (disabled = false) => ({
-    padding: '9px 12px', borderRadius: '7px',
-    border: `1px solid ${c.border}`, background: disabled ? (isDarkMode ? '#0a0a0a' : '#f3f4f6') : c.input,
-    color: disabled ? c.muted : c.heading, fontSize: '13px', outline: 'none',
+    height: '36px', padding: '0 12px', borderRadius: 'var(--r-control)',
+    border: `1px solid ${c.border2}`, background: disabled ? c.raised : c.input,
+    color: disabled ? c.muted : c.heading, fontSize: '14px', outline: 'none', fontFamily: 'inherit',
     width: '100%', boxSizing: 'border-box', cursor: disabled ? 'not-allowed' : 'text',
   });
+  // Quiet secondary buttons: add rows, upload
+  const addBtn = {
+    border: `1px dashed ${c.border2}`, borderRadius: 'var(--r-control)', height: '32px', padding: '0 12px',
+    background: 'transparent', color: c.text, fontSize: '13px', fontWeight: 500, cursor: 'pointer',
+    display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'inherit',
+  };
+  const iconBtn = {
+    background: 'none', border: 'none', cursor: 'pointer', color: c.muted, width: '32px', height: '32px',
+    borderRadius: 'var(--r-control)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  };
   const lbl = (text) => (
-    <label style={{ fontSize: '12px', fontWeight: '600', color: c.text, display: 'block', marginBottom: '5px' }}>
+    <label style={{ fontSize: '13px', fontWeight: 500, color: c.text, display: 'block', marginBottom: '8px' }}>
       {text}
     </label>
   );
   const sectionCard = (title, icon, children) => (
-    <div style={{ background: c.card, borderRadius: '12px', border: `1px solid ${c.border}`, overflow: 'hidden', marginBottom: '20px' }}>
-      <div style={{ padding: '14px 20px', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: '8px', background: c.section }}>
-        {icon}
-        <span style={{ fontWeight: '700', fontSize: '14px', color: c.heading }}>{title}</span>
-        {!isAdmin && <span style={{ marginLeft: 'auto', fontSize: '11px', color: c.muted, fontStyle: 'italic' }}>View only</span>}
+    <div style={{ background: c.card, borderRadius: 'var(--r-card)', border: `1px solid ${c.border}`, overflow: 'hidden', marginBottom: '24px', boxShadow: 'var(--shadow-sm)' }}>
+      <div style={{ height: '52px', padding: '0 20px', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: '10px', background: c.section }}>
+        <span style={{ display: 'flex', color: c.muted }}>{icon}</span>
+        <span style={{ fontWeight: 500, fontSize: '15px', color: c.heading }}>{title}</span>
+        {!isAdmin && <span style={{ marginLeft: 'auto', fontSize: '12px', fontFamily: 'var(--font-mono)', color: c.muted }}>View only</span>}
       </div>
       <div style={{ padding: '20px' }}>{children}</div>
     </div>
@@ -406,61 +423,61 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
 
   return (
     <div style={{ height: 'calc(100vh - 108px)', overflowY: 'auto', background: c.bg }}>
-      <div style={{ maxWidth: '760px', margin: '0 auto', padding: '28px 24px 80px' }}>
+      <div style={{ maxWidth: '760px', margin: '0 auto', padding: '32px 24px 80px' }}>
 
         {/* Page header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '24px', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '32px', gap: '16px' }}>
           <div>
-            <h1 style={{ margin: 0, fontSize: '24px', fontWeight: '800', color: c.heading }}>Organization</h1>
-            <p style={{ margin: '4px 0 0', fontSize: '13px', color: c.muted }}>
-              {isAdmin ? 'Manage your church or organization details' : 'Organization info — contact an admin to make changes'}
+            <h1 style={{ margin: 0, fontSize: '28px', lineHeight: 1.15, fontWeight: 500, color: c.heading }}>Organization</h1>
+            <p style={{ margin: '8px 0 0', fontSize: '14px', color: c.text }}>
+              {isAdmin ? 'Your church details, services, teams and brand' : 'Only an admin can change these details'}
             </p>
           </div>
           {isAdmin && (
             <button
               onClick={handleSave}
               disabled={saving}
-              style={{ border: 'none', borderRadius: '8px', padding: '9px 20px', background: saved ? c.success : c.primary, color: 'white', fontWeight: '700', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '7px', flexShrink: 0, opacity: saving ? 0.75 : 1 }}
+              style={{ border: 'none', borderRadius: 'var(--r-control)', height: '36px', padding: '0 16px', background: c.primary, color: c.onAccent, fontWeight: 500, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, opacity: saving ? 0.75 : 1, fontFamily: 'inherit', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12)' }}
             >
-              <Save size={15} /> {saving ? 'Saving…' : saved ? '✓ Saved' : 'Save Changes'}
+              <Save size={16} strokeWidth={1.5} /> {saving ? 'Saving…' : saved ? 'Saved' : 'Save changes'}
             </button>
           )}
         </div>
 
         {/* Migration warning */}
         {dbErr && (
-          <div style={{ background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.3)', borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', fontSize: '13px', color: isDarkMode ? '#fcd34d' : '#92400e' }}>
-            âš  {dbErr}
+          <div style={{ background: c.deep, border: `1px solid ${c.border}`, borderRadius: 'var(--r-control)', padding: '12px 16px', marginBottom: '24px', fontSize: '13px', color: c.heading, display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--warning)', flexShrink: 0 }} />{dbErr}
           </div>
         )}
 
-        {/* â”€â”€ SECTION 1: Identity â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        {sectionCard('Church / Organization Info', <Building size={15} color={c.primary} />, (
+        {/* ── SECTION 1: Identity ─────────────────────────────────────────── */}
+        {sectionCard('Church info', <Building size={16} strokeWidth={1.5} />, (
           <div>
             {/* Logo */}
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px' }}>
               <div style={{ flexShrink: 0 }}>
                 {form.logo_url
-                  ? <img src={form.logo_url} alt="Logo" style={{ width: '80px', height: '80px', borderRadius: '12px', objectFit: 'cover', border: `2px solid ${c.border}` }} />
-                  : <div style={{ width: '80px', height: '80px', borderRadius: '12px', background: 'rgba(59,130,246,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: `2px dashed ${c.border}` }}>
-                      <Building size={28} color={c.primary} />
+                  ? <img src={form.logo_url} alt={`${form.name || 'Organization'} logo`} style={{ width: '80px', height: '80px', borderRadius: 'var(--r-card)', objectFit: 'cover', border: `1px solid ${c.border}`, display: 'block' }} />
+                  : <div style={{ width: '80px', height: '80px', borderRadius: 'var(--r-card)', background: c.raised, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px dashed ${c.border2}` }}>
+                      <Building size={24} strokeWidth={1.5} color={c.muted} />
                     </div>
                 }
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: c.heading, marginBottom: '6px' }}>Organization Logo</div>
-                <div style={{ fontSize: '12px', color: c.muted, marginBottom: '10px' }}>PNG or SVG recommended — min 200×200px</div>
+                <div style={{ fontSize: '14px', fontWeight: 500, color: c.heading, marginBottom: '4px' }}>Logo</div>
+                <div style={{ fontSize: '13px', color: c.muted, marginBottom: '12px' }}>PNG or SVG, at least 200 × 200 px</div>
                 {isAdmin && (
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button
                       onClick={() => fileRef.current?.click()}
                       disabled={uploading}
-                      style={{ border: `1px solid ${c.border}`, borderRadius: '6px', padding: '6px 12px', background: 'transparent', color: c.text, fontSize: '12px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+                      style={{ ...addBtn, border: `1px solid ${c.border2}`, background: c.card, color: c.heading }}
                     >
-                      <Upload size={12} /> {uploading ? 'Uploading…' : 'Upload Logo'}
+                      <Upload size={14} strokeWidth={1.5} /> {uploading ? 'Uploading…' : 'Upload logo'}
                     </button>
                     {form.logo_url && (
-                      <button onClick={() => set('logo_url', '')} style={{ border: 'none', background: 'none', color: c.danger, fontSize: '12px', cursor: 'pointer', padding: '6px 8px' }}>
+                      <button onClick={() => set('logo_url', '')} style={{ border: 'none', background: 'none', color: c.text, fontSize: '13px', cursor: 'pointer', height: '32px', padding: '0 8px', fontFamily: 'inherit' }}>
                         Remove
                       </button>
                     )}
@@ -470,9 +487,9 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div style={{ gridColumn: '1 / -1' }}>
-                {lbl('Organization Name')}
+                {lbl('Name')}
                 <input style={inp(!isAdmin)} value={form.name} onChange={e => set('name', e.target.value)} disabled={!isAdmin} placeholder="First Church of Worship" />
               </div>
               <div>
@@ -491,11 +508,11 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
           </div>
         ))}
 
-        {/* â”€â”€ SECTION 2: Location â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        {sectionCard('Location & Capacity', <MapPin size={15} color={c.primary} />, (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+        {/* ── SECTION 2: Location ─────────────────────────────────────────── */}
+        {sectionCard('Location and capacity', <MapPin size={16} strokeWidth={1.5} />, (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <div style={{ gridColumn: '1 / -1' }}>
-              {lbl('Street Address')}
+              {lbl('Street address')}
               <input style={inp(!isAdmin)} value={form.address_street} onChange={e => set('address_street', e.target.value)} disabled={!isAdmin} placeholder="123 Church Street" />
             </div>
             <div>
@@ -503,11 +520,11 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
               <input style={inp(!isAdmin)} value={form.address_city} onChange={e => set('address_city', e.target.value)} disabled={!isAdmin} placeholder="City" />
             </div>
             <div>
-              {lbl('State / Province')}
+              {lbl('State or province')}
               <input style={inp(!isAdmin)} value={form.address_state} onChange={e => set('address_state', e.target.value)} disabled={!isAdmin} placeholder="State" />
             </div>
             <div>
-              {lbl('ZIP / Postal Code')}
+              {lbl('ZIP or postal code')}
               <input style={inp(!isAdmin)} value={form.address_zip} onChange={e => set('address_zip', e.target.value)} disabled={!isAdmin} placeholder="00000" />
             </div>
             <div>
@@ -517,20 +534,20 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
               </select>
             </div>
             <div>
-              {lbl('Seating Capacity')}
+              {lbl('Seating capacity')}
               <input style={inp(!isAdmin)} value={form.capacity} onChange={e => set('capacity', e.target.value)} disabled={!isAdmin} placeholder="500" type="number" min="0" />
             </div>
           </div>
         ))}
 
-        {/* â”€â”€ SECTION 3: Service Times â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        {sectionCard('Service Times', <Clock size={15} color={c.primary} />, (
+        {/* ── SECTION 3: Service Times ─────────────────────────────────────── */}
+        {sectionCard('Service times', <Clock size={16} strokeWidth={1.5} />, (
           <div>
-            <div style={{ fontSize: '12px', color: c.muted, marginBottom: '14px' }}>
-              Add all your regular service times so the team knows the schedule.
+            <div style={{ fontSize: '13px', color: c.text, marginBottom: '16px' }}>
+              Your regular weekly services, so every team sees the same schedule.
             </div>
             {form.service_times.map((st, i) => (
-              <div key={i} style={{ display: 'grid', gridTemplateColumns: '140px 110px 1fr 32px', gap: '8px', marginBottom: '10px', alignItems: 'center' }}>
+              <div key={i} style={{ display: 'grid', gridTemplateColumns: '140px 120px 1fr 32px', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
                 <select
                   style={{ ...inp(!isAdmin), appearance: 'none' }}
                   value={st.day}
@@ -554,8 +571,8 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
                   disabled={!isAdmin}
                 />
                 {isAdmin && (
-                  <button onClick={() => removeST(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.danger, display: 'flex', alignItems: 'center', padding: '4px' }}>
-                    <X size={16} />
+                  <button onClick={() => removeST(i)} title="Remove service time" className="wo-icon-btn" style={iconBtn}>
+                    <X size={16} strokeWidth={1.5} />
                   </button>
                 )}
               </div>
@@ -563,68 +580,67 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
             {isAdmin && (
               <button
                 onClick={addServiceTime}
-                style={{ border: `1px dashed ${c.border}`, borderRadius: '7px', padding: '7px 14px', background: 'transparent', color: c.muted, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}
+                style={{ ...addBtn, marginTop: '12px' }}
               >
-                <Plus size={13} /> Add Service Time
+                <Plus size={14} strokeWidth={1.5} /> Add service time
               </button>
             )}
             {form.service_times.length === 0 && (
-              <div style={{ fontSize: '13px', color: c.muted, fontStyle: 'italic' }}>No service times added yet.</div>
+              <div style={{ fontSize: '13px', color: c.muted, marginTop: '12px' }}>No service times yet</div>
             )}
           </div>
         ))}
 
-        {/* â”€â”€ SECTION 4: Ministries â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        {sectionCard('Ministries & Positions', <Layers size={15} color={c.primary} />, (
+        {/* ── SECTION 4: Ministries ────────────────────────────────────────── */}
+        {sectionCard('Ministries and positions', <Layers size={16} strokeWidth={1.5} />, (
           <div>
-            <div style={{ fontSize: '12px', color: c.muted, marginBottom: '16px' }}>
-              Define each ministry area and the positions within it. Positions appear as role options in the Teams tab.
+            <div style={{ fontSize: '13px', color: c.text, marginBottom: '16px' }}>
+              Each ministry and the positions in it. Positions show up as roles in Teams.
             </div>
 
             {form.ministries.length === 0 && (
-              <div style={{ fontSize: '13px', color: c.muted, fontStyle: 'italic', marginBottom: '12px' }}>No ministries defined yet.</div>
+              <div style={{ fontSize: '13px', color: c.muted, marginBottom: '12px' }}>No ministries yet</div>
             )}
 
             {form.ministries.map((m, mi) => (
-              <div key={mi} style={{ border: `1px solid ${c.border}`, borderRadius: '10px', marginBottom: '12px', overflow: 'hidden' }}>
+              <div key={mi} style={{ border: `1px solid ${c.border}`, borderRadius: 'var(--r-control)', marginBottom: '12px', overflow: 'hidden' }}>
                 {/* Ministry header row */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', background: c.section, borderBottom: `1px solid ${c.border}` }}>
-                  <Layers size={13} style={{ color: c.primary, flexShrink: 0 }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 8px 8px 12px', background: c.deep, borderBottom: `1px solid ${c.border}` }}>
                   <input
-                    style={{ ...inp(!isAdmin), fontWeight: '700', fontSize: '13px', flex: 1 }}
+                    style={{ ...inp(!isAdmin), height: '32px', fontWeight: 500, fontSize: '14px', flex: 1, background: 'transparent', border: '1px solid transparent', padding: '0 4px' }}
                     value={m.name}
                     onChange={e => updateMinName(mi, e.target.value)}
-                    placeholder="Ministry name (e.g. Worship, Production, Kids)"
+                    placeholder="Ministry name, like Worship or Kids"
                     disabled={!isAdmin}
                   />
-                  <span style={{ fontSize: '11px', color: c.muted, whiteSpace: 'nowrap' }}>
+                  <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: c.muted, whiteSpace: 'nowrap' }}>
                     {(m.positions || []).length} position{(m.positions || []).length !== 1 ? 's' : ''}
                   </span>
                   {isAdmin && (
-                    <button onClick={() => removeMin(mi)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.danger, display: 'flex', padding: '2px' }}>
-                      <X size={15} />
+                    <button onClick={() => removeMin(mi)} title="Remove ministry" className="wo-icon-btn" style={iconBtn}>
+                      <X size={16} strokeWidth={1.5} />
                     </button>
                   )}
                 </div>
 
                 {/* Positions list */}
-                <div style={{ padding: '12px 14px' }}>
+                <div style={{ padding: '12px' }}>
                   {(m.positions || []).length === 0 && (
-                    <div style={{ fontSize: '12px', color: c.muted, fontStyle: 'italic', marginBottom: '8px' }}>No positions yet — add one below.</div>
+                    <div style={{ fontSize: '13px', color: c.muted, marginBottom: '8px' }}>No positions yet</div>
                   )}
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: (m.positions||[]).length > 0 ? '10px' : '0' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: (m.positions||[]).length > 0 ? '12px' : '0' }}>
                     {(m.positions || []).map((pos, pi) => (
-                      <div key={pi} style={{ display: 'flex', alignItems: 'center', background: c.card, border: `1px solid ${c.border}`, borderRadius: '20px', padding: '3px 4px 3px 12px', gap: '4px' }}>
+                      <div key={pi} style={{ display: 'flex', alignItems: 'center', height: '28px', background: c.raised, border: `1px solid ${c.border}`, borderRadius: 'var(--r-tag)', padding: '0 2px 0 8px', gap: '2px' }}>
                         <input
                           value={pos}
                           onChange={e => updatePosition(mi, pi, e.target.value)}
                           disabled={!isAdmin}
                           placeholder="Position"
-                          style={{ border: 'none', background: 'transparent', color: c.heading, fontSize: '12px', outline: 'none', width: `${Math.max(pos.length, 8) + 2}ch`, minWidth: '60px', maxWidth: '200px' }}
+                          style={{ border: 'none', background: 'transparent', color: c.heading, fontSize: '13px', outline: 'none', fontFamily: 'inherit', width: `${Math.max(pos.length, 8) + 2}ch`, minWidth: '60px', maxWidth: '200px' }}
                         />
                         {isAdmin && (
-                          <button onClick={() => removePosition(mi, pi)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.muted, display: 'flex', padding: '2px', lineHeight: 1 }}>
-                            <X size={11} />
+                          <button onClick={() => removePosition(mi, pi)} title="Remove position" style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.muted, width: '22px', height: '22px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <X size={12} strokeWidth={1.5} />
                           </button>
                         )}
                       </div>
@@ -633,9 +649,9 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
                   {isAdmin && (
                     <button
                       onClick={() => addPosition(mi)}
-                      style={{ border: `1px dashed ${c.border}`, borderRadius: '20px', padding: '3px 12px', background: 'transparent', color: c.muted, fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      style={{ ...addBtn, height: '28px', padding: '0 8px', gap: '4px', borderRadius: 'var(--r-tag)' }}
                     >
-                      <Plus size={11} /> Add position
+                      <Plus size={14} strokeWidth={1.5} /> Add position
                     </button>
                   )}
                 </div>
@@ -645,36 +661,36 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
             {isAdmin && (
               <button
                 onClick={addMinistry}
-                style={{ border: `1px dashed ${c.border}`, borderRadius: '8px', padding: '8px 16px', background: 'transparent', color: c.muted, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}
+                style={{ ...addBtn, marginTop: '4px' }}
               >
-                <Plus size={13} /> Add Ministry
+                <Plus size={14} strokeWidth={1.5} /> Add ministry
               </button>
             )}
           </div>
         ))}
 
-        {/* â”€â”€ SECTION 5: Uplifting Verses â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        {sectionCard('Uplifting Verses', <BookOpen size={15} color={c.primary} />, (
+        {/* ── SECTION 5: Uplifting Verses ──────────────────────────────────── */}
+        {sectionCard('Verses', <BookOpen size={16} strokeWidth={1.5} />, (
           <div>
-            <div style={{ fontSize: '12px', color: c.muted, marginBottom: '14px' }}>
-              Custom verses appear in the status bar instead of the defaults. Add up to 30.
+            <div style={{ fontSize: '13px', color: c.text, marginBottom: '16px' }}>
+              Your own verses replace the defaults in the strip above the header. Up to 30.
               {' '}
               <button
                 onClick={() => setShowDefaultVerses(v => !v)}
-                style={{ background: 'none', border: 'none', color: c.primary, cursor: 'pointer', fontSize: '12px', padding: 0, display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                style={{ background: 'none', border: 'none', color: c.ink, cursor: 'pointer', fontSize: '13px', fontWeight: 500, padding: 0, display: 'inline-flex', alignItems: 'center', gap: '4px', fontFamily: 'inherit' }}
               >
-                {showDefaultVerses ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                {showDefaultVerses ? <ChevronUp size={14} strokeWidth={1.5} /> : <ChevronDown size={14} strokeWidth={1.5} />}
                 {showDefaultVerses ? 'Hide' : 'View'} 25 defaults
               </button>
             </div>
 
             {/* Default verse reference list */}
             {showDefaultVerses && (
-              <div style={{ background: isDarkMode ? '#111111' : '#f8fafc', borderRadius: '8px', border: `1px solid ${c.border}`, padding: '12px 16px', marginBottom: '16px' }}>
-                <div style={{ fontSize: '11px', fontWeight: '700', color: c.muted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Default verse pool (read-only)</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              <div style={{ background: c.deep, borderRadius: 'var(--r-control)', border: `1px solid ${c.border}`, padding: '12px 16px', marginBottom: '16px' }}>
+                <div style={{ fontSize: '12px', color: c.muted, marginBottom: '8px' }}>Default verses</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                   {DEFAULT_VERSE_SAMPLES.map(r => (
-                    <span key={r} style={{ fontSize: '11px', background: isDarkMode ? '#27272a' : '#e5e7eb', color: c.text, padding: '2px 8px', borderRadius: '10px' }}>{r}</span>
+                    <span key={r} style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', background: c.card, border: `1px solid ${c.border}`, color: c.text, padding: '0 6px', lineHeight: '22px', borderRadius: 'var(--r-tag)' }}>{r}</span>
                   ))}
                 </div>
               </div>
@@ -682,61 +698,61 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
 
             {/* Custom verse rows */}
             {form.custom_verses.map((v, i) => (
-              <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 32px', gap: '8px', marginBottom: '10px', alignItems: 'flex-start' }}>
+              <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 32px', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
                 <input
                   style={inp(!isAdmin)}
                   value={v.text}
                   onChange={e => updateVerse(i, 'text', e.target.value)}
-                  placeholder="Verse text…"
+                  placeholder="Verse text"
                   disabled={!isAdmin}
                 />
                 <input
                   style={inp(!isAdmin)}
                   value={v.reference}
                   onChange={e => updateVerse(i, 'reference', e.target.value)}
-                  placeholder="Reference (e.g. John 3:16)"
+                  placeholder="Reference, like John 3:16"
                   disabled={!isAdmin}
                 />
                 {isAdmin && (
-                  <button onClick={() => removeVerse(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.danger, display: 'flex', alignItems: 'center', padding: '4px', marginTop: '6px' }}>
-                    <X size={16} />
+                  <button onClick={() => removeVerse(i)} title="Remove verse" className="wo-icon-btn" style={iconBtn}>
+                    <X size={16} strokeWidth={1.5} />
                   </button>
                 )}
               </div>
             ))}
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '12px' }}>
               {isAdmin && form.custom_verses.length < 30 && (
                 <button
                   onClick={addVerse}
-                  style={{ border: `1px dashed ${c.border}`, borderRadius: '7px', padding: '7px 14px', background: 'transparent', color: c.muted, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  style={addBtn}
                 >
-                  <Plus size={13} /> Add Verse
+                  <Plus size={14} strokeWidth={1.5} /> Add verse
                 </button>
               )}
               {form.custom_verses.length > 0 && (
-                <span style={{ fontSize: '12px', color: c.muted }}>{form.custom_verses.length} / 30</span>
+                <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums', color: c.muted }}>{form.custom_verses.length} of 30</span>
               )}
               {form.custom_verses.length === 0 && (
-                <span style={{ fontSize: '13px', color: c.muted, fontStyle: 'italic' }}>No custom verses — using the 25 defaults.</span>
+                <span style={{ fontSize: '13px', color: c.muted }}>Using the 25 default verses</span>
               )}
             </div>
           </div>
         ))}
 
-        {/* â”€â”€ SECTION 6: Volunteer Wellbeing (Burnout) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── SECTION 6: Volunteer Wellbeing (Burnout) ─────────────────────── */}
         {/* Messaging (Twilio / WhatsApp) */}
-        {sectionCard('Messaging', <Phone size={15} color='#0070F3' />, (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <div style={{ fontSize: '12px', color: c.muted, lineHeight: '1.6', padding: '10px 14px', background: isDarkMode ? 'rgba(0,112,243,0.06)' : 'rgba(0,112,243,0.04)', borderRadius: '8px', borderLeft: '3px solid #0070F380' }}>
-              Connect your <strong>Twilio</strong> account to send SMS or WhatsApp reminders to volunteers directly from the service planner.{' '}
-              <a href="https://console.twilio.com" target="_blank" rel="noreferrer" style={{ color: '#0070F3' }}>Get credentials at console.twilio.com</a>
+        {sectionCard('Messaging', <Phone size={16} strokeWidth={1.5} />, (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ fontSize: '13px', color: c.text, lineHeight: '20px' }}>
+              Connect a Twilio account to send SMS or WhatsApp reminders to volunteers from the service planner.{' '}
+              <a href="https://console.twilio.com" target="_blank" rel="noreferrer" style={{ color: c.ink, fontWeight: 500 }}>Get credentials from Twilio</a>
             </div>
             {[
               { key: 'twilio_account_sid',   label: 'Account SID',         placeholder: 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', isSecret: false },
-              { key: 'twilio_auth_token',    label: 'Auth Token',           placeholder: 'Your Twilio auth token',              isSecret: true  },
-              { key: 'twilio_from_phone',    label: 'SMS From Number',      placeholder: '+12025551234  (E.164 format)',         isSecret: false },
-              { key: 'twilio_whatsapp_from', label: 'WhatsApp From Number', placeholder: 'whatsapp:+14155238886',                isSecret: false },
+              { key: 'twilio_auth_token',    label: 'Auth token',           placeholder: 'Your Twilio auth token',              isSecret: true  },
+              { key: 'twilio_from_phone',    label: 'SMS from number',      placeholder: '+12025551234',         isSecret: false },
+              { key: 'twilio_whatsapp_from', label: 'WhatsApp from number', placeholder: 'whatsapp:+14155238886',                isSecret: false },
             ].map(({ key, label, placeholder, isSecret }) => (
               <TwilioField
                 key={key}
@@ -751,48 +767,50 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
                 inp={inp}
               />
             ))}
-            <div style={{ fontSize: '11px', color: c.muted, opacity: 0.7 }}>
-              Credentials are stored encrypted in your Supabase org record. Deploy the <code style={{ fontFamily: 'monospace', background: isDarkMode ? '#27272a' : '#f4f4f5', padding: '1px 4px', borderRadius: '3px' }}>send-message</code> Edge Function to activate sending.
+            <div style={{ fontSize: '12px', color: c.muted, lineHeight: '18px' }}>
+              Credentials are stored in your Supabase organization record. Deploy the <code style={{ fontFamily: 'var(--font-mono)', background: c.raised, padding: '1px 4px', borderRadius: '4px' }}>send-message</code> Edge Function to start sending.
             </div>
           </div>
         ))}
 
         {/* The Sabbath Feature */}
-        {sectionCard('The Sabbath Feature', <Heart size={15} color='#ef4444' />, (
+        {sectionCard('The Sabbath Feature', <Heart size={16} strokeWidth={1.5} />, (
           <div>
-            <div style={{ fontSize: '12px', fontStyle: 'italic', color: c.muted, marginBottom: '16px', padding: '10px 14px', background: isDarkMode ? 'rgba(239,68,68,0.06)' : 'rgba(239,68,68,0.04)', borderRadius: '8px', borderLeft: '3px solid #ef444480', lineHeight: '1.6' }}>
-              "God ordained us humans to rest a day from work. Churches are no different when it comes to volunteers."
+            <div style={{ fontSize: '16px', fontFamily: 'var(--font-verse)', color: c.text, marginBottom: '20px', paddingLeft: '16px', borderLeft: `2px solid ${c.border2}`, lineHeight: '24px' }}>
+              &ldquo;God ordained us humans to rest a day from work. Churches are no different when it comes to volunteers.&rdquo;
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
               <div>
-                <div style={{ fontSize: '14px', fontWeight: '600', color: c.heading }}>Sabbath Rest Monitoring</div>
-                <div style={{ fontSize: '12px', color: c.muted, marginTop: '3px' }}>
-                  Automatically flag volunteers who may be over-serving and need rest.
+                <div style={{ fontSize: '14px', fontWeight: 500, color: c.heading }}>Sabbath rest monitoring</div>
+                <div style={{ fontSize: '13px', color: c.muted, marginTop: '4px' }}>
+                  Flag volunteers who are serving too often and need a week off
                 </div>
               </div>
               {/* Toggle */}
               <button
                 onClick={() => isAdmin && set('burnout_prevention_enabled', !form.burnout_prevention_enabled)}
+                role="switch" aria-checked={form.burnout_prevention_enabled} title="Sabbath rest monitoring"
                 style={{
-                  width: '48px', height: '26px', borderRadius: '13px', border: 'none', cursor: isAdmin ? 'pointer' : 'default',
-                  background: form.burnout_prevention_enabled ? '#10b981' : (isDarkMode ? '#27272a' : '#d1d5db'),
-                  position: 'relative', flexShrink: 0, transition: 'background 0.2s',
+                  width: '40px', height: '24px', borderRadius: '12px', border: 'none', cursor: isAdmin ? 'pointer' : 'default',
+                  background: form.burnout_prevention_enabled ? c.primary : c.raised,
+                  boxShadow: form.burnout_prevention_enabled ? 'none' : `inset 0 0 0 1px ${c.border2}`,
+                  position: 'relative', flexShrink: 0, transition: 'background-color var(--t-fast) var(--ease)',
                 }}
               >
                 <div style={{
-                  position: 'absolute', top: '3px',
-                  left: form.burnout_prevention_enabled ? '25px' : '3px',
-                  width: '20px', height: '20px', borderRadius: '50%', background: 'white',
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.2)', transition: 'left 0.2s',
+                  position: 'absolute', top: '3px', left: '3px',
+                  transform: form.burnout_prevention_enabled ? 'translateX(16px)' : 'translateX(0)',
+                  width: '18px', height: '18px', borderRadius: '50%', background: '#ffffff',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.2)', transition: 'transform var(--t-fast) var(--ease)',
                 }} />
               </button>
             </div>
 
             {form.burnout_prevention_enabled && (
-              <div style={{ background: isDarkMode ? '#111111' : '#f8fafc', borderRadius: '10px', border: `1px solid ${c.border}`, padding: '16px' }}>
+              <div style={{ background: c.deep, borderRadius: 'var(--r-control)', border: `1px solid ${c.border}`, padding: '16px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                   <div>
-                    {lbl('Warning after (consecutive Sundays)')}
+                    {lbl('Warn after, Sundays in a row')}
                     <input
                       style={inp(!isAdmin)}
                       type="number" min="1" max="10"
@@ -800,10 +818,10 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
                       onChange={e => set('burnout_warning_threshold', Number(e.target.value))}
                       disabled={!isAdmin}
                     />
-                    <div style={{ fontSize: '11px', color: c.muted, marginTop: '4px' }}>Show orange warning badge</div>
+                    <div style={{ fontSize: '12px', color: c.muted, marginTop: '8px' }}>Shows a warning on the volunteer</div>
                   </div>
                   <div>
-                    {lbl('Auto-break after (serves in 60 days)')}
+                    {lbl('Break after, serves in 60 days')}
                     <input
                       style={inp(!isAdmin)}
                       type="number" min="1" max="20"
@@ -811,15 +829,15 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
                       onChange={e => set('burnout_auto_threshold', Number(e.target.value))}
                       disabled={!isAdmin}
                     />
-                    <div style={{ fontSize: '11px', color: c.muted, marginTop: '4px' }}>Show red badge + 14-day break</div>
+                    <div style={{ fontSize: '12px', color: c.muted, marginTop: '8px' }}>Starts a 14-day break</div>
                   </div>
                 </div>
-                <div style={{ fontSize: '12px', color: c.muted, lineHeight: '1.7' }}>
-                  <strong style={{ color: c.text }}>Sabbath guidelines (research-backed):</strong><br />
-                  · No more than 3 consecutive Sundays without a Sabbath break<br />
-                  · No more than 6 serves in any 60-day period<br />
-                  · Every volunteer deserves at least 1 Sunday per month as a congregant<br />
-                  <span style={{ opacity: 0.7, fontSize: '11px' }}>Sources: Lifeway Research, Planning Center, Church Juice</span>
+                <div style={{ fontSize: '13px', color: c.text, lineHeight: '22px', paddingTop: '16px', borderTop: `1px solid ${c.border}` }}>
+                  <div style={{ color: c.heading, fontWeight: 500, marginBottom: '4px' }}>Guidelines</div>
+                  No more than 3 Sundays in a row without a break<br />
+                  No more than 6 serves in any 60 days<br />
+                  At least 1 Sunday a month in the pews for every volunteer<br />
+                  <span style={{ fontSize: '12px', color: c.muted }}>Sources: Lifeway Research, Planning Center, Church Juice</span>
                 </div>
               </div>
             )}
@@ -827,34 +845,34 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
         ))}
 
         {/* ── BRAND COLOR ── */}
-        {sectionCard('Brand Color', <span style={{ width: 16, height: 16, borderRadius: '50%', background: brandColor, display: 'inline-block', boxShadow: `0 0 0 2px ${brandColor}44` }} />, (
+        {sectionCard('Brand color', <span style={{ width: 10, height: 10, margin: '0 3px', borderRadius: '50%', background: brandColor, display: 'inline-block' }} />, (
           <div>
             {/* Pending proposal banner */}
             {proposal && (
-              <div style={{ marginBottom: '20px', padding: '14px 16px', borderRadius: '10px', background: isDarkMode ? 'rgba(99,102,241,0.12)' : 'rgba(99,102,241,0.07)', border: `1px solid ${isDarkMode ? 'rgba(99,102,241,0.3)' : 'rgba(99,102,241,0.25)'}` }}>
+              <div style={{ marginBottom: '20px', padding: '16px', borderRadius: 'var(--r-control)', background: c.deep, border: `1px solid ${c.border2}` }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
                   <div style={{ display: 'flex', gap: '6px' }}>
                     {[proposal.proposed_color, proposal.proposed_header_color, proposal.proposed_sidebar_color].map((col, i) => (
-                      <span key={i} title={['Primary','Top Bar','Sidebar'][i]} style={{ width: 20, height: 20, borderRadius: '50%', background: col || '#888', flexShrink: 0, border: '2px solid rgba(255,255,255,0.3)' }} />
+                      <span key={i} title={['Primary','Top Bar','Sidebar'][i]} style={{ width: 20, height: 20, borderRadius: '50%', background: col || 'var(--text-3)', flexShrink: 0, boxShadow: `inset 0 0 0 1px ${c.border2}` }} />
                     ))}
                   </div>
                   <div>
-                    <div style={{ fontSize: '13px', fontWeight: '700', color: c.heading }}>Brand color change pending approval</div>
-                    <div style={{ fontSize: '11px', color: c.muted, marginTop: '2px' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 500, color: c.heading }}>Brand color change waiting for approval</div>
+                    <div style={{ fontSize: '12px', color: c.muted, marginTop: '4px', fontVariantNumeric: 'tabular-nums' }}>
                       {(proposal.approved_by || []).length} of {Math.min(adminCount, 2)} admin approval{Math.min(adminCount, 2) > 1 ? 's' : ''} received
                     </div>
                   </div>
                 </div>
                 {isAdmin && !(proposal.approved_by || []).includes(userId) && (
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={approveBrandColor} disabled={brandSaving} style={{ flex: 1, padding: '7px', borderRadius: '7px', border: 'none', background: c.success, color: '#fff', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>Approve</button>
-                    <button onClick={rejectBrandColor} style={{ flex: 1, padding: '7px', borderRadius: '7px', border: `1px solid ${c.border}`, background: 'transparent', color: c.danger, fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>Reject</button>
+                    <button onClick={approveBrandColor} disabled={brandSaving} style={{ flex: 1, height: '36px', borderRadius: 'var(--r-control)', border: 'none', background: c.primary, color: c.onAccent, fontSize: '13px', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Approve</button>
+                    <button onClick={rejectBrandColor} style={{ flex: 1, height: '36px', borderRadius: 'var(--r-control)', border: `1px solid ${c.border2}`, background: c.card, color: c.danger, fontSize: '13px', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Reject</button>
                   </div>
                 )}
                 {isAdmin && (proposal.approved_by || []).includes(userId) && (
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <span style={{ fontSize: '12px', color: c.muted }}>Your approval is recorded. Waiting for other admins.</span>
-                    <button onClick={rejectBrandColor} style={{ marginLeft: 'auto', padding: '5px 10px', borderRadius: '6px', border: `1px solid ${c.border}`, background: 'transparent', color: c.danger, fontSize: '11px', cursor: 'pointer' }}>Cancel</button>
+                    <span style={{ fontSize: '13px', color: c.text }}>You approved this. Waiting for another admin</span>
+                    <button onClick={rejectBrandColor} style={{ marginLeft: 'auto', height: '32px', padding: '0 12px', borderRadius: 'var(--r-control)', border: `1px solid ${c.border2}`, background: c.card, color: c.danger, fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
                   </div>
                 )}
               </div>
@@ -863,42 +881,42 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
             {isAdmin && (
               <div>
                 {/* Current swatches */}
-                <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '24px', marginBottom: '20px', flexWrap: 'wrap' }}>
                   {[
-                    { label: 'Nav Bar',       color: brandColor },
-                    { label: 'Scripture Bar', color: brandHeaderColor },
+                    { label: 'Nav bar',       color: brandColor },
+                    { label: 'Scripture bar', color: brandHeaderColor },
                     { label: 'Sidebar',       color: brandSidebarColor },
                   ].map(({ label, color }) => (
                     <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <div style={{ width: 32, height: 32, borderRadius: '8px', background: color, boxShadow: `0 0 0 2px ${color}55`, flexShrink: 0 }} />
+                      <div style={{ width: 32, height: 32, borderRadius: 'var(--r-control)', background: color, boxShadow: `inset 0 0 0 1px ${c.border2}`, flexShrink: 0 }} />
                       <div>
-                        <div style={{ fontSize: '10px', fontWeight: '700', color: c.muted, textTransform: 'uppercase', letterSpacing: '0.6px' }}>{label}</div>
-                        <div style={{ fontSize: '11px', color: c.text, fontFamily: 'monospace' }}>{color}</div>
+                        <div style={{ fontSize: '12px', color: c.muted }}>{label}</div>
+                        <div style={{ fontSize: '12px', color: c.heading, fontFamily: 'var(--font-mono)' }}>{color}</div>
                       </div>
                     </div>
                   ))}
-                  {brandSaved && <span style={{ fontSize: '12px', color: c.success, fontWeight: '700', alignSelf: 'center' }}>✓ Applied</span>}
+                  {brandSaved && <span style={{ fontSize: '13px', color: c.text, alignSelf: 'center', display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: c.success }} />Applied</span>}
                 </div>
 
                 {/* 3 pickers */}
                 {[
-                  { label: 'Nav Bar',       desc: 'Accent line under the header + the active tab underline (no longer fills the whole bar)', picked: pickedColor,        set: setPickedColor,        pickedText: pickedNavTextColor,    setText: setPickedNavTextColor },
-                  { label: 'Scripture Bar', desc: 'Currently not applied — the verse strip stays neutral in this version',                     picked: pickedHeaderColor, set: setPickedHeaderColor,  pickedText: pickedHeaderTextColor, setText: setPickedHeaderTextColor },
-                  { label: 'Sidebar',       desc: 'Currently not applied — the sidebar stays neutral in this version',                          picked: pickedSidebarColor,set: setPickedSidebarColor, pickedText: pickedSidebarTextColor, setText: setPickedSidebarTextColor },
+                  { label: 'Nav bar',       desc: 'The line under the header, the active tab and primary buttons', picked: pickedColor,        set: setPickedColor,        pickedText: pickedNavTextColor,    setText: setPickedNavTextColor },
+                  { label: 'Scripture bar', desc: 'Not used yet. The verse strip stays neutral',                     picked: pickedHeaderColor, set: setPickedHeaderColor,  pickedText: pickedHeaderTextColor, setText: setPickedHeaderTextColor },
+                  { label: 'Sidebar',       desc: 'Not used yet. The sidebar stays neutral',                          picked: pickedSidebarColor,set: setPickedSidebarColor, pickedText: pickedSidebarTextColor, setText: setPickedSidebarTextColor },
                 ].map(({ label, desc, picked, set, pickedText, setText }) => {
                   const autoText   = getAutoTextColor(picked);
                   const effectText = pickedText || autoText;
                   return (
-                  <div key={label} style={{ marginBottom: '14px', padding: '14px', borderRadius: '12px', border: `1px solid ${c.border}` }}>
+                  <div key={label} style={{ marginBottom: '12px', padding: '12px', borderRadius: 'var(--r-control)', border: `1px solid ${c.border}` }}>
                     {/* Zone header row */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       {/* Live preview chip */}
-                      <div style={{ width: 44, height: 44, borderRadius: '10px', background: picked, flexShrink: 0, boxShadow: `0 2px 10px ${picked}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1.5px solid ${c.border}` }}>
-                        {setText && <span style={{ fontSize: '11px', fontWeight: '800', color: effectText, letterSpacing: '-0.5px' }}>Aa</span>}
+                      <div style={{ width: 40, height: 40, borderRadius: 'var(--r-tag)', background: picked, flexShrink: 0, boxShadow: `inset 0 0 0 1px ${c.border2}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {setText && <span style={{ fontSize: '13px', fontWeight: 500, color: effectText }}>Aa</span>}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: '13px', fontWeight: '700', color: c.heading }}>{label}</div>
-                        <div style={{ fontSize: '11px', color: c.muted, marginTop: '1px' }}>{desc}</div>
+                        <div style={{ fontSize: '14px', fontWeight: 500, color: c.heading }}>{label}</div>
+                        <div style={{ fontSize: '12px', color: c.muted, marginTop: '2px' }}>{desc}</div>
                       </div>
                       {/* Color picker swatch */}
                       <ColorPicker
@@ -906,7 +924,7 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
                         onChange={set}
                         isDarkMode={isDarkMode}
                         presets={BRAND_PRESETS}
-                        label={`${label} Background`}
+                        label={`${label} background`}
                         align="right"
                       />
                     </div>
@@ -914,23 +932,23 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
                     {/* Text color row (nav + scripture bar only) */}
                     {setText && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px', paddingTop: '12px', borderTop: `1px solid ${c.border}` }}>
-                        <span style={{ fontSize: '11px', fontWeight: '600', color: c.muted, whiteSpace: 'nowrap' }}>Text color:</span>
+                        <span style={{ fontSize: '12px', color: c.muted, whiteSpace: 'nowrap' }}>Text color</span>
                         <button
                           onClick={() => setText(null)}
-                          style={{ fontSize: '10px', fontWeight: '700', padding: '3px 10px', borderRadius: '20px', border: `1.5px solid ${!pickedText ? c.primary : c.border}`, background: !pickedText ? (isDarkMode ? 'rgba(59,130,246,0.15)' : '#eff6ff') : 'transparent', color: !pickedText ? c.primary : c.muted, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s' }}
+                          style={{ fontSize: '12px', fontWeight: 500, height: '24px', padding: '0 8px', borderRadius: 'var(--r-tag)', border: `1px solid ${!pickedText ? 'var(--accent-line)' : c.border2}`, background: !pickedText ? c.soft : 'transparent', color: !pickedText ? c.ink : c.text, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'inherit', transition: 'background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease)' }}
                         >Auto</button>
-                        <button onClick={() => setText('#ffffff')} title="White" style={{ width: 22, height: 22, borderRadius: '50%', background: '#ffffff', border: `2px solid ${pickedText === '#ffffff' ? c.primary : c.border}`, cursor: 'pointer', flexShrink: 0 }} />
-                        <button onClick={() => setText('#09090B')} title="Black" style={{ width: 22, height: 22, borderRadius: '50%', background: '#09090B', border: `2px solid ${pickedText === '#09090B' ? c.primary : c.border}`, cursor: 'pointer', flexShrink: 0 }} />
+                        <button onClick={() => setText('#ffffff')} title="White" style={{ width: 22, height: 22, borderRadius: '50%', background: '#ffffff', border: `2px solid ${pickedText === '#ffffff' ? c.primary : c.border2}`, cursor: 'pointer', flexShrink: 0 }} />
+                        <button onClick={() => setText('#09090B')} title="Black" style={{ width: 22, height: 22, borderRadius: '50%', background: '#09090B', border: `2px solid ${pickedText === '#09090B' ? c.primary : c.border2}`, cursor: 'pointer', flexShrink: 0 }} />
                         <ColorPicker
                           value={effectText}
                           onChange={setText}
                           isDarkMode={isDarkMode}
-                          label="Custom Text Color"
+                          label="Custom text color"
                           align="right"
                         />
                         {/* Live preview chip */}
-                        <div style={{ marginLeft: 'auto', padding: '4px 12px', borderRadius: '8px', background: picked, color: effectText, fontSize: '12px', fontWeight: '700', letterSpacing: '0.1px', whiteSpace: 'nowrap' }}>
-                          Aa Preview
+                        <div style={{ marginLeft: 'auto', height: '28px', display: 'flex', alignItems: 'center', padding: '0 12px', borderRadius: 'var(--r-tag)', background: picked, color: effectText, fontSize: '13px', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                          Preview
                         </div>
                       </div>
                     )}
@@ -940,31 +958,31 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
 
                 {/* Migration warning */}
                 {migrationNeeded && (
-                  <div style={{ marginBottom: '14px', padding: '10px 14px', borderRadius: '8px', background: isDarkMode ? 'rgba(239,68,68,0.12)' : '#fef2f2', border: '1px solid rgba(239,68,68,0.3)', fontSize: '12px', color: isDarkMode ? '#fca5a5' : '#b91c1c', lineHeight: '1.6' }}>
-                    <strong>Migration required:</strong> Run <code style={{ fontFamily: 'monospace', background: 'rgba(0,0,0,0.08)', padding: '1px 5px', borderRadius: '3px' }}>add_brand_color.sql</code> in Supabase SQL Editor to persist brand colors. Colors will preview below but won't save until the migration is run.
+                  <div style={{ marginBottom: '12px', padding: '12px 16px', borderRadius: 'var(--r-control)', background: c.deep, border: `1px solid ${c.border2}`, fontSize: '13px', color: c.text, lineHeight: '20px' }}>
+                    <span style={{ color: c.heading, fontWeight: 500 }}>Migration needed.</span> Run <code style={{ fontFamily: 'var(--font-mono)', background: c.raised, padding: '1px 4px', borderRadius: '4px' }}>add_brand_color.sql</code> in the Supabase SQL Editor to keep brand colors. Until then they preview but don't save.
                   </div>
                 )}
 
                 {/* Action */}
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '20px' }}>
                   {(adminCount <= 1 || migrationNeeded) ? (
                     <button
                       onClick={() => applyAllBrandColors(pickedColor, pickedHeaderColor, pickedSidebarColor, pickedNavTextColor, pickedHeaderTextColor, pickedSidebarTextColor)}
                       disabled={brandSaving}
-                      style={{ padding: '9px 22px', borderRadius: '8px', border: 'none', background: pickedColor, color: pickedNavTextColor || getAutoTextColor(pickedColor), fontSize: '13px', fontWeight: '700', cursor: brandSaving ? 'not-allowed' : 'pointer' }}
+                      style={{ height: '36px', padding: '0 16px', borderRadius: 'var(--r-control)', border: 'none', background: pickedColor, color: pickedNavTextColor || getAutoTextColor(pickedColor), fontSize: '13px', fontWeight: 500, cursor: brandSaving ? 'not-allowed' : 'pointer', fontFamily: 'inherit', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12)' }}
                     >
-                      {brandSaving ? 'Applying…' : migrationNeeded ? 'Preview Colors' : 'Apply Brand Colors'}
+                      {brandSaving ? 'Applying…' : migrationNeeded ? 'Preview colors' : 'Apply brand colors'}
                     </button>
                   ) : (
                     <button
                       onClick={proposeBrandColor}
                       disabled={brandSaving || !!proposal}
-                      style={{ padding: '9px 22px', borderRadius: '8px', border: 'none', background: pickedColor, color: '#fff', fontSize: '13px', fontWeight: '700', cursor: brandSaving || !!proposal ? 'not-allowed' : 'pointer', opacity: !!proposal ? 0.5 : 1 }}
+                      style={{ height: '36px', padding: '0 16px', borderRadius: 'var(--r-control)', border: 'none', background: pickedColor, color: getAutoTextColor(pickedColor), fontSize: '13px', fontWeight: 500, cursor: brandSaving || !!proposal ? 'not-allowed' : 'pointer', opacity: !!proposal ? 0.5 : 1, fontFamily: 'inherit' }}
                     >
-                      {brandSaving ? 'Submitting…' : 'Propose Color Change'}
+                      {brandSaving ? 'Submitting…' : 'Propose color change'}
                     </button>
                   )}
-                  {adminCount > 1 && !migrationNeeded && <span style={{ fontSize: '12px', color: c.muted }}>Requires {Math.min(adminCount, 2)} admin approvals</span>}
+                  {adminCount > 1 && !migrationNeeded && <span style={{ fontSize: '13px', color: c.muted }}>Needs {Math.min(adminCount, 2)} admin approvals</span>}
                 </div>
               </div>
             )}
@@ -972,15 +990,15 @@ export default function OrgSettings({ orgId, isDarkMode, userRole, session, onBr
             {!isAdmin && (
               <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
                 {[
-                  { label: 'Nav Bar',           color: brandColor },
-                  { label: 'Scripture Bar',     color: brandHeaderColor },
+                  { label: 'Nav bar',           color: brandColor },
+                  { label: 'Scripture bar',     color: brandHeaderColor },
                   { label: 'Sidebar',           color: brandSidebarColor },
                 ].map(({ label, color }) => (
                   <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: 32, height: 32, borderRadius: '8px', background: color, boxShadow: `0 0 0 2px ${color}55` }} />
+                    <div style={{ width: 32, height: 32, borderRadius: 'var(--r-control)', background: color, boxShadow: `inset 0 0 0 1px ${c.border2}`, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: '10px', fontWeight: '700', color: c.muted, textTransform: 'uppercase' }}>{label}</div>
-                      <div style={{ fontSize: '11px', color: c.text, fontFamily: 'monospace' }}>{color}</div>
+                      <div style={{ fontSize: '12px', color: c.muted }}>{label}</div>
+                      <div style={{ fontSize: '12px', color: c.heading, fontFamily: 'var(--font-mono)' }}>{color}</div>
                     </div>
                   </div>
                 ))}

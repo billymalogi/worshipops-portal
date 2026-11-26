@@ -1,78 +1,16 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '../supabaseClient';
+import SabbathPanel, { calcBurnout, STATUS_META, StatusDot } from './SabbathPanel';
 import {
   Search, Plus, Trash2, Mail, Phone, X, Save, Edit2,
   ChevronRight, User, Info, Heart, Calendar, AlertTriangle,
   CheckCircle, Clock, Star, ExternalLink, UserPlus, Copy, CheckCheck,
 } from 'lucide-react';
 
-// â”€â”€ Burnout helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const SIXTY_DAYS_MS = 60 * 24 * 60 * 60 * 1000;
-
-function getMemberServes(member, services) {
-  const nameLC  = (member.name  || '').toLowerCase();
-  const emailLC = (member.email || '').toLowerCase();
-  const serves  = [];
-
-  for (const svc of services) {
-    const date = svc.date ? new Date(svc.date) : null;
-    if (!date) continue;
-    const items = Array.isArray(svc.items) ? svc.items : [];
-    const found = items.some(item => {
-      const fields = [item.assignedTo, item.member, item.name, item.email, item.volunteer]
-        .map(v => (v || '').toLowerCase());
-      return fields.some(f => (nameLC && f === nameLC) || (emailLC && f.includes(emailLC) && emailLC));
-    });
-    if (found) serves.push(date);
-  }
-  return serves.sort((a, b) => b - a); // newest first
-}
-
-function calcBurnout(member, services, warningThreshold = 3, autoThreshold = 6) {
-  const serves = getMemberServes(member, services);
-  const now = Date.now();
-
-  // Serves in last 60 days
-  const serves60 = serves.filter(d => (now - d.getTime()) <= SIXTY_DAYS_MS);
-
-  // Consecutive Sundays (day 0)
-  const sundays = serves
-    .filter(d => d.getDay() === 0)
-    .sort((a, b) => b - a); // newest first
-
-  let consecutiveSundays = 0;
-  if (sundays.length > 0) {
-    consecutiveSundays = 1;
-    for (let i = 1; i < sundays.length; i++) {
-      const gap = (sundays[i - 1].getTime() - sundays[i].getTime()) / (7 * 24 * 60 * 60 * 1000);
-      if (gap <= 1.5) { consecutiveSundays++; } else break;
-    }
-  }
-
-  const onBreak    = member.available_until && new Date(member.available_until) > new Date();
-  const isAutoBreak = serves60.length >= autoThreshold;
-  const isWarning  = !isAutoBreak && consecutiveSundays >= warningThreshold;
-
-  let status = 'active';
-  if (onBreak)       status = 'break';
-  else if (isAutoBreak) status = 'burnout';
-  else if (isWarning)   status = 'warning';
-
-  return { status, serves60: serves60.length, consecutiveSundays, totalServes: serves.length, lastServe: serves[0] || null };
-}
-
-// â”€â”€ Color tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const STATUS_META = {
-  active:  { label: 'Active',          color: '#10b981', bg: 'rgba(16,185,129,0.1)',  icon: '🟢' },
-  warning: { label: 'High Serve Load',   color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', icon: '🟡' },
-  burnout: { label: 'Needs Sabbath Rest', color: '#ef4444', bg: 'rgba(239,68,68,0.1)', icon: '🔴' },
-  break:   { label: 'Sabbath Break',      color: '#3b82f6', bg: 'rgba(59,130,246,0.1)', icon: '🔵' },
-};
-
 const ROLES = ['Worship Leader', 'Vocalist', 'Guitarist', 'Bassist', 'Drummer', 'Keyboardist',
                'Sound Tech', 'Lighting Tech', 'Video Tech', 'Presenter', 'Pastor', 'Other'];
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 export default function TeamManager({ orgId, isDarkMode, userRole, services = [], session }) {
   const isAdmin  = userRole === 'admin';
   const isEditor = userRole === 'admin' || userRole === 'editor';
@@ -86,7 +24,6 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
   const [showEditModal,  setShowEditModal]  = useState(false);
   const [editingMember,  setEditingMember]  = useState(null);
   const [saving,         setSaving]         = useState(false);
-  const [showBurnoutInfo,setShowBurnoutInfo]= useState(false);
 
   // Invite modal
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -111,29 +48,41 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
   });
 
   const c = {
-    bg:      isDarkMode ? '#111111' : '#f9fafb',
-    card:    isDarkMode ? '#1f1f22' : '#ffffff',
-    text:    isDarkMode ? '#d1d5db' : '#27272a',
-    heading: isDarkMode ? '#f9fafb' : '#111111',
-    border:  isDarkMode ? '#27272a' : '#e5e7eb',
-    muted:   isDarkMode ? '#6b7280' : '#9ca3af',
-    hover:   isDarkMode ? '#27272a' : '#f3f4f6',
-    input:   isDarkMode ? '#111111' : '#f9fafb',
-    sidebar: isDarkMode ? '#0a0a0a' : '#f8f9fa',
-    primary: '#3b82f6',
-    success: '#10b981',
-    warning: '#f59e0b',
-    danger:  '#ef4444',
+    bg:       'var(--page)',
+    card:     'var(--card)',
+    text:     'var(--text-2)',
+    heading:  'var(--text-1)',
+    border:   'var(--line)',
+    border2:  'var(--line-2)',
+    muted:    'var(--text-3)',
+    hover:    'var(--raised)',
+    input:    'var(--page)',
+    sidebar:  'var(--deep)',
+    deep:     'var(--deep)',
+    primary:  'var(--accent)',
+    ink:      'var(--accent-ink)',
+    soft:     'var(--accent-soft)',
+    onAccent: 'var(--on-accent)',
+    success:  'var(--positive)',
+    warning:  'var(--warning)',
+    danger:   'var(--negative)',
   };
 
   const inp = (disabled = false) => ({
-    padding: '8px 12px', borderRadius: '6px',
-    border: `1px solid ${c.border}`, background: disabled ? (isDarkMode ? '#0a0a0a' : '#f3f4f6') : c.input,
-    color: disabled ? c.muted : c.heading, fontSize: '13px', outline: 'none',
+    height: '36px', padding: '0 12px', borderRadius: 'var(--r-control)',
+    border: `1px solid ${c.border2}`, background: disabled ? c.hover : c.input,
+    color: disabled ? c.muted : c.heading, fontSize: '14px', outline: 'none', fontFamily: 'inherit',
     width: '100%', boxSizing: 'border-box',
   });
+  const area = (minHeight) => ({ ...inp(), height: 'auto', minHeight, padding: '8px 12px', lineHeight: '20px', resize: 'vertical' });
+  const fieldLabel = { fontSize: '13px', fontWeight: 500, color: c.text, display: 'block', marginBottom: '8px' };
+  const btnBase = { height: '36px', padding: '0 14px', borderRadius: 'var(--r-control)', fontSize: '13px', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'inherit', whiteSpace: 'nowrap' };
+  const btnPrimary = { ...btnBase, border: 'none', background: c.primary, color: c.onAccent, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12)' };
+  const btnSecondary = { ...btnBase, border: `1px solid ${c.border2}`, background: c.card, color: c.heading };
+  const iconBtn = { background: 'none', border: 'none', borderRadius: 'var(--r-control)', width: '28px', height: '28px', cursor: 'pointer', color: c.muted, display: 'flex', alignItems: 'center', justifyContent: 'center' };
+  const chip = { fontSize: '12px', background: c.hover, border: `1px solid ${c.border}`, color: c.text, padding: '0 6px', lineHeight: '20px', borderRadius: 'var(--r-tag)', whiteSpace: 'nowrap' };
 
-  // â”€â”€ Fetch team + burnout settings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Fetch team + burnout settings ─────────────────────────────────────────
   const fetchTeam = async () => {
     if (!orgId) return;
     setLoading(true);
@@ -153,7 +102,7 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
 
   useEffect(() => { fetchTeam(); }, [orgId]);
 
-  // â”€â”€ Compute burnout for all members â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Compute burnout for all members ──────────────────────────────────────
   const burnoutMap = useMemo(() => {
     if (!burnoutEnabled) return {};
     const map = {};
@@ -173,7 +122,7 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
     setBurnoutQueue(triggered);
   }, [burnoutMap, isAdmin, burnoutEnabled, members]);
 
-  // â”€â”€ Fetch linked user profile when selecting a member â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Fetch linked user profile when selecting a member ────────────────────
   useEffect(() => {
     if (!selectedMember?.linked_user_id) { setLinkedProfile(null); return; }
     setLoadingProfile(true);
@@ -181,7 +130,7 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
       .then(({ data }) => { setLinkedProfile(data || null); setLoadingProfile(false); });
   }, [selectedMember?.linked_user_id]);
 
-  // â”€â”€ Save member â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Save member ───────────────────────────────────────────────────────────
   // Derive flat list of all positions from all org ministries
   const orgPositions = useMemo(() => {
     const flat = [];
@@ -317,7 +266,7 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
     await fetchTeam();
   };
 
-  // â”€â”€ Filtered list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Filtered list ─────────────────────────────────────────────────────────
   const filtered = members.filter(m =>
     (m.name  || '').toLowerCase().includes(search.toLowerCase()) ||
     (m.role  || '').toLowerCase().includes(search.toLowerCase()) ||
@@ -330,7 +279,7 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
 
   const ministriesForMember = (m) => Array.isArray(m.ministries) ? m.ministries : [];
 
-  // â”€â”€ Merge profile (linked user_profile overrides team_member fields) â”€â”€â”€â”€â”€â”€
+  // ── Merge profile (linked user_profile overrides team_member fields) ──────
   const mergedProfile = useMemo(() => {
     if (!selectedMember) return null;
     if (!linkedProfile) return selectedMember;
@@ -343,16 +292,16 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
     };
   }, [selectedMember, linkedProfile]);
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────────────────────────────────
   return (
     <div style={{ height: 'calc(100vh - 108px)', display: 'flex', flexDirection: 'column', background: c.bg, overflow: 'hidden' }}>
 
-      {/* â”€â”€ Burnout alert banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── Burnout alert banner ────────────────────────────────────────────── */}
       {isAdmin && burnoutEnabled && burnoutQueue.length > 0 && (
-        <div style={{ background: 'rgba(245,158,11,0.1)', borderBottom: `1px solid rgba(245,158,11,0.3)`, padding: '10px 24px', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
-          <AlertTriangle size={16} color={c.warning} />
-          <span style={{ fontSize: '13px', color: isDarkMode ? '#fcd34d' : '#92400e', flex: 1 }}>
-            <strong>{burnoutQueue.length}</strong> volunteer{burnoutQueue.length !== 1 ? 's' : ''} may need a Sabbath rest — review and notify them.
+        <div style={{ background: c.deep, borderBottom: `1px solid ${c.border}`, padding: '8px 24px', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.warning, flexShrink: 0 }} />
+          <span style={{ fontSize: '13px', color: c.heading, flex: 1 }}>
+            <span style={{ fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>{burnoutQueue.length}</span> volunteer{burnoutQueue.length !== 1 ? 's' : ''} may need a Sabbath rest
           </span>
           <button
             onClick={() => {
@@ -361,85 +310,68 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
                 .map(m => `mailto:${m.email}?subject=You%27ve%20been%20scheduled%20for%20a%20rest&body=Hi%20${encodeURIComponent(m.name)}%2C%0A%0AWe%20appreciate%20everything%20you%20do!%20To%20prevent%20burnout%2C%20we%27re%20giving%20you%20the%20next%202%20weeks%20off%20from%20serving.%20Enjoy%20some%20time%20as%20a%20congregant!%0A%0ABlessings%2C%0ALeadership%20Team`);
               links.forEach((url, i) => setTimeout(() => window.open(url), i * 400));
             }}
-            style={{ border: `1px solid rgba(245,158,11,0.4)`, borderRadius: '6px', padding: '5px 14px', background: 'transparent', color: isDarkMode ? '#fcd34d' : '#92400e', fontSize: '12px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+            style={{ ...btnSecondary, height: '32px' }}
           >
-            <Mail size={13} /> Review & Send Emails
+            <Mail size={16} strokeWidth={1.5} /> Email them
           </button>
         </div>
       )}
 
-      {/* â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-      <div style={{ padding: '18px 24px', background: c.card, borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0 }}>
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      <div style={{ padding: '20px 24px', background: c.card, borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
         <div style={{ flex: 1 }}>
-          <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '700', color: c.heading }}>Team Roster</h1>
-          <p style={{ margin: '3px 0 0', fontSize: '13px', color: c.muted }}>{members.length} members</p>
+          <h1 style={{ margin: 0, fontSize: '24px', lineHeight: '32px', fontWeight: 500, color: c.heading }}>Team roster</h1>
+          <p style={{ margin: 0, fontSize: '13px', color: c.muted, fontVariantNumeric: 'tabular-nums' }}>{members.length} {members.length === 1 ? 'person' : 'people'}</p>
         </div>
         <div style={{ position: 'relative' }}>
-          <Search size={15} color={c.muted} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
+          <Search size={16} strokeWidth={1.5} color={c.muted} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
           <input
-            placeholder="Search name, role, email…"
+            placeholder="Search"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            style={{ ...inp(), paddingLeft: '32px', width: '220px' }}
+            style={{ ...inp(), paddingLeft: '34px', width: '220px', marginRight: '8px' }}
           />
         </div>
-        {burnoutEnabled && (
-          <button
-            onClick={() => setShowBurnoutInfo(v => !v)}
-            style={{ border: `1px solid ${c.border}`, borderRadius: '6px', padding: '7px 12px', background: 'transparent', color: c.muted, fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
-          >
-            <Heart size={13} /> Sabbath Feature
-          </button>
-        )}
         {isAdmin && (
           <button
             onClick={() => { setShowInviteModal(true); setInviteResult(null); }}
-            style={{ border: `1px solid ${c.border}`, borderRadius: '7px', padding: '8px 16px', background: 'transparent', color: c.text, fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+            style={btnSecondary}
           >
-            <UserPlus size={15} /> Invite
+            <UserPlus size={16} strokeWidth={1.5} /> Invite
           </button>
         )}
         {isEditor && (
           <button
             onClick={() => openEdit()}
-            style={{ border: 'none', borderRadius: '7px', padding: '8px 16px', background: c.primary, color: 'white', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+            style={btnPrimary}
           >
-            <Plus size={15} /> Add Person
+            <Plus size={16} strokeWidth={1.5} /> Add person
           </button>
         )}
       </div>
 
-      {/* Burnout info panel */}
-      {showBurnoutInfo && (
-        <div style={{ background: '#ffffff', border: `1px solid rgba(245,158,11,0.3)`, borderLeft: 'none', borderRight: 'none', padding: '14px 24px', flexShrink: 0 }}>
-          <div style={{ fontSize: '13px', fontWeight: '700', color: '#111111', marginBottom: '4px' }}>The Sabbath Feature — Guidelines</div>
-          <div style={{ fontSize: '12px', fontStyle: 'italic', color: '#374151', marginBottom: '8px' }}>”God ordained us humans to rest a day from work. Churches are no different when it comes to volunteers.”</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '8px', fontSize: '12px', color: '#374151' }}>
-            <span>🟡 Warning: {warningThreshold}+ consecutive Sundays serving</span>
-            <span>🔴 Needs Sabbath Rest: {autoThreshold}+ serves in the last 60 days (14-day break)</span>
-            <span>🔵 Sabbath Break: temporarily resting, not to be scheduled</span>
-            <span>✓ Aim for at least 1 Sunday/month as a congregant, not a server</span>
-          </div>
-        </div>
+      {/* The Sabbath Feature: rest status for the whole team, always in view */}
+      {burnoutEnabled && (
+        <SabbathPanel members={members} burnoutMap={burnoutMap} warningThreshold={warningThreshold} autoThreshold={autoThreshold} />
       )}
 
-      {/* â”€â”€ Table + Profile Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── Table + Profile Panel ────────────────────────────────────────────── */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
 
         {/* Table */}
         <div style={{ flex: 1, overflowY: 'auto', overflowX: 'auto' }}>
           {loading ? (
-            <div style={{ padding: '60px', textAlign: 'center', color: c.muted }}>Loading team…</div>
+            <div style={{ padding: '64px', textAlign: 'center', color: c.muted, fontSize: '14px' }}>Loading team…</div>
           ) : filtered.length === 0 ? (
-            <div style={{ padding: '60px', textAlign: 'center', color: c.muted }}>
-              {search ? 'No matches found.' : 'No team members yet. Click "Add Person" to get started.'}
+            <div style={{ padding: '64px', textAlign: 'center', color: c.text, fontSize: '14px' }}>
+              {search ? `No one matches “${search}”` : 'No one on the team yet. Use Add person to start.'}
             </div>
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
               <thead>
-                <tr style={{ background: isDarkMode ? '#0a0a0a' : '#f8fafc', borderBottom: `2px solid ${c.border}` }}>
-                  {['Name', 'Role', 'Phone', 'Email', 'Ministries', 'Last Serve', 'Status', ''].map(h => (
-                    <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: c.muted, whiteSpace: 'nowrap' }}>
+                <tr style={{ background: c.deep, borderBottom: `1px solid ${c.border}` }}>
+                  {['Name', 'Role', 'Phone', 'Email', 'Ministries', 'Last served', 'Status', ''].map(h => (
+                    <th key={h} style={{ height: '36px', padding: '0 16px', textAlign: 'left', fontSize: '12px', fontWeight: 400, color: c.muted, whiteSpace: 'nowrap', position: 'sticky', top: 0, background: c.deep, zIndex: 1 }}>
                       {h}
                     </th>
                   ))}
@@ -458,73 +390,71 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
                       style={{
                         borderBottom: `1px solid ${c.border}`,
                         cursor: 'pointer',
-                        background: isSelected ? (isDarkMode ? 'rgba(59,130,246,0.08)' : 'rgba(59,130,246,0.04)') : 'transparent',
-                        transition: 'background 0.15s',
+                        background: isSelected ? c.hover : 'transparent',
+                        boxShadow: isSelected ? `inset 2px 0 0 ${c.primary}` : 'none',
+                        transition: 'background-color var(--t-fast) var(--ease)',
                       }}
                       onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = c.hover; }}
                       onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}
                     >
                       {/* Name + Avatar */}
-                      <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '10px 16px', whiteSpace: 'nowrap' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: isDarkMode ? '#27272a' : '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '700', color: c.muted, flexShrink: 0, overflow: 'hidden' }}>
+                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: c.hover, border: `1px solid ${c.border}`, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 500, color: c.text, flexShrink: 0, overflow: 'hidden' }}>
                             {member.avatar_url
                               ? <img src={member.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                               : getInitials(member.name)}
                           </div>
-                          <span style={{ fontWeight: '600', color: c.heading }}>{member.name}</span>
-                          {isSelected && <ChevronRight size={14} color={c.primary} />}
+                          <span style={{ fontWeight: 500, fontSize: '14px', color: c.heading }}>{member.name}</span>
                         </div>
                       </td>
                       {/* Role */}
-                      <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '10px 16px', whiteSpace: 'nowrap' }}>
                         {member.role
-                          ? <span style={{ background: isDarkMode ? '#27272a' : '#f3f4f6', color: c.text, padding: '2px 8px', borderRadius: '4px', fontSize: '12px' }}>{member.role}</span>
+                          ? <span style={{ color: c.text, fontSize: '13px' }}>{member.role}</span>
                           : <span style={{ color: c.muted }}>—</span>}
                       </td>
                       {/* Phone */}
-                      <td style={{ padding: '12px 16px', color: c.muted, fontFamily: 'monospace', fontSize: '12px', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '10px 16px', color: member.phone ? c.text : c.muted, fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums', fontSize: '12px', whiteSpace: 'nowrap' }}>
                         {member.phone || '—'}
                       </td>
                       {/* Email */}
-                      <td style={{ padding: '12px 16px', color: c.muted, fontFamily: 'monospace', fontSize: '12px', whiteSpace: 'nowrap', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <td style={{ padding: '10px 16px', color: member.email ? c.text : c.muted, fontSize: '13px', whiteSpace: 'nowrap', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {member.email || '—'}
                       </td>
                       {/* Ministries */}
-                      <td style={{ padding: '12px 16px' }}>
+                      <td style={{ padding: '10px 16px' }}>
                         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                           {mins.slice(0, 3).map((mn, i) => (
-                            <span key={i} style={{ fontSize: '11px', background: 'rgba(59,130,246,0.1)', color: c.primary, padding: '1px 7px', borderRadius: '10px', whiteSpace: 'nowrap' }}>{mn}</span>
+                            <span key={i} style={chip}>{mn}</span>
                           ))}
-                          {mins.length > 3 && <span style={{ fontSize: '11px', color: c.muted }}>+{mins.length - 3}</span>}
+                          {mins.length > 3 && <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: c.muted, lineHeight: '22px' }}>+{mins.length - 3}</span>}
                           {mins.length === 0 && <span style={{ color: c.muted }}>—</span>}
                         </div>
                       </td>
                       {/* Last Serve */}
-                      <td style={{ padding: '12px 16px', color: c.muted, whiteSpace: 'nowrap', fontSize: '12px' }}>
+                      <td style={{ padding: '10px 16px', color: b.lastServe ? c.text : c.muted, whiteSpace: 'nowrap', fontSize: '13px', fontVariantNumeric: 'tabular-nums' }}>
                         {b.lastServe ? formatDate(b.lastServe) : '—'}
                       </td>
                       {/* Status */}
-                      <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '10px 16px', whiteSpace: 'nowrap' }}>
                         {burnoutEnabled ? (
-                          <span style={{ fontSize: '11px', fontWeight: '700', color: sm.color, background: sm.bg, padding: '3px 10px', borderRadius: '20px' }}>
-                            {sm.icon} {sm.label}
-                          </span>
+                          <StatusDot meta={sm} />
                         ) : (
-                          <span style={{ fontSize: '11px', color: c.muted }}>—</span>
+                          <span style={{ fontSize: '13px', color: c.muted }}>—</span>
                         )}
                       </td>
                       {/* Actions */}
-                      <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
-                        <div style={{ display: 'flex', gap: '4px' }} onClick={e => e.stopPropagation()}>
+                      <td style={{ padding: '10px 16px', whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'flex', gap: '2px', justifyContent: 'flex-end' }} onClick={e => e.stopPropagation()}>
                           {isEditor && (
-                            <button onClick={() => openEdit(member)} style={{ background: 'none', border: `1px solid ${c.border}`, borderRadius: '5px', padding: '5px 7px', cursor: 'pointer', color: c.text, display: 'flex', alignItems: 'center' }}>
-                              <Edit2 size={13} />
+                            <button onClick={() => openEdit(member)} title="Edit" className="wo-icon-btn" style={iconBtn}>
+                              <Edit2 size={16} strokeWidth={1.5} />
                             </button>
                           )}
                           {isAdmin && (
-                            <button onClick={() => handleDelete(member.id)} style={{ background: 'none', border: `1px solid ${c.border}`, borderRadius: '5px', padding: '5px 7px', cursor: 'pointer', color: c.danger, display: 'flex', alignItems: 'center' }}>
-                              <Trash2 size={13} />
+                            <button onClick={() => handleDelete(member.id)} title="Remove from team" className="wo-icon-btn" style={iconBtn}>
+                              <Trash2 size={16} strokeWidth={1.5} />
                             </button>
                           )}
                         </div>
@@ -537,72 +467,70 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
           )}
         </div>
 
-        {/* â”€â”€ Profile Side Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── Profile Side Panel ───────────────────────────────────────────── */}
         {selectedMember && (
           <div style={{
-            width: '380px', flexShrink: 0, borderLeft: `1px solid ${c.border}`,
+            width: '360px', flexShrink: 0, borderLeft: `1px solid ${c.border}`,
             background: c.card, display: 'flex', flexDirection: 'column', overflowY: 'auto',
           }}>
             {/* Panel header */}
-            <div style={{ padding: '16px 20px', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ flex: 1, fontWeight: '700', fontSize: '14px', color: c.heading }}>Profile</div>
+            <div style={{ height: '52px', padding: '0 12px 0 20px', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ flex: 1, fontWeight: 500, fontSize: '14px', color: c.heading }}>Profile</div>
               {isEditor && (
-                <button onClick={() => openEdit(selectedMember)} style={{ border: `1px solid ${c.border}`, borderRadius: '6px', padding: '5px 10px', background: 'transparent', color: c.text, fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Edit2 size={12} /> Edit
+                <button onClick={() => openEdit(selectedMember)} style={{ ...btnSecondary, height: '28px', padding: '0 10px', fontSize: '12px', gap: '4px' }}>
+                  <Edit2 size={14} strokeWidth={1.5} /> Edit
                 </button>
               )}
-              <button onClick={() => setSelectedMember(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.muted, display: 'flex', alignItems: 'center' }}>
-                <X size={18} />
+              <button onClick={() => setSelectedMember(null)} title="Close" className="wo-icon-btn" style={iconBtn}>
+                <X size={16} strokeWidth={1.5} />
               </button>
             </div>
 
             <div style={{ padding: '20px', flex: 1 }}>
               {/* Avatar + Name */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '20px' }}>
-                <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: isDarkMode ? '#27272a' : '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: '700', color: c.muted, flexShrink: 0, overflow: 'hidden', border: `2px solid ${c.border}` }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+                <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: c.hover, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 500, color: c.text, flexShrink: 0, overflow: 'hidden', border: `1px solid ${c.border}`, boxSizing: 'border-box' }}>
                   {(mergedProfile?.avatar_url)
                     ? <img src={mergedProfile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     : getInitials(mergedProfile?.name || selectedMember.name)}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: '800', fontSize: '17px', color: c.heading }}>
+                  <div style={{ fontWeight: 500, fontSize: '18px', lineHeight: '24px', color: c.heading }}>
                     {mergedProfile?.display_name || selectedMember.name}
                   </div>
                   {selectedMember.role && (
-                    <div style={{ fontSize: '12px', color: c.primary, fontWeight: '600', marginTop: '2px' }}>{selectedMember.role}</div>
+                    <div style={{ fontSize: '13px', color: c.text, marginTop: '2px' }}>{selectedMember.role}</div>
                   )}
                   {burnoutEnabled && (() => {
                     const b = burnoutMap[selectedMember.id];
                     const sm = STATUS_META[b?.status] || STATUS_META.active;
                     return (
-                      <span style={{ fontSize: '11px', fontWeight: '700', color: sm.color, background: sm.bg, padding: '2px 8px', borderRadius: '20px', display: 'inline-block', marginTop: '4px' }}>
-                        {sm.icon} {sm.label}
-                      </span>
+                      <div style={{ marginTop: '4px' }}><StatusDot meta={sm} size={12} /></div>
                     );
                   })()}
-                  {loadingProfile && <div style={{ fontSize: '11px', color: c.muted, marginTop: '4px' }}>Loading linked profile…</div>}
-                  {linkedProfile && <div style={{ fontSize: '11px', color: c.success, marginTop: '4px', display: 'flex', alignItems: 'center', gap: '3px' }}><CheckCircle size={11} /> Linked Account</div>}
+                  {loadingProfile && <div style={{ fontSize: '12px', color: c.muted, marginTop: '4px' }}>Loading linked profile…</div>}
+                  {linkedProfile && <div style={{ fontSize: '12px', color: c.muted, marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}><CheckCircle size={12} strokeWidth={1.5} /> Linked account</div>}
                 </div>
               </div>
 
               {/* Contact */}
-              <SectionBlock title="Contact" icon={<Phone size={13} />} c={c}>
-                <InfoRow icon={<Mail size={13} />} label="Email" value={selectedMember.email}
-                  action={selectedMember.email ? <a href={`mailto:${selectedMember.email}`} style={{ color: c.primary, display: 'flex', alignItems: 'center' }}><ExternalLink size={12} /></a> : null} />
-                <InfoRow icon={<Phone size={13} />} label="Phone" value={selectedMember.phone} />
+              <SectionBlock title="Contact" icon={<Phone size={16} strokeWidth={1.5} />} c={c}>
+                <InfoRow icon={<Mail size={16} strokeWidth={1.5} />} label="Email" value={selectedMember.email}
+                  action={selectedMember.email ? <a href={`mailto:${selectedMember.email}`} title="Email" style={{ color: c.muted, display: 'flex', alignItems: 'center' }}><ExternalLink size={14} strokeWidth={1.5} /></a> : null} />
+                <InfoRow icon={<Phone size={16} strokeWidth={1.5} />} label="Phone" value={selectedMember.phone} />
               </SectionBlock>
 
               {/* Personal */}
-              <SectionBlock title="Personal" icon={<User size={13} />} c={c}>
-                <InfoRow icon={<Calendar size={13} />} label="Date of Birth" value={mergedProfile?.date_of_birth ? formatDate(mergedProfile.date_of_birth) : null} />
+              <SectionBlock title="Personal" icon={<User size={16} strokeWidth={1.5} />} c={c}>
+                <InfoRow icon={<Calendar size={16} strokeWidth={1.5} />} label="Birthday" value={mergedProfile?.date_of_birth ? formatDate(mergedProfile.date_of_birth) : null} />
                 {(mergedProfile?.bio) && (
-                  <div style={{ fontSize: '13px', color: c.text, marginTop: '8px', lineHeight: '1.6' }}>{mergedProfile.bio}</div>
+                  <div style={{ fontSize: '14px', color: c.text, marginTop: '8px', lineHeight: '22px' }}>{mergedProfile.bio}</div>
                 )}
                 {Array.isArray(selectedMember.household) && selectedMember.household.length > 0 && (
-                  <div style={{ marginTop: '10px' }}>
-                    <div style={{ fontSize: '11px', fontWeight: '700', color: c.muted, textTransform: 'uppercase', marginBottom: '6px' }}>Household</div>
+                  <div style={{ marginTop: '12px' }}>
+                    <div style={{ fontSize: '12px', color: c.muted, marginBottom: '4px' }}>Household</div>
                     {selectedMember.household.map((h, i) => (
-                      <div key={i} style={{ fontSize: '12px', color: c.text, marginBottom: '3px' }}>
+                      <div key={i} style={{ fontSize: '13px', color: c.heading, marginBottom: '4px' }}>
                         {h.name} <span style={{ color: c.muted }}>· {h.relationship}</span>
                       </div>
                     ))}
@@ -611,19 +539,19 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
               </SectionBlock>
 
               {/* Ministry */}
-              <SectionBlock title="Ministry" icon={<Star size={13} />} c={c}>
+              <SectionBlock title="Ministry" icon={<Star size={16} strokeWidth={1.5} />} c={c}>
                 {ministriesForMember(selectedMember).length > 0 ? (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                     {ministriesForMember(selectedMember).map((mn, i) => (
-                      <span key={i} style={{ fontSize: '12px', background: 'rgba(59,130,246,0.1)', color: c.primary, padding: '3px 10px', borderRadius: '20px' }}>{mn}</span>
+                      <span key={i} style={chip}>{mn}</span>
                     ))}
                   </div>
                 ) : (
-                  <span style={{ fontSize: '13px', color: c.muted, fontStyle: 'italic' }}>No ministries assigned</span>
+                  <span style={{ fontSize: '13px', color: c.muted }}>No ministries yet</span>
                 )}
                 {selectedMember.notes && (
-                  <div style={{ marginTop: '10px', fontSize: '12px', color: c.muted, background: isDarkMode ? '#111111' : '#f8fafc', padding: '8px 10px', borderRadius: '6px', border: `1px solid ${c.border}` }}>
-                    <strong>Notes:</strong> {selectedMember.notes}
+                  <div style={{ marginTop: '12px', fontSize: '13px', lineHeight: '20px', color: c.text, background: c.deep, padding: '8px 12px', borderRadius: 'var(--r-control)', border: `1px solid ${c.border}` }}>
+                    <div style={{ fontSize: '12px', color: c.muted, marginBottom: '2px' }}>Admin notes</div>{selectedMember.notes}
                   </div>
                 )}
               </SectionBlock>
@@ -633,26 +561,26 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
                 const b = burnoutMap[selectedMember.id];
                 if (!b) return null;
                 return (
-                  <SectionBlock title="Serve Stats" icon={<Clock size={13} />} c={c}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '10px' }}>
-                      <StatChip label="Total Serves" value={b.totalServes} c={c} />
-                      <StatChip label="Last 60 Days" value={b.serves60} c={c} accent={b.serves60 >= autoThreshold ? c.danger : b.serves60 >= autoThreshold - 2 ? c.warning : null} />
-                      <StatChip label="Consec. Sundays" value={b.consecutiveSundays} c={c} accent={b.consecutiveSundays >= warningThreshold ? c.warning : null} />
+                  <SectionBlock title="Serving" icon={<Clock size={16} strokeWidth={1.5} />} c={c}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '12px' }}>
+                      <StatChip label="Total" value={b.totalServes} c={c} />
+                      <StatChip label="Last 60 days" value={b.serves60} c={c} accent={b.serves60 >= autoThreshold ? c.danger : b.serves60 >= autoThreshold - 2 ? c.warning : null} />
+                      <StatChip label="Sundays in a row" value={b.consecutiveSundays} c={c} accent={b.consecutiveSundays >= warningThreshold ? c.warning : null} />
                     </div>
                     {b.lastServe && (
-                      <div style={{ fontSize: '12px', color: c.muted }}>Last served: {formatDate(b.lastServe)}</div>
+                      <div style={{ fontSize: '13px', color: c.muted }}>Last served {formatDate(b.lastServe)}</div>
                     )}
                     {selectedMember.available_until && new Date(selectedMember.available_until) > new Date() && (
-                      <div style={{ marginTop: '8px', fontSize: '12px', color: c.primary, background: 'rgba(59,130,246,0.1)', padding: '6px 10px', borderRadius: '6px' }}>
+                      <div style={{ marginTop: '8px', fontSize: '13px', color: c.heading, background: c.deep, border: `1px solid ${c.border}`, padding: '8px 12px', borderRadius: 'var(--r-control)' }}>
                         On break until {formatDate(selectedMember.available_until)}
                       </div>
                     )}
                     {isAdmin && b.status === 'burnout' && !(selectedMember.available_until && new Date(selectedMember.available_until) > new Date()) && (
                       <button
                         onClick={() => triggerBreak(selectedMember)}
-                        style={{ marginTop: '10px', width: '100%', border: `1px solid rgba(239,68,68,0.3)`, borderRadius: '6px', padding: '7px 12px', background: 'rgba(239,68,68,0.08)', color: c.danger, fontSize: '12px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                        style={{ ...btnSecondary, marginTop: '12px', width: '100%', justifyContent: 'center' }}
                       >
-                        <Heart size={13} /> Schedule 14-Day Break
+                        <Heart size={16} strokeWidth={1.5} /> Start a 14-day break
                       </button>
                     )}
                   </SectionBlock>
@@ -664,9 +592,9 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
                 <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: `1px solid ${c.border}` }}>
                   <a
                     href={`mailto:${selectedMember.email}?subject=WorshipOps Update`}
-                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderRadius: '7px', border: `1px solid ${c.border}`, color: c.text, textDecoration: 'none', fontSize: '13px', fontWeight: '600', background: 'transparent' }}
+                    style={{ ...btnSecondary, textDecoration: 'none', justifyContent: 'center' }}
                   >
-                    <Mail size={14} color={c.primary} /> Send Email
+                    <Mail size={16} strokeWidth={1.5} /> Send email
                   </a>
                 </div>
               )}
@@ -675,84 +603,84 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
         )}
       </div>
 
-      {/* â”€â”€ Edit / Add modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── Edit / Add modal ─────────────────────────────────────────────────── */}
       {showEditModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 999, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: c.card, borderRadius: '14px', border: `1px solid ${c.border}`, width: '100%', maxWidth: '560px', maxHeight: '90vh', overflow: 'auto', boxShadow: '0 24px 60px rgba(0,0,0,0.3)' }}>
-            <div style={{ padding: '20px 24px', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ fontWeight: '700', fontSize: '16px', color: c.heading }}>
-                {editingMember ? 'Edit Member' : 'Add Team Member'}
+          <div style={{ background: c.card, borderRadius: 'var(--r-panel)', border: `1px solid ${c.border2}`, width: '100%', maxWidth: '560px', maxHeight: '90vh', overflow: 'auto', boxShadow: 'var(--shadow-lg)' }}>
+            <div style={{ padding: '16px 16px 16px 24px', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ fontWeight: 500, fontSize: '16px', color: c.heading }}>
+                {editingMember ? 'Edit person' : 'Add person'}
               </div>
-              <button onClick={() => setShowEditModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.muted, display: 'flex' }}><X size={18} /></button>
+              <button onClick={() => setShowEditModal(false)} title="Close" className="wo-icon-btn" style={iconBtn}><X size={16} strokeWidth={1.5} /></button>
             </div>
-            <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={{ fontSize: '12px', fontWeight: '600', color: c.text, display: 'block', marginBottom: '5px' }}>Full Name *</label>
+                  <label style={fieldLabel}>Full name</label>
                   <input style={inp()} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Jane Smith" />
                 </div>
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: '600', color: c.text, display: 'block', marginBottom: '5px' }}>Email</label>
+                  <label style={fieldLabel}>Email</label>
                   <input style={inp()} type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="jane@church.com" />
                 </div>
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: '600', color: c.text, display: 'block', marginBottom: '5px' }}>Phone</label>
+                  <label style={fieldLabel}>Phone</label>
                   <input style={inp()} value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="(555) 000-0000" />
                 </div>
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: '600', color: c.text, display: 'block', marginBottom: '5px' }}>Role / Position</label>
-                  <input style={inp()} list="role-list" value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} placeholder="e.g. Vocalist" />
+                  <label style={fieldLabel}>Role</label>
+                  <input style={inp()} list="role-list" value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} placeholder="Vocalist" />
                   <datalist id="role-list">
                     {(orgPositions.length > 0 ? orgPositions : ROLES).map(r => <option key={r} value={r} />)}
                   </datalist>
                 </div>
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: '600', color: c.text, display: 'block', marginBottom: '5px' }}>Date of Birth</label>
+                  <label style={fieldLabel}>Birthday</label>
                   <input style={inp()} type="date" value={form.date_of_birth} onChange={e => setForm(f => ({ ...f, date_of_birth: e.target.value }))} />
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={{ fontSize: '12px', fontWeight: '600', color: c.text, display: 'block', marginBottom: '5px' }}>Bio</label>
-                  <textarea style={{ ...inp(), minHeight: '70px', resize: 'vertical' }} value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} placeholder="Short bio…" />
+                  <label style={fieldLabel}>Bio</label>
+                  <textarea style={area('72px')} value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} placeholder="A line or two about them" />
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={{ fontSize: '12px', fontWeight: '600', color: c.text, display: 'block', marginBottom: '5px' }}>Notes (admin only)</label>
-                  <textarea style={{ ...inp(), minHeight: '55px', resize: 'vertical' }} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="Internal notes…" />
+                  <label style={fieldLabel}>Notes <span style={{ color: c.muted, fontWeight: 400 }}>· admins only</span></label>
+                  <textarea style={area('56px')} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="Only admins see these" />
                 </div>
               </div>
 
               {/* Ministries */}
               <div>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: c.text, display: 'block', marginBottom: '8px' }}>Ministries</label>
+                <label style={fieldLabel}>Ministries</label>
                 <MinistryTagInput tags={form.ministries} onChange={tags => setForm(f => ({ ...f, ministries: tags }))} c={c} inp={inp} />
               </div>
 
               {/* Household */}
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: '600', color: c.text }}>Household</label>
+                  <label style={{ ...fieldLabel, marginBottom: 0 }}>Household</label>
                   <button onClick={() => setForm(f => ({ ...f, household: [...f.household, { name: '', relationship: '' }] }))}
-                    style={{ fontSize: '12px', color: c.primary, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                    <Plus size={12} /> Add
+                    style={{ fontSize: '13px', fontWeight: 500, color: c.ink, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'inherit', height: '28px' }}>
+                    <Plus size={14} strokeWidth={1.5} /> Add
                   </button>
                 </div>
                 {form.household.map((h, i) => (
                   <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 28px', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
                     <input style={inp()} value={h.name} onChange={e => { const hh = [...form.household]; hh[i] = { ...hh[i], name: e.target.value }; setForm(f => ({ ...f, household: hh })); }} placeholder="Name" />
                     <input style={inp()} value={h.relationship} onChange={e => { const hh = [...form.household]; hh[i] = { ...hh[i], relationship: e.target.value }; setForm(f => ({ ...f, household: hh })); }} placeholder="Relationship" />
-                    <button onClick={() => setForm(f => ({ ...f, household: f.household.filter((_, idx) => idx !== i) }))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.danger, display: 'flex', alignItems: 'center', padding: '2px' }}><X size={14} /></button>
+                    <button onClick={() => setForm(f => ({ ...f, household: f.household.filter((_, idx) => idx !== i) }))} title="Remove" className="wo-icon-btn" style={iconBtn}><X size={16} strokeWidth={1.5} /></button>
                   </div>
                 ))}
-                {form.household.length === 0 && <div style={{ fontSize: '12px', color: c.muted, fontStyle: 'italic' }}>No household members added.</div>}
+                {form.household.length === 0 && <div style={{ fontSize: '13px', color: c.muted }}>No household members yet</div>}
               </div>
             </div>
 
-            <div style={{ padding: '14px 24px', borderTop: `1px solid ${c.border}`, display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-              <button onClick={() => setShowEditModal(false)} style={{ border: `1px solid ${c.border}`, borderRadius: '7px', padding: '8px 18px', background: 'transparent', color: c.text, fontWeight: '600', fontSize: '13px', cursor: 'pointer' }}>
+            <div style={{ padding: '16px 24px', borderTop: `1px solid ${c.border}`, display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+              <button onClick={() => setShowEditModal(false)} style={btnSecondary}>
                 Cancel
               </button>
-              <button onClick={handleSave} disabled={saving || !form.name.trim()} style={{ border: 'none', borderRadius: '7px', padding: '8px 20px', background: c.primary, color: 'white', fontWeight: '700', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '7px', opacity: (saving || !form.name.trim()) ? 0.65 : 1 }}>
-                <Save size={14} /> {saving ? 'Saving…' : 'Save'}
+              <button onClick={handleSave} disabled={saving || !form.name.trim()} style={{ ...btnPrimary, opacity: (saving || !form.name.trim()) ? 0.5 : 1 }}>
+                <Save size={16} strokeWidth={1.5} /> {saving ? 'Saving…' : 'Save'}
               </button>
             </div>
           </div>
@@ -762,15 +690,15 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
       {/* Invite modal */}
       {showInviteModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-          <div style={{ background: c.card, border: `1px solid ${c.border}`, borderRadius: '16px', width: 'min(440px,100%)', boxShadow: '0 20px 60px rgba(0,0,0,0.5)', overflow: 'hidden' }}>
+          <div style={{ background: c.card, border: `1px solid ${c.border2}`, borderRadius: 'var(--r-panel)', width: 'min(440px,100%)', boxShadow: 'var(--shadow-lg)', overflow: 'hidden' }}>
             {/* Header */}
-            <div style={{ padding: '20px 24px', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ padding: '16px 16px 16px 24px', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: c.heading }}>Invite to Team</h3>
-                <p style={{ margin: '3px 0 0', fontSize: '12px', color: c.muted }}>They'll receive an email with a signup link.</p>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 500, color: c.heading }}>Invite to the team</h3>
+                <p style={{ margin: '2px 0 0', fontSize: '13px', color: c.muted }}>They get an email with a sign-up link</p>
               </div>
-              <button onClick={() => { setShowInviteModal(false); setInviteResult(null); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: c.muted, padding: '4px' }}>
-                <X size={18} />
+              <button onClick={() => { setShowInviteModal(false); setInviteResult(null); }} title="Close" className="wo-icon-btn" style={iconBtn}>
+                <X size={16} strokeWidth={1.5} />
               </button>
             </div>
 
@@ -779,32 +707,32 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
               {inviteResult && !inviteResult.error && (
                 <div>
                   <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-                    <CheckCircle size={36} color="#10b981" style={{ margin: '0 auto 10px', display: 'block' }} />
-                    <p style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: c.heading }}>Invite sent!</p>
+                    <CheckCircle size={24} strokeWidth={1.5} color={c.success} style={{ margin: '0 auto 8px', display: 'block' }} />
+                    <p style={{ margin: 0, fontSize: '15px', fontWeight: 500, color: c.heading }}>Invite sent</p>
                     {inviteResult.warning && (
-                      <p style={{ margin: '6px 0 0', fontSize: '12px', color: '#f59e0b' }}>{inviteResult.warning}</p>
+                      <p style={{ margin: '8px 0 0', fontSize: '13px', color: c.text }}>{inviteResult.warning}</p>
                     )}
                   </div>
                   {inviteResult.url && (
-                    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: '8px', padding: '10px 12px', marginBottom: '14px' }}>
-                      <p style={{ margin: '0 0 6px', fontSize: '11px', fontWeight: '600', color: c.muted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Invite Link</p>
+                    <div style={{ background: c.deep, border: `1px solid ${c.border}`, borderRadius: 'var(--r-control)', padding: '12px', marginBottom: '16px' }}>
+                      <p style={{ margin: '0 0 4px', fontSize: '12px', color: c.muted }}>Invite link</p>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '12px', color: c.text, flex: 1, wordBreak: 'break-all' }}>{inviteResult.url}</span>
+                        <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: c.heading, flex: 1, wordBreak: 'break-all' }}>{inviteResult.url}</span>
                         <button
                           onClick={() => navigator.clipboard.writeText(inviteResult.url)}
-                          style={{ background: 'transparent', border: `1px solid ${c.border}`, borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: c.muted, flexShrink: 0 }}
+                          style={{ ...iconBtn, border: `1px solid ${c.border2}`, background: c.card, flexShrink: 0 }}
                           title="Copy link"
                         >
-                          <Copy size={13} />
+                          <Copy size={14} strokeWidth={1.5} />
                         </button>
                       </div>
                     </div>
                   )}
-                  <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                    <button onClick={() => { setInviteResult(null); }} style={{ padding: '8px 16px', borderRadius: '7px', border: `1px solid ${c.border}`, background: 'transparent', color: c.text, fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
-                      Send Another
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                    <button onClick={() => { setInviteResult(null); }} style={btnSecondary}>
+                      Send another
                     </button>
-                    <button onClick={() => { setShowInviteModal(false); setInviteResult(null); }} style={{ padding: '8px 16px', borderRadius: '7px', border: 'none', background: c.primary, color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}>
+                    <button onClick={() => { setShowInviteModal(false); setInviteResult(null); }} style={btnPrimary}>
                       Done
                     </button>
                   </div>
@@ -813,32 +741,32 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
 
               {/* Form */}
               {(!inviteResult || inviteResult.error) && (
-                <form onSubmit={handleInvite} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <form onSubmit={handleInvite} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: c.muted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '5px' }}>Name (optional)</label>
+                    <label style={fieldLabel}>Name <span style={{ color: c.muted, fontWeight: 400 }}>· optional</span></label>
                     <input
                       value={inviteForm.name}
                       onChange={e => setInviteForm(f => ({ ...f, name: e.target.value }))}
                       placeholder="Jane Smith"
-                      style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: `1px solid ${c.border}`, background: c.bg, color: c.text, fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                      style={inp()}
                     />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: c.muted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '5px' }}>Email *</label>
+                    <label style={fieldLabel}>Email</label>
                     <input
                       required type="email"
                       value={inviteForm.email}
                       onChange={e => setInviteForm(f => ({ ...f, email: e.target.value }))}
                       placeholder="jane@example.com"
-                      style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: `1px solid ${c.border}`, background: c.bg, color: c.text, fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                      style={inp()}
                     />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: c.muted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '5px' }}>Role</label>
+                    <label style={fieldLabel}>Role</label>
                     <select
                       value={inviteForm.role}
                       onChange={e => setInviteForm(f => ({ ...f, role: e.target.value }))}
-                      style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: `1px solid ${c.border}`, background: c.bg, color: c.text, fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                      style={inp()}
                     >
                       <optgroup label="Full Members">
                         <option value="org_leader">Org Leader</option>
@@ -857,54 +785,55 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
 
                   {/* Guest options */}
                   {inviteForm.role === 'guest' && (
-                    <div style={{ background: isDarkMode ? '#1a1a1a' : '#f4f4f5', border: `1px solid ${c.border}`, borderRadius: '10px', padding: '14px' }}>
-                      <div style={{ fontSize: '12px', fontWeight: '700', color: c.heading, marginBottom: '12px' }}>Guest Access Settings</div>
-                      <div style={{ marginBottom: '12px' }}>
-                        <div style={{ fontSize: '11px', fontWeight: '600', color: c.muted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Duration</div>
-                        <div style={{ display: 'flex', gap: '6px' }}>
+                    <div style={{ background: c.deep, border: `1px solid ${c.border}`, borderRadius: 'var(--r-card)', padding: '16px' }}>
+                      <div style={{ fontSize: '14px', fontWeight: 500, color: c.heading, marginBottom: '12px' }}>Guest access</div>
+                      <div style={{ marginBottom: '16px' }}>
+                        <div style={{ fontSize: '13px', color: c.text, marginBottom: '8px' }}>How long</div>
+                        <div style={{ display: 'flex', gap: '2px', padding: '2px', background: c.hover, border: `1px solid ${c.border}`, borderRadius: 'var(--r-control)' }}>
                           {[1, 2, 3].map(w => (
                             <button key={w} type="button" onClick={() => setInviteForm(f => ({ ...f, guestWeeks: w }))}
-                              style={{ flex: 1, padding: '7px', borderRadius: '7px', border: `1px solid ${inviteForm.guestWeeks === w ? c.primary : c.border}`, background: inviteForm.guestWeeks === w ? `${c.primary}18` : 'transparent', color: inviteForm.guestWeeks === w ? c.primary : c.text, fontWeight: inviteForm.guestWeeks === w ? '700' : '500', fontSize: '12px', cursor: 'pointer' }}>
+                              style={{ flex: 1, height: '28px', borderRadius: '6px', border: 'none', background: inviteForm.guestWeeks === w ? c.card : 'transparent', boxShadow: inviteForm.guestWeeks === w ? 'var(--shadow-sm)' : 'none', color: inviteForm.guestWeeks === w ? c.heading : c.text, fontWeight: 500, fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit' }}>
                               {w} week{w > 1 ? 's' : ''}
                             </button>
                           ))}
                         </div>
                       </div>
                       <div>
-                        <div style={{ fontSize: '11px', fontWeight: '600', color: c.muted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>What can they access?</div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                        <div style={{ fontSize: '13px', color: c.text, marginBottom: '8px' }}>What they can see</div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                           {[
                             { key: 'teams',      label: 'Teams',              desc: 'Team roster for their week' },
                             { key: 'planner',    label: 'Planner',            desc: 'Assigned service plans' },
-                            { key: 'production', label: 'Stage & Production', desc: 'Stage, lighting, rehearsals' },
+                            { key: 'production', label: 'Production', desc: 'Stage, lighting, rehearsals' },
                             { key: 'songs',      label: 'Songs',              desc: 'Song library' },
                           ].map(({ key, label, desc }) => (
-                            <label key={key} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '8px 10px', borderRadius: '7px', border: `1px solid ${inviteForm.guestPerms[key] ? c.primary : c.border}`, background: inviteForm.guestPerms[key] ? `${c.primary}10` : 'transparent', cursor: 'pointer' }}>
+                            <label key={key} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '8px 12px', borderRadius: 'var(--r-control)', border: `1px solid ${inviteForm.guestPerms[key] ? 'var(--accent-line)' : c.border2}`, background: inviteForm.guestPerms[key] ? c.soft : c.card, cursor: 'pointer' }}>
                               <input type="checkbox" checked={inviteForm.guestPerms[key]}
                                 onChange={e => setInviteForm(f => ({ ...f, guestPerms: { ...f.guestPerms, [key]: e.target.checked } }))}
-                                style={{ marginTop: '2px', flexShrink: 0, accentColor: c.primary }} />
+                                style={{ marginTop: '3px', flexShrink: 0, accentColor: 'var(--accent)' }} />
                               <div>
-                                <div style={{ fontSize: '12px', fontWeight: '600', color: c.heading }}>{label}</div>
-                                <div style={{ fontSize: '10px', color: c.muted, marginTop: '1px' }}>{desc}</div>
+                                <div style={{ fontSize: '12px', fontWeight: 500, color: c.heading }}>{label}</div>
+                                <div style={{ fontSize: '12px', color: c.muted, marginTop: '2px' }}>{desc}</div>
                               </div>
                             </label>
                           ))}
                         </div>
-                        <p style={{ margin: '6px 0 0', fontSize: '10px', color: c.muted }}>Billing and Admin are always blocked for guests.</p>
+                        <p style={{ margin: '8px 0 0', fontSize: '12px', color: c.muted }}>Guests never see Billing or Admin</p>
                       </div>
                     </div>
                   )}
                   {inviteResult?.error && (
-                    <div style={{ fontSize: '13px', color: '#ef4444', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '8px', padding: '10px 12px' }}>
+                    <div style={{ fontSize: '13px', color: c.heading, background: c.deep, border: `1px solid ${c.border2}`, borderRadius: 'var(--r-control)', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.danger, flexShrink: 0 }} />
                       {inviteResult.error}
                     </div>
                   )}
-                  <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', paddingTop: '4px' }}>
-                    <button type="button" onClick={() => { setShowInviteModal(false); setInviteResult(null); }} style={{ padding: '8px 18px', borderRadius: '7px', border: `1px solid ${c.border}`, background: 'transparent', color: c.text, fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', paddingTop: '4px' }}>
+                    <button type="button" onClick={() => { setShowInviteModal(false); setInviteResult(null); }} style={btnSecondary}>
                       Cancel
                     </button>
-                    <button type="submit" disabled={inviteSending || !inviteForm.email.trim()} style={{ padding: '8px 20px', borderRadius: '7px', border: 'none', background: c.primary, color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer', opacity: (inviteSending || !inviteForm.email.trim()) ? 0.65 : 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <UserPlus size={14} /> {inviteSending ? 'Sending…' : 'Send Invite'}
+                    <button type="submit" disabled={inviteSending || !inviteForm.email.trim()} style={{ ...btnPrimary, opacity: (inviteSending || !inviteForm.email.trim()) ? 0.5 : 1 }}>
+                      <UserPlus size={16} strokeWidth={1.5} /> {inviteSending ? 'Sending…' : 'Send invite'}
                     </button>
                   </div>
                 </form>
@@ -917,23 +846,23 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
       {/* Add Position to Org prompt */}
       {addPositionPrompt && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-          <div style={{ background: c.card, border: `1px solid ${c.border}`, borderRadius: '14px', padding: '28px', width: 'min(380px,100%)', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
-            <h3 style={{ margin: '0 0 10px', fontSize: '16px', fontWeight: '700', color: c.heading }}>New Position Detected</h3>
-            <p style={{ margin: '0 0 20px', fontSize: '13px', color: c.muted, lineHeight: '1.6' }}>
-              <em>{addPositionPrompt.role}</em> is not in your org's position list yet. Add it so others can reuse it?
+          <div style={{ background: c.card, border: `1px solid ${c.border2}`, borderRadius: 'var(--r-panel)', padding: '24px', width: 'min(380px,100%)', boxShadow: 'var(--shadow-lg)' }}>
+            <h3 style={{ margin: '0 0 8px', fontSize: '16px', fontWeight: 500, color: c.heading }}>Add this position?</h3>
+            <p style={{ margin: '0 0 24px', fontSize: '14px', color: c.text, lineHeight: '22px' }}>
+              <span style={{ color: c.heading, fontWeight: 500 }}>{addPositionPrompt.role}</span> isn't in your position list yet. Add it so others can pick it too?
             </p>
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => { setAddPositionPrompt(null); addPositionPrompt.resolve(false); }}
-                style={{ padding: '8px 18px', borderRadius: '7px', border: `1px solid ${c.border}`, background: 'transparent', color: c.text, fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
+                style={btnSecondary}
               >
-                No, skip
+                Skip
               </button>
               <button
                 onClick={() => { setAddPositionPrompt(null); addPositionPrompt.resolve(true); }}
-                style={{ padding: '8px 18px', borderRadius: '7px', border: 'none', background: c.primary, color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}
+                style={btnPrimary}
               >
-                Yes, add it
+                Add position
               </button>
             </div>
           </div>
@@ -943,13 +872,13 @@ export default function TeamManager({ orgId, isDarkMode, userRole, services = []
   );
 }
 
-// â”€â”€ Small sub-components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Small sub-components ──────────────────────────────────────────────────────
 function SectionBlock({ title, icon, children, c }) {
   return (
-    <div style={{ marginBottom: '18px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', paddingBottom: '6px', borderBottom: `1px solid ${c.border}` }}>
-        <span style={{ color: c.primary }}>{icon}</span>
-        <span style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: c.muted }}>{title}</span>
+    <div style={{ marginBottom: '24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', paddingBottom: '8px', borderBottom: `1px solid ${c.border}` }}>
+        <span style={{ color: c.muted, display: 'flex' }}>{icon}</span>
+        <span style={{ fontSize: '13px', fontWeight: 500, color: c.heading }}>{title}</span>
       </div>
       {children}
     </div>
@@ -959,10 +888,10 @@ function SectionBlock({ title, icon, children, c }) {
 function InfoRow({ icon, label, value, action }) {
   if (!value) return null;
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '7px', fontSize: '13px' }}>
-      <span style={{ opacity: 0.5, flexShrink: 0 }}>{icon}</span>
-      <span style={{ color: '#6b7280', flexShrink: 0, minWidth: '60px' }}>{label}</span>
-      <span style={{ flex: 1, fontWeight: '500' }}>{value}</span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: '13px' }}>
+      <span style={{ color: 'var(--text-3)', flexShrink: 0, display: 'flex' }}>{icon}</span>
+      <span style={{ color: 'var(--text-3)', flexShrink: 0, minWidth: '64px' }}>{label}</span>
+      <span style={{ flex: 1, color: 'var(--text-1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</span>
       {action}
     </div>
   );
@@ -970,9 +899,11 @@ function InfoRow({ icon, label, value, action }) {
 
 function StatChip({ label, value, c, accent }) {
   return (
-    <div style={{ background: accent ? `${accent}18` : (c.bg), border: `1px solid ${accent || c.border}`, borderRadius: '8px', padding: '8px 10px', textAlign: 'center' }}>
-      <div style={{ fontSize: '20px', fontWeight: '800', color: accent || c.heading }}>{value}</div>
-      <div style={{ fontSize: '10px', color: c.muted, marginTop: '2px' }}>{label}</div>
+    <div style={{ background: c.deep, border: `1px solid ${c.border}`, borderRadius: 'var(--r-control)', padding: '12px' }}>
+      <div style={{ fontSize: '24px', lineHeight: 1, fontWeight: 500, color: c.heading, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      <div style={{ fontSize: '12px', color: c.muted, marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        {accent && <span style={{ width: 6, height: 6, borderRadius: '50%', background: accent, flexShrink: 0 }} />}{label}
+      </div>
     </div>
   );
 }
@@ -986,11 +917,11 @@ function MinistryTagInput({ tags, onChange, c, inp }) {
   };
   return (
     <div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: tags.length ? '8px' : 0 }}>
         {tags.map((t, i) => (
-          <span key={i} style={{ fontSize: '12px', background: 'rgba(59,130,246,0.1)', color: c.primary, padding: '3px 10px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <span key={i} style={{ fontSize: '13px', background: c.hover, border: `1px solid ${c.border}`, color: c.heading, height: '28px', padding: '0 2px 0 8px', borderRadius: 'var(--r-tag)', display: 'flex', alignItems: 'center', gap: '2px', boxSizing: 'border-box' }}>
             {t}
-            <button onClick={() => onChange(tags.filter((_, idx) => idx !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.primary, padding: 0, display: 'flex', lineHeight: 1 }}><X size={11} /></button>
+            <button onClick={() => onChange(tags.filter((_, idx) => idx !== i))} title="Remove" style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.muted, width: '22px', height: '22px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={12} strokeWidth={1.5} /></button>
           </span>
         ))}
       </div>
@@ -1000,9 +931,9 @@ function MinistryTagInput({ tags, onChange, c, inp }) {
           value={inputVal}
           onChange={e => setInputVal(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTag(inputVal); } }}
-          placeholder="Type a ministry and press Enter…"
+          placeholder="Type a ministry, then press Enter"
         />
-        <button onClick={() => addTag(inputVal)} style={{ border: `1px solid ${c.border}`, borderRadius: '6px', padding: '6px 12px', background: 'transparent', color: c.text, fontSize: '12px', cursor: 'pointer' }}>Add</button>
+        <button onClick={() => addTag(inputVal)} style={{ border: `1px solid ${c.border2}`, borderRadius: 'var(--r-control)', height: '36px', padding: '0 14px', background: c.card, color: c.heading, fontSize: '13px', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Add</button>
       </div>
     </div>
   );
